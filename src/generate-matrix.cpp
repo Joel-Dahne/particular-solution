@@ -78,7 +78,8 @@ void scale_norm(mpfr_t mpfr_scaling, mpfr_t mpfr_theta_bound,
 }
 
 void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
-                     mpfr_t *scaling, int len, int N, mpfr_t nu, mpfr_t mu0) {
+                     mpfr_t *scaling, int len, int N, mpfr_t nu, mpfr_t mu0,
+                     int index_step) {
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, res;
   slong prec, prec_local;
 
@@ -99,7 +100,7 @@ void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
     arf_set_mpfr(arb_midref(theta), thetas[i]);
     arf_set_mpfr(arb_midref(phi), phis[i]);
     for (slong j = 0; j < N; j++) {
-      arb_mul_si(tmp, arb_mu0, 2*j + 1, prec);
+      arb_mul_si(tmp, arb_mu0, index_step*j + 1, prec);
 
       arb_cos(tmp2, theta, prec);
       prec_local = prec;
@@ -128,7 +129,8 @@ void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
 }
 
 void eigenfunction(mpfr_t *res, mpfr_t *coefs, mpfr_t *thetas,
-                   mpfr_t *phis, int len, int N, mpfr_t nu, mpfr_t mu0) {
+                   mpfr_t *phis, int len, int N, mpfr_t nu, mpfr_t mu0,
+                   int index_step) {
   arb_ptr arb_coefs;
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, term, sum;
   slong prec, prec_local;

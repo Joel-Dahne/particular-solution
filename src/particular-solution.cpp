@@ -15,7 +15,8 @@ using namespace mpfr;
 
 void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
                     mpfr_t *scaling, int boundary, int interior, int N,
-                    mpfr_t a, mpfr_t b, mpfr_t mu0, mpreal tol) {
+                    mpfr_t a, mpfr_t b, mpfr_t mu0, mpreal tol,
+                    int index_step) {
   mpfr_t c, d;
   mpreal invphi, invphi2, h, yc, yd;
   int n;
@@ -35,8 +36,10 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
   mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
-  yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0);
-  yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0);
+  yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
+             index_step);
+  yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
+             index_step);
 
   for (int k = 0; k < n; k++) {
     if (yc < yd) {
@@ -45,14 +48,16 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
       yd = yc;
       h = invphi*h;
       mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-      yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0);
+      yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
+                 index_step);
     } else {
       mpfr_set(a, c, MPFR_RNDN);
       mpfr_set(c, d, MPFR_RNDN);
       yc = yd;
       h = invphi*h;
       mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-      yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0);
+      yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
+                 index_step);
     }
   }
 
@@ -67,7 +72,8 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   mpfr_clear(d);
 }
 
-void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
+void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int index_step,
+                         int output) {
   mpfr_t v1[3], v2[3], v3[3];
   mpfr_t *A_arr, *thetas, *phis, *scaling, *coefs, *thetas_eigen, *phis_eigen,
     *values;
@@ -126,7 +132,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
 
   mpfr_set_d(nu_mid, 1.825757081, MPFR_RNDN);
   for (int i = 0; i < N; i++) {
-    mpfr_mul_si(mu, mu0, 2*i+1, MPFR_RNDN);
+    mpfr_mul_si(mu, mu0, index_step*i+1, MPFR_RNDN);
     scale_norm(scaling[i], theta_bound, nu_mid, mu);
   }
 
@@ -144,7 +150,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
       s = sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N, nu,
-                mu0);
+                mu0, index_step);
       cout << mpreal(nu) << " " << s << endl;
     }
   }
@@ -154,7 +160,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
     mpfr_sub_d(nu_low, nu_mid, 1e-2, MPFR_RNDN);
     mpfr_add_d(nu_upp, nu_mid, 1e-2, MPFR_RNDN);
     minimize_sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N,
-                   nu_low, nu_upp, mu0, mpreal(1e-10));
+                   nu_low, nu_upp, mu0, mpreal(1e-10), index_step);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
@@ -167,7 +173,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
 
     // Find the coefficients of the expansion
     coefs_sigma(coefs, A_arr, thetas, phis, scaling, num_boundary, num_interior,
-                N, nu, mu0);
+                N, nu, mu0, index_step);
 
     if (output == 2)
       for (int i = 0; i < N; i++) {
@@ -178,7 +184,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
       // Plotting the eigenfunction
       boundary(thetas_eigen, phis_eigen, v2, v3, num_eigen);
       eigenfunction(values, coefs, thetas_eigen, phis_eigen, num_eigen, N, nu,
-                    mu0);
+                    mu0, index_step);
       for (int i = 0; i < num_eigen; i++) {
         cout << mpreal(phis_eigen[i]) << " " << mpreal(values[i]) << endl;
       }
@@ -227,8 +233,16 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int output) {
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
   mpfr_t mu0;
-  int c, prec, output, N_beg, N_end, N_step;
+  int c, prec, output, N_beg, N_end, N_step, index_step;
   string usage;
+
+  for (int i = 0; i < 3; i++) {
+    mpfr_init(angles[i]);
+  }
+  mpfr_init(mu0);
+
+  srand(1);
+  cout << setprecision(20);
 
   usage = "Usage: ./particular-solution [OPTION]... -- N_begin N_end\n\
 Evaluate the method of particular solution with the number of therms in\n\
@@ -279,13 +293,7 @@ Options are:\n\
 
   mpfr_set_default_prec(prec);
 
-  srand(1);
-  cout << setprecision(20);
-
-  for (int i = 0; i < 3; i++) {
-    mpfr_init(angles[i]);
-  }
-  mpfr_init(mu0);
+  index_step = 1;
 
   mpfr_const_pi(angles[0], MPFR_RNDN);
   mpfr_mul_si(angles[0], angles[0], 2, MPFR_RNDN);
@@ -300,7 +308,7 @@ Options are:\n\
   mpfr_set_str(mu0, "-1.5", 10, MPFR_RNDN);
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    particular_solution(angles, mu0, N, output);
+    particular_solution(angles, mu0, N, index_step, output);
   }
 
   for (int i = 0; i < 3; i++) {

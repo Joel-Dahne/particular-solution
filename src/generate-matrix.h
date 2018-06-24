@@ -6,9 +6,10 @@
 void scale_norm(mpfr_t scaling, mpfr_t theta_bound, mpfr_t nu, mpfr_t mu);
 
 void generate_matrix(mpfr_t *A, mpfr_t *thetas, mpfr_t *phis, mpfr_t *scaling,
-                     int len, int N, mpfr_t nu, mpfr_t mu0);
+                     int len, int N, mpfr_t nu, mpfr_t mu0, int index_step);
 
 void eigenfunction(mpfr_t *res, mpfr_t *coefs, mpfr_t *thetas,
-                   mpfr_t *phis, int len, int N, mpfr_t nu, mpfr_t mu0);
+                   mpfr_t *phis, int len, int N, mpfr_t nu, mpfr_t mu0,
+                   int index_step);
 
 #endif

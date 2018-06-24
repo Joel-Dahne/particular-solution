@@ -26,12 +26,14 @@ using namespace Eigen;
  nu - Value of nu to use in the computations
  */
 mpreal sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis, mpfr_t *scaling,
-             int boundary, int interior, int N, mpfr_t nu, mpfr_t mu0) {
+             int boundary, int interior, int N, mpfr_t nu, mpfr_t mu0,
+             int index_step) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
   mpreal A_arr_mpreal[(boundary + interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0);
+  generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0,
+                  index_step);
 
   // Create an array of mpreals with the same values
   for (int i = 0; i < (boundary + interior)*N; i++) {
@@ -54,12 +56,13 @@ mpreal sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis, mpfr_t *scaling,
 
 void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
                  mpfr_t *scaling, int boundary, int interior, int N,
-                  mpfr_t nu, mpfr_t mu0) {
+                 mpfr_t nu, mpfr_t mu0, int index_step) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
   mpreal A_arr_mpreal[(boundary + interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0);
+  generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0,
+                  index_step);
 
   // Create an array of mpreals with the same values
   for (int i = 0; i < (boundary + interior)*N; i++) {
