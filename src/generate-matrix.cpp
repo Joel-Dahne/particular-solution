@@ -60,7 +60,7 @@ void scale_norm(mpfr_t mpfr_scaling, mpfr_t mpfr_theta_bound,
   arb_set_str(acb_realref(zero), "1e-1", prec);
   arf_set_mpfr(arb_midref(acb_realref(theta_bound)), mpfr_theta_bound);
 
-  mag_set_ui_2exp_si(tol, 1, -prec);
+  mag_zero(tol);
   do {
     acb_calc_integrate(scaling, integrand, params, zero, theta_bound, prec, tol,
                        NULL, prec);
