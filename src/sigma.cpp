@@ -29,7 +29,8 @@ mpreal sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis, mpfr_t *scaling,
              int boundary, int interior, int N, mpfr_t nu, mpfr_t mu0,
              int index_step) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
-  mpreal A_arr_mpreal[(boundary + interior)*N];
+  mpreal *A_arr_mpreal;
+  A_arr_mpreal = new mpreal[(boundary + interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
   generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0,
@@ -51,6 +52,7 @@ mpreal sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis, mpfr_t *scaling,
   // Find the smallest singular values
   BDCSVD<MatrixXmp> svd(Q.block(0, 0, interior, N));
 
+  delete [] A_arr_mpreal;
   return svd.singularValues()(N-1);
 }
 
@@ -58,7 +60,8 @@ void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
                  mpfr_t *scaling, int boundary, int interior, int N,
                  mpfr_t nu, mpfr_t mu0, int index_step) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
-  mpreal A_arr_mpreal[(boundary + interior)*N];
+  mpreal *A_arr_mpreal;
+  A_arr_mpreal = new mpreal[(boundary + interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
   generate_matrix(A_arr, thetas, phis, scaling, boundary + interior, N, nu, mu0,
@@ -93,4 +96,5 @@ void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   for (int i = 0; i < N; i++) {
     mpfr_set(coefs_arr[i], coefs(i).mpfr_srcptr(), MPFR_RNDN);
   }
+  delete [] A_arr_mpreal;
 }
