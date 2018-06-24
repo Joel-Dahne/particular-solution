@@ -13,8 +13,8 @@ function [Ns, nus, plot_x, plot_y] = parse_eigenfunction(path)
     np = header(3);
 
     data = dlmread(path, sep, [line + 1, 0, line + np, 1]);
-    plot_x = [plot_x plot(:, 1)];
-    plot_y = [plot_y plot(:, 2)];
+    plot_x = [plot_x data(:, 1)];
+    plot_y = [plot_y data(:, 2)];
 
     line = line + np + 1;
     header = dlmread(path, sep, [line, 0, line, 3]);
