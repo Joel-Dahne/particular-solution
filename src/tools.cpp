@@ -91,7 +91,8 @@ angles_to_vectors(mpfr_t *v1, mpfr_t *v2, mpfr_t *v3, mpfr_t theta_bound,
   mpfr_clear(tmp2);
 }
 
-void boundary(mpfr_t *thetas, mpfr_t *phis, mpfr_t *v1, mpfr_t *v2, int n) {
+void boundary(mpfr_t *thetas, mpfr_t *phis, mpfr_t *v1, mpfr_t *v2, int n,
+              int half_boundary) {
   mpfr_t arcx, arcy, arcz, t, norm, tmp;
 
   mpfr_init(arcx);
@@ -104,7 +105,10 @@ void boundary(mpfr_t *thetas, mpfr_t *phis, mpfr_t *v1, mpfr_t *v2, int n) {
 
   for (int i = 0; i < n; i++) {
     mpfr_set_si(t, i + 1, MPFR_RNDN);
-    mpfr_div_si(t, t, 2*n, MPFR_RNDN);
+    if (half_boundary)
+      mpfr_div_si(t, t, 2*n, MPFR_RNDN);
+    else
+      mpfr_div_si(t, t, n + 1, MPFR_RNDN);
 
     mpfr_sub(arcx, v2[0], v1[0], MPFR_RNDN);
     mpfr_mul(arcx, arcx, t, MPFR_RNDN);

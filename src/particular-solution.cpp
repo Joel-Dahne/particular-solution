@@ -73,7 +73,7 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
 }
 
 void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int index_step,
-                         int output) {
+                         int half_boundary, int output) {
   mpfr_t v1[3], v2[3], v3[3];
   mpfr_t *A_arr, *thetas, *phis, *scaling, *coefs, *thetas_eigen, *phis_eigen,
     *values;
@@ -126,7 +126,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int index_step,
     mpfr_init(values[i]);
   }
 
-  boundary(thetas, phis, v2, v3, num_boundary);
+  boundary(thetas, phis, v2, v3, num_boundary, half_boundary);
   interior(thetas + num_boundary, phis + num_boundary, v1, v2, v3,
            num_interior);
 
@@ -182,7 +182,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int index_step,
 
     if (output == 1) {
       // Plotting the eigenfunction
-      boundary(thetas_eigen, phis_eigen, v2, v3, num_eigen);
+      boundary(thetas_eigen, phis_eigen, v2, v3, num_eigen, half_boundary);
       eigenfunction(values, coefs, thetas_eigen, phis_eigen, num_eigen, N, nu,
                     mu0, index_step);
       for (int i = 0; i < num_eigen; i++) {
@@ -233,7 +233,7 @@ void particular_solution(mpfr_t angles[], mpfr_t mu0, int N, int index_step,
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
   mpfr_t mu0;
-  int c, prec, output, N_beg, N_end, N_step, index_step;
+  int c, prec, output, N_beg, N_end, N_step, index_step, half_boundary;
   string usage;
 
   for (int i = 0; i < 3; i++) {
@@ -294,6 +294,7 @@ Options are:\n\
   mpfr_set_default_prec(prec);
 
   index_step = 1;
+  half_boundary = 0;
 
   mpfr_const_pi(angles[0], MPFR_RNDN);
   mpfr_mul_si(angles[0], angles[0], 2, MPFR_RNDN);
@@ -308,7 +309,7 @@ Options are:\n\
   mpfr_set_str(mu0, "-1.5", 10, MPFR_RNDN);
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    particular_solution(angles, mu0, N, index_step, output);
+    particular_solution(angles, mu0, N, index_step, half_boundary, output);
   }
 
   for (int i = 0; i < 3; i++) {
