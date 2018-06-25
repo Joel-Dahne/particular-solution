@@ -244,15 +244,18 @@ int main(int argc, char *argv[]) {
   srand(1);
   cout << setprecision(20);
 
-  usage = "Usage: ./particular-solution [OPTION]... -- N_begin N_end\n\
-Evaluate the method of particular solution with the number of therms in\n\
-the expansion varying from N_begin to N_end with a default step size of 2\n\
+  usage = "Usage: ./particular-solution [OPTION]... -- N1 D1 N2 D2 N3 D3\n\
+Evaluate the method of particular solution for the spherical triangle given \n\
+by the angles (pi*N1/D1, pi*N2/D2, pi*N3/D3). By default it uses N from 4 to 16\n\
+with a step size of 2.\n\
 Options are:\n\
   -p <value> - set the working precision to this (default 53)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
                1: Output data for plotting the approximate eigenfunctions\n\
                2: Output the coefficients of the expansions\n\
+  -b <value> - start value for N\n\
+  -e <value> - end value for N\n\
   -s <value> - step size for N (default 2)";
 
   // Set default values for parameters
@@ -262,13 +265,19 @@ Options are:\n\
   N_end = 16;
   N_step = 2;
 
-  while ((c = getopt (argc, argv, "p:o:s:")) != -1)
+  while ((c = getopt (argc, argv, "p:o:b:e:s:")) != -1)
     switch(c) {
     case 'p':
       prec = atoi(optarg);
       break;
     case 'o':
       output = atoi(optarg);
+      break;
+    case 'b':
+      N_beg = atoi(optarg);
+      break;
+    case 'e':
+      N_end = atoi(optarg);
       break;
     case 's':
       N_step = atoi(optarg);
@@ -286,27 +295,39 @@ Options are:\n\
       abort ();
     }
 
-  if (argc - optind > 0)
-    N_beg = atoi(argv[optind]);
-  if (argc - optind > 1)
-    N_end = atoi(argv[optind + 1]);
-
   mpfr_set_default_prec(prec);
 
-  index_step = 1;
-  half_boundary = 0;
-
   mpfr_const_pi(angles[0], MPFR_RNDN);
-  mpfr_mul_si(angles[0], angles[0], 2, MPFR_RNDN);
-  mpfr_div_si(angles[0], angles[0], 3, MPFR_RNDN);
   mpfr_const_pi(angles[1], MPFR_RNDN);
-  mpfr_mul_si(angles[1], angles[1], 2, MPFR_RNDN);
-  mpfr_div_si(angles[1], angles[1], 3, MPFR_RNDN);
   mpfr_const_pi(angles[2], MPFR_RNDN);
-  mpfr_mul_si(angles[2], angles[2], 2, MPFR_RNDN);
-  mpfr_div_si(angles[2], angles[2], 3, MPFR_RNDN);
+  if (argc - optind > 1) {
+    mpfr_mul_si(angles[0], angles[0], atoi(argv[optind]), MPFR_RNDN);
+    mpfr_div_si(angles[0], angles[0], atoi(argv[optind + 1]), MPFR_RNDN);
+    mpfr_set_si(mu0, -atoi(argv[optind + 1]), MPFR_RNDN);
+    mpfr_div_si(mu0, mu0, atoi(argv[optind]), MPFR_RNDN);
+  } else {
+    mpfr_mul_si(angles[0], angles[0], 2, MPFR_RNDN);
+    mpfr_div_si(angles[0], angles[0], 3, MPFR_RNDN);
+    mpfr_set_si(mu0, -3, MPFR_RNDN);
+    mpfr_div_si(mu0, mu0, 2, MPFR_RNDN);
+  }
+  if (argc - optind > 3) {
+    mpfr_mul_si(angles[1], angles[1], atoi(argv[optind + 2]), MPFR_RNDN);
+    mpfr_div_si(angles[1], angles[1], atoi(argv[optind + 3]), MPFR_RNDN);
+  } else {
+    mpfr_mul_si(angles[1], angles[1], 2, MPFR_RNDN);
+    mpfr_div_si(angles[1], angles[1], 3, MPFR_RNDN);
+  }
+  if (argc - optind > 5) {
+    mpfr_mul_si(angles[2], angles[2], atoi(argv[optind + 4]), MPFR_RNDN);
+    mpfr_div_si(angles[2], angles[2], atoi(argv[optind + 5]), MPFR_RNDN);
+  } else {
+    mpfr_mul_si(angles[2], angles[2], 2, MPFR_RNDN);
+    mpfr_div_si(angles[2], angles[2], 3, MPFR_RNDN);
+  }
 
-  mpfr_set_str(mu0, "-1.5", 10, MPFR_RNDN);
+  index_step = 2;
+  half_boundary = 1;
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
     particular_solution(angles, mu0, N, index_step, half_boundary, output);
