@@ -62,7 +62,7 @@ void scale_norm(mpfr_t mpfr_scaling, mpfr_t mpfr_theta_bound,
 
   mag_zero(tol);
   do {
-    acb_calc_integrate(scaling, integrand, params, zero, theta_bound, prec, tol,
+    acb_calc_integrate(scaling, integrand, params, zero, theta_bound, 16, tol,
                        NULL, prec);
     prec *= 2;
   } while (!acb_is_finite(scaling));
