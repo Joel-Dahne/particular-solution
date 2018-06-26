@@ -161,7 +161,7 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs, mpfr_t *thetas,
     arb_zero(sum);
 
     for (slong j = 0; j < N; j++) {
-      arb_mul_si(tmp, arb_mu0, 2*j + 1, prec);
+      arb_mul_si(tmp, arb_mu0, index_step*j + 1, prec);
 
       arb_cos(tmp2, theta, prec);
       prec_local = prec;
