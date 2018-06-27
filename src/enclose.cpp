@@ -165,7 +165,7 @@ static int integrand(acb_ptr out, const acb_t inp, void *param_void, slong order
 }
 
 static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
-                          arb_t nu, arb_t mu0, slong index_step, slong prec) {
+                          arb_t nu, arb_t mu0, int (*index)(int), slong prec) {
   acb_t zero, theta_bound_c, tmp_c;
   acb_ptr params;
   arb_t integral_phi, mu, norm_part, tmp;
@@ -199,7 +199,7 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   for (slong i = 0; i < N; i++) {
 
     /* params[1] = mu */
-    arb_mul_si(acb_realref(params + 1), mu0, index_step*i + 1, prec);
+    arb_mul_si(acb_realref(params + 1), mu0, index(i), prec);
 
     /* Compute the integral corresponding to theta */
     prec_local = prec;
@@ -237,7 +237,7 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
 static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
                                        slong N, arb_ptr v1, arb_ptr v2,
                                        arb_t nu, arb_t mu0,
-                                       slong index_step, slong prec) {
+                                       int (*index)(int), slong prec) {
   arb_ptr w;
   arb_t norm_w, phi, mu, term, tmp;
   slong prec_local;
@@ -265,7 +265,7 @@ static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
 
 
   for (slong i = 0; i < N; i++) {
-    arb_mul_si(mu, mu0, index_step*i + 1, prec);
+    arb_mul_si(mu, mu0, index(i), prec);
 
     prec_local = prec;
     do {
@@ -294,7 +294,7 @@ static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
 }
 
 static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
-                     arb_ptr v2, arb_t nu, arb_t mu0, slong index_step,
+                     arb_ptr v2, arb_t nu, arb_t mu0, int (*index)(int),
                      slong prec) {
   arb_ptr intervals, evals, next_intervals;
   arf_t t_low, t_upp, max_low, max_upp, tmp;
@@ -338,7 +338,7 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
      * for the maximum */
     for (slong i = 0; i < num_intervals; i++) {
       eigenfunction_parametrized(evals + i, intervals + i, coefs, N, v1, v2, nu,
-                                 mu0, index_step, prec);
+                                 mu0, index, prec);
       if (arb_is_finite(evals + i)){
         arb_get_abs_ubound_arf(tmp, evals + i, prec);
         arf_max(max_upp, max_upp, tmp);
@@ -387,7 +387,7 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 }
 
 void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
-             mpfr_t nu_mpfr, int index_step) {
+             mpfr_t nu_mpfr, int (*index)(int)) {
   arb_ptr v1, v2, coefs;
   arb_t eps, nu, mu0, theta_bound, norm, max, tmp;
   arf_t eps_upp;
@@ -422,9 +422,9 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_div_si(mu0, mu0, angles_coefs[0], prec);
 
   /* Compute an enclosure of a lower bound of the norm */
-  integral_norm(norm, coefs, N, theta_bound, nu, mu0, index_step, prec);
+  integral_norm(norm, coefs, N, theta_bound, nu, mu0, index, prec);
 
-  maximize(max, coefs, N, v1, v2, nu, mu0, index_step, prec);
+  maximize(max, coefs, N, v1, v2, nu, mu0, index, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++) {

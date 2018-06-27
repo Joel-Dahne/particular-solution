@@ -17,7 +17,7 @@ using namespace mpfr;
 void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
                     mpfr_t *scaling, int boundary, int interior, int N,
                     mpfr_t a, mpfr_t b, mpfr_t mu0, mpreal tol,
-                    int index_step) {
+                    int (*index)(int)) {
   mpfr_t c, d;
   mpreal invphi, invphi2, h, yc, yd;
   int n;
@@ -38,9 +38,9 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
   yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
-             index_step);
+             index);
   yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
-             index_step);
+             index);
 
   for (int k = 0; k < n; k++) {
     if (yc < yd) {
@@ -50,7 +50,7 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
       h = invphi*h;
       mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
       yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
-                 index_step);
+                 index);
     } else {
       mpfr_set(a, c, MPFR_RNDN);
       mpfr_set(c, d, MPFR_RNDN);
@@ -58,7 +58,7 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
       h = invphi*h;
       mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
       yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
-                 index_step);
+                 index);
     }
   }
 
@@ -75,7 +75,7 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
 
 void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
                          int angles_coefs[], mpfr_t *scaling, mpfr_t mu0,
-                         mpfr_t nu_guess, int N, int index_step,
+                         mpfr_t nu_guess, int N, int (*index)(int),
                          int half_boundary, int output) {
 
   mpfr_t *A_arr, *thetas, *phis, *coefs, *thetas_eigen, *phis_eigen,
@@ -136,7 +136,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
       s = sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N, nu,
-                mu0, index_step);
+                mu0, index);
       cout << mpreal(nu) << " " << s << endl;
     }
   }
@@ -146,7 +146,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
     mpfr_sub_d(nu_low, nu_guess, 1e-2, MPFR_RNDN);
     mpfr_add_d(nu_upp, nu_guess, 1e-2, MPFR_RNDN);
     minimize_sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N,
-                   nu_low, nu_upp, mu0, mpreal(1e-10), index_step);
+                   nu_low, nu_upp, mu0, mpreal(1e-10), index);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
@@ -159,7 +159,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
 
     // Find the coefficients of the expansion
     coefs_sigma(coefs, A_arr, thetas, phis, scaling, num_boundary, num_interior,
-                N, nu, mu0, index_step);
+                N, nu, mu0, index);
 
     if (output == 1)
       // Print the coefficients for the eigenfunction
@@ -171,7 +171,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
       // Plotting the eigenfunction
       boundary(thetas_eigen, phis_eigen, v2, v3, num_eigen, half_boundary);
       eigenfunction(values, coefs, thetas_eigen, phis_eigen, num_eigen, N, nu,
-                    mu0, index_step);
+                    mu0, index);
       for (int i = 0; i < num_eigen; i++) {
         cout << mpreal(phis_eigen[i]) << " " << mpreal(values[i]) << endl;
       }
@@ -181,7 +181,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
       // Compute an enclosure for the eigenfunction This part is not
       // completely safe to rounding errors, the lower bound should be
       // rounded down and the upper bound up.
-      enclose(eps, angles_coefs, coefs, N, nu, index_step);
+      enclose(eps, angles_coefs, coefs, N, nu, index);
       cout << mpreal(eps) << endl
            << mpreal(nu)*(1 + mpreal(nu))/(1 + mpreal(eps)) << " "
            << mpreal(nu)*(1 + mpreal(nu))/(1 - mpreal(eps)) << endl;
@@ -219,11 +219,15 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
   mpfr_clear(eps);
 }
 
+int index_function(int k) {
+  return 2*k + 1;
+}
+
 int main(int argc, char *argv[]) {
   mpfr_t angles[3], v1[3], v2[3], v3[3], *scaling;
   mpfr_t mu0, nu_guess, theta_bound, mu;
   int angles_coefs[6];
-  int c, prec, output, N_beg, N_end, N_step, index_step, half_boundary;
+  int c, prec, output, N_beg, N_end, N_step, half_boundary;
   string usage;
 
   for (int i = 0; i < 3; i++) {
@@ -339,7 +343,6 @@ Options are:\n\
     angles_coefs[5] = 3;
   }
 
-  index_step = 2;
   half_boundary = 1;
 
   angles_to_vectors(v1, v2, v3, theta_bound, angles);
@@ -347,13 +350,13 @@ Options are:\n\
   scaling = new mpfr_t[N_end];
   for (int i = 0; i < N_end; i++) {
     mpfr_init(scaling[i]);
-    mpfr_mul_si(mu, mu0, index_step*i+1, MPFR_RNDN);
+    mpfr_mul_si(mu, mu0, index_function(i), MPFR_RNDN);
     scale_norm(scaling[i], theta_bound, nu_guess, mu);
   }
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
     particular_solution(v1, v2, v3, angles_coefs, scaling, mu0, nu_guess, N,
-                        index_step, half_boundary, output);
+                        index_function, half_boundary, output);
   }
 
   for (int i = 0; i < N_end; i++) {
