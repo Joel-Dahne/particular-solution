@@ -1,3 +1,5 @@
+#include "tools.h"
+
 #include "arb.h"
 #include "acb.h"
 #include "arb_hypgeom.h"
@@ -77,11 +79,10 @@ void scale_norm(mpfr_t mpfr_scaling, mpfr_t mpfr_theta_bound,
   mag_clear(tol);
 }
 
-void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
-                     mpfr_t *scaling, int len, int N, mpfr_t nu, mpfr_t mu0,
-                     int (*index)(int)) {
+void generate_matrix(mpfr_t *A_arr, struct Points points, mpfr_t *scaling,
+                     int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, res;
-  slong prec, prec_local;
+  slong prec, prec_local, n;
 
   arb_init(theta);
   arb_init(phi);
@@ -96,9 +97,11 @@ void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   arf_set_mpfr(arb_midref(arb_nu), nu);
   arf_set_mpfr(arb_midref(arb_mu0), mu0);
 
-  for (slong i = 0; i < len; i++) {
-    arf_set_mpfr(arb_midref(theta), thetas[i]);
-    arf_set_mpfr(arb_midref(phi), phis[i]);
+  n = points.boundary + points.interior;
+
+  for (slong i = 0; i < n; i++) {
+    arf_set_mpfr(arb_midref(theta), points.thetas[i]);
+    arf_set_mpfr(arb_midref(phi), points.phis[i]);
     for (slong j = 0; j < N; j++) {
       arb_mul_si(tmp, arb_mu0, index(j), prec);
 
@@ -114,8 +117,8 @@ void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
 
       arb_mul(res, res, tmp, prec);
 
-      arf_get_mpfr(A_arr[j*len + i], arb_midref(res), MPFR_RNDN);
-      mpfr_mul(A_arr[j*len + i], A_arr[j*len + i], scaling[j], MPFR_RNDN);
+      arf_get_mpfr(A_arr[j*n + i], arb_midref(res), MPFR_RNDN);
+      mpfr_mul(A_arr[j*n + i], A_arr[j*n + i], scaling[j], MPFR_RNDN);
     }
   }
 
@@ -128,9 +131,8 @@ void generate_matrix(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   arb_clear(res);
 }
 
-void eigenfunction(mpfr_t *res, mpfr_t *coefs, mpfr_t *thetas,
-                   mpfr_t *phis, int len, int N, mpfr_t nu, mpfr_t mu0,
-                   int (*index)(int)) {
+void eigenfunction(mpfr_t *res, mpfr_t *coefs, struct Points points, int N,
+                   mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   arb_ptr arb_coefs;
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, term, sum;
   slong prec, prec_local;
@@ -154,9 +156,9 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs, mpfr_t *thetas,
   arf_set_mpfr(arb_midref(arb_nu), nu);
   arf_set_mpfr(arb_midref(arb_mu0), mu0);
 
-  for (slong i = 0; i < len; i++) {
-    arf_set_mpfr(arb_midref(theta), thetas[i]);
-    arf_set_mpfr(arb_midref(phi), phis[i]);
+  for (slong i = 0; i < points.boundary + points.interior; i++) {
+    arf_set_mpfr(arb_midref(theta), points.thetas[i]);
+    arf_set_mpfr(arb_midref(phi), points.phis[i]);
 
     arb_zero(sum);
 

@@ -14,8 +14,7 @@
 using namespace std;
 using namespace mpfr;
 
-void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
-                    mpfr_t *scaling, int boundary, int interior, int N,
+void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
                     mpfr_t a, mpfr_t b, mpfr_t mu0, mpreal tol,
                     int (*index)(int)) {
   mpfr_t c, d;
@@ -37,10 +36,8 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
   mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
-  yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
-             index);
-  yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
-             index);
+  yc = sigma(A_arr, points, scaling, N, c, mu0, index);
+  yd = sigma(A_arr, points, scaling, N, d, mu0, index);
 
   for (int k = 0; k < n; k++) {
     if (yc < yd) {
@@ -49,16 +46,14 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
       yd = yc;
       h = invphi*h;
       mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-      yc = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, c, mu0,
-                 index);
+      yc = sigma(A_arr, points, scaling, N, c, mu0, index);
     } else {
       mpfr_set(a, c, MPFR_RNDN);
       mpfr_set(c, d, MPFR_RNDN);
       yc = yd;
       h = invphi*h;
       mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-      yd = sigma(A_arr, thetas, phis, scaling, boundary, interior, N, d, mu0,
-                 index);
+      yd = sigma(A_arr, points, scaling, N, d, mu0, index);
     }
   }
 
@@ -73,16 +68,15 @@ void minimize_sigma(mpfr_t *A_arr, mpfr_t *thetas, mpfr_t *phis,
   mpfr_clear(d);
 }
 
-void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
-                         int angles_coefs[], mpfr_t *scaling, mpfr_t mu0,
-                         mpfr_t nu_guess, int N, int (*index)(int),
-                         int half_boundary, int output) {
+void particular_solution(struct Geometry geometry, int angles_coefs[],
+                         mpfr_t *scaling, mpfr_t mu0, mpfr_t nu_guess,
+                         int N, int (*index)(int), int output) {
 
-  mpfr_t *A_arr, *thetas, *phis, *coefs, *thetas_eigen, *phis_eigen,
-    *values;
+  mpfr_t *A_arr, *coefs, *values;
   mpfr_t mu, nu_low, nu_upp, nu_step, nu, eps;
   mpreal s;
-  int num_boundary, num_interior, iterations, num_eigen;
+  int iterations;
+  struct Points points, points_eigen;
 
   mpfr_init(mu);
   mpfr_init(nu_low);
@@ -91,36 +85,30 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
   mpfr_init(nu);
   mpfr_init(eps);
 
-  num_boundary = 2*N;
-  num_interior = 2*N;
-  num_eigen = 500; //Should this depend on N?
+  points.boundary = 2*N;
+  points.interior = 2*N;
+  points_eigen.boundary = 500;
+  points_eigen.interior = 0;
 
-  A_arr = new mpfr_t[(num_boundary + num_interior)*N];
-  thetas = new mpfr_t[num_boundary + num_interior];
-  phis = new mpfr_t[num_boundary + num_interior];
+  points_init(points);
+  points_init(points_eigen);
+
+  A_arr = new mpfr_t[(points.boundary + points.interior)*N];
   coefs = new mpfr_t[N];
-  thetas_eigen = new mpfr_t[num_eigen];
-  phis_eigen = new mpfr_t[num_eigen];
-  values = new mpfr_t[num_eigen];
-  for (int i = 0; i < (num_boundary + num_interior)*N; i++) {
+  values = new mpfr_t[points_eigen.boundary + points_eigen.interior];
+
+  for (int i = 0; i < (points.boundary + points.interior)*N; i++) {
     mpfr_init(A_arr[i]);
-  }
-  for (int i = 0; i < num_boundary + num_interior; i++) {
-    mpfr_init(thetas[i]);
-    mpfr_init(phis[i]);
   }
   for (int i = 0; i < N; i++) {
     mpfr_init(coefs[i]);
   }
-  for (int i = 0; i < num_eigen; i++) {
-    mpfr_init(thetas_eigen[i]);
-    mpfr_init(phis_eigen[i]);
+  for (int i = 0; i < points_eigen.interior + points_eigen.boundary; i++) {
     mpfr_init(values[i]);
   }
 
-  boundary(thetas, phis, v2, v3, num_boundary, half_boundary);
-  interior(thetas + num_boundary, phis + num_boundary, v1, v2, v3,
-           num_interior);
+  boundary(points, geometry);
+  interior(points, geometry);
 
   if (output == 0) {
     // Plot the values of sigma
@@ -135,8 +123,7 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
       mpfr_set(nu, nu_step, MPFR_RNDN);
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
-      s = sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N, nu,
-                mu0, index);
+      s = sigma(A_arr, points, scaling, N, nu, mu0, index);
       cout << mpreal(nu) << " " << s << endl;
     }
   }
@@ -145,21 +132,20 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
     // Find the value of nu that minimizes sigma
     mpfr_sub_d(nu_low, nu_guess, 1e-2, MPFR_RNDN);
     mpfr_add_d(nu_upp, nu_guess, 1e-2, MPFR_RNDN);
-    minimize_sigma(A_arr, thetas, phis, scaling, num_boundary, num_interior, N,
-                   nu_low, nu_upp, mu0, mpreal(1e-10), index);
+    minimize_sigma(A_arr, points, scaling, N, nu_low, nu_upp, mu0,
+                   mpreal(1e-10), index);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
 
     cout << N << " " << mpreal(nu);
     if (output == 2)
-      cout << " " << num_eigen << endl;
+      cout << " " << points_eigen.boundary << endl;
     else
       cout << endl;
 
     // Find the coefficients of the expansion
-    coefs_sigma(coefs, A_arr, thetas, phis, scaling, num_boundary, num_interior,
-                N, nu, mu0, index);
+    coefs_sigma(coefs, A_arr, points, scaling, N, nu, mu0, index);
 
     if (output == 1)
       // Print the coefficients for the eigenfunction
@@ -169,11 +155,11 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
 
     if (output == 2) {
       // Plotting the eigenfunction
-      boundary(thetas_eigen, phis_eigen, v2, v3, num_eigen, half_boundary);
-      eigenfunction(values, coefs, thetas_eigen, phis_eigen, num_eigen, N, nu,
-                    mu0, index);
-      for (int i = 0; i < num_eigen; i++) {
-        cout << mpreal(phis_eigen[i]) << " " << mpreal(values[i]) << endl;
+      boundary(points_eigen, geometry);
+      eigenfunction(values, coefs, points_eigen, N, nu, mu0, index);
+
+      for (int i = 0; i < points_eigen.boundary; i++) {
+        cout << mpreal(points_eigen.phis[i]) << " " << mpreal(values[i]) << endl;
       }
     }
 
@@ -188,28 +174,21 @@ void particular_solution(mpfr_t v1[], mpfr_t v2[], mpfr_t v3[],
     }
   }
   /* Clear all variables */
-  for (int i = 0; i < (num_boundary + num_interior)*N; i++) {
+  for (int i = 0; i < (points.boundary + points.interior)*N; i++) {
     mpfr_clear(A_arr[i]);
-  }
-  for (int i = 0; i < num_boundary + num_interior; i++) {
-    mpfr_clear(thetas[i]);
-    mpfr_clear(phis[i]);
   }
   for (int i = 0; i < N; i++) {
     mpfr_clear(coefs[i]);
   }
-  for (int i = 0; i < num_eigen; i++) {
-    mpfr_clear(thetas_eigen[i]);
-    mpfr_clear(phis_eigen[i]);
+  for (int i = 0; i < points_eigen.boundary + points_eigen.interior; i++) {
     mpfr_clear(values[i]);
   }
   delete [] A_arr;
-  delete [] thetas;
-  delete [] phis;
   delete [] coefs;
-  delete [] thetas_eigen;
-  delete [] phis_eigen;
   delete [] values;
+
+  points_clear(points);
+  points_clear(points_eigen);
 
   mpfr_clear(mu);
   mpfr_clear(nu_low);
@@ -224,21 +203,20 @@ int index_function(int k) {
 }
 
 int main(int argc, char *argv[]) {
-  mpfr_t angles[3], v1[3], v2[3], v3[3], *scaling;
-  mpfr_t mu0, nu_guess, theta_bound, mu;
+  mpfr_t angles[3], *scaling;
+  mpfr_t mu0, nu_guess, mu;
   int angles_coefs[6];
-  int c, prec, output, N_beg, N_end, N_step, half_boundary;
+  int c, prec, output, N_beg, N_end, N_step;
   string usage;
+  struct Geometry geometry;
+
+  geometry_init(geometry);
 
   for (int i = 0; i < 3; i++) {
     mpfr_init(angles[i]);
-    mpfr_init(v1[i]);
-    mpfr_init(v2[i]);
-    mpfr_init(v3[i]);
   }
   mpfr_init(mu0);
   mpfr_init(nu_guess);
-  mpfr_init(theta_bound);
   mpfr_init(mu);
 
   srand(1);
@@ -289,11 +267,13 @@ Options are:\n\
       break;
     case '?':
       if (optopt == 'p')
-        cerr <<"Option -" << char(optopt) << " requires an argument.\n\n" << endl;
+        cerr <<"Option -" << char(optopt) << " requires an argument.\n\n"
+             << endl;
       else if (isprint (optopt))
         cerr << "Unknown option `-" << char(optopt) << "'.\n\n" << endl;
       else
-        cerr << "Unknown option character `" << char(optopt) << "'.\n\n" << endl;
+        cerr << "Unknown option character `" << char(optopt) << "'.\n\n"
+             << endl;
       cerr << usage << endl;
       exit(0);
     default:
@@ -343,20 +323,19 @@ Options are:\n\
     angles_coefs[5] = 3;
   }
 
-  half_boundary = 1;
-
-  angles_to_vectors(v1, v2, v3, theta_bound, angles);
+  angles_to_vectors(geometry, angles);
+  geometry.half_boundary = 1;
 
   scaling = new mpfr_t[N_end];
   for (int i = 0; i < N_end; i++) {
     mpfr_init(scaling[i]);
     mpfr_mul_si(mu, mu0, index_function(i), MPFR_RNDN);
-    scale_norm(scaling[i], theta_bound, nu_guess, mu);
+    scale_norm(scaling[i], geometry.theta_bound, nu_guess, mu);
   }
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    particular_solution(v1, v2, v3, angles_coefs, scaling, mu0, nu_guess, N,
-                        index_function, half_boundary, output);
+    particular_solution(geometry, angles_coefs, scaling, mu0, nu_guess, N,
+                        index_function, output);
   }
 
   for (int i = 0; i < N_end; i++) {
@@ -367,14 +346,12 @@ Options are:\n\
 
   for (int i = 0; i < 3; i++) {
     mpfr_clear(angles[i]);
-    mpfr_clear(v1[i]);
-    mpfr_clear(v2[i]);
-    mpfr_clear(v3[i]);
   }
+
+  geometry_clear(geometry);
 
   mpfr_clear(mu0);
   mpfr_clear(nu_guess);
-  mpfr_clear(theta_bound);
   mpfr_clear(mu);
 
   return 0;
