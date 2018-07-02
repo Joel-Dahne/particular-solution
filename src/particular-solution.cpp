@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
+#include <math.h>
 
 using namespace std;
 using namespace mpfr;
@@ -198,8 +199,12 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
   mpfr_clear(eps);
 }
 
-int index_function(int k) {
+int index_function_odd(int k) {
   return 2*k + 1;
+}
+
+int index_function_all(int k) {
+  return k + 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -209,6 +214,7 @@ int main(int argc, char *argv[]) {
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
   struct Geometry geometry;
+  int (*index_function)(int);
 
   geometry_init(geometry);
 
@@ -220,14 +226,13 @@ int main(int argc, char *argv[]) {
   mpfr_init(mu);
 
   srand(1);
-  cout << setprecision(20);
 
   usage = "Usage: ./particular-solution [OPTION]... -- N1 D1 N2 D2 N3 D3\n\
 Evaluate the method of particular solution for the spherical triangle given \n\
 by the angles (pi*N1/D1, pi*N2/D2, pi*N3/D3). By default it uses N from 4 to 16\n\
 with a step size of 2.\n\
 Options are:\n\
-  -n <value< - guess for the eigenvalue, used as midpoint (default 1.825757)\n\
+  -n <value< - guess for the eigenvalue, used as midpoint (default 4.0631)\n\
   -p <value> - set the working precision to this (default 53)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
@@ -235,7 +240,9 @@ Options are:\n\
                2: Output data for plotting the approximate eigenfunctions\n\
   -b <value> - start value for N (default 4)\n\
   -e <value> - end value for N (default 16)\n\
-  -s <value> - step size for N (default 2)";
+  -s <value> - step size for N (default 2)\n\
+  -h         - set this flag to use only half of the boundary\n\
+  -i         - set this flag to use only odd indices in the expansion";
 
   // Set default values for parameters
   prec = 53;
@@ -243,9 +250,11 @@ Options are:\n\
   N_beg = 4;
   N_end = 16;
   N_step = 2;
-  mpfr_set_str(nu_guess, "1.825757", 10, MPFR_RNDN);
+  mpfr_set_str(nu_guess, "4.0631", 10, MPFR_RNDN);
+  geometry.half_boundary = 0;
+  index_function = index_function_all;
 
-  while ((c = getopt (argc, argv, "n:p:o:b:e:s:")) != -1)
+  while ((c = getopt (argc, argv, "n:p:o:b:e:s:hi")) != -1)
     switch(c) {
     case 'n':
       mpfr_set_str(nu_guess, optarg, 10, MPFR_RNDN);
@@ -265,6 +274,12 @@ Options are:\n\
     case 's':
       N_step = atoi(optarg);
       break;
+    case 'h':
+      geometry.half_boundary = 1;
+      break;
+    case 'i':
+      index_function = index_function_odd;
+      break;
     case '?':
       if (optopt == 'p')
         cerr <<"Option -" << char(optopt) << " requires an argument.\n\n"
@@ -281,50 +296,43 @@ Options are:\n\
     }
 
   mpfr_set_default_prec(prec);
+  cout << setprecision((int)ceil(prec*log10(2)));
 
   mpfr_const_pi(angles[0], MPFR_RNDN);
   mpfr_const_pi(angles[1], MPFR_RNDN);
   mpfr_const_pi(angles[2], MPFR_RNDN);
   if (argc - optind > 1) {
-    mpfr_mul_si(angles[0], angles[0], atoi(argv[optind]), MPFR_RNDN);
-    mpfr_div_si(angles[0], angles[0], atoi(argv[optind + 1]), MPFR_RNDN);
-    mpfr_set_si(mu0, -atoi(argv[optind + 1]), MPFR_RNDN);
-    mpfr_div_si(mu0, mu0, atoi(argv[optind]), MPFR_RNDN);
     angles_coefs[0] = atoi(argv[optind]);
     angles_coefs[1] = atoi(argv[optind + 1]);
   } else {
-    mpfr_mul_si(angles[0], angles[0], 2, MPFR_RNDN);
-    mpfr_div_si(angles[0], angles[0], 3, MPFR_RNDN);
-    mpfr_set_si(mu0, -3, MPFR_RNDN);
-    mpfr_div_si(mu0, mu0, 2, MPFR_RNDN);
     angles_coefs[0] = 2;
     angles_coefs[1] = 3;
   }
   if (argc - optind > 3) {
-    mpfr_mul_si(angles[1], angles[1], atoi(argv[optind + 2]), MPFR_RNDN);
-    mpfr_div_si(angles[1], angles[1], atoi(argv[optind + 3]), MPFR_RNDN);
     angles_coefs[2] = atoi(argv[optind + 2]);
     angles_coefs[3] = atoi(argv[optind + 3]);
   } else {
-    mpfr_mul_si(angles[1], angles[1], 2, MPFR_RNDN);
-    mpfr_div_si(angles[1], angles[1], 3, MPFR_RNDN);
-    angles_coefs[2] = 2;
-    angles_coefs[3] = 3;
+    angles_coefs[2] = 1;
+    angles_coefs[3] = 4;
   }
   if (argc - optind > 5) {
-    mpfr_mul_si(angles[2], angles[2], atoi(argv[optind + 4]), MPFR_RNDN);
-    mpfr_div_si(angles[2], angles[2], atoi(argv[optind + 5]), MPFR_RNDN);
     angles_coefs[4] = atoi(argv[optind + 4]);
     angles_coefs[5] = atoi(argv[optind + 5]);
   } else {
-    mpfr_mul_si(angles[2], angles[2], 2, MPFR_RNDN);
-    mpfr_div_si(angles[2], angles[2], 3, MPFR_RNDN);
-    angles_coefs[4] = 2;
-    angles_coefs[5] = 3;
+    angles_coefs[4] = 1;
+    angles_coefs[5] = 2;
   }
 
+  mpfr_mul_si(angles[0], angles[0], angles_coefs[0], MPFR_RNDN);
+  mpfr_div_si(angles[0], angles[0], angles_coefs[1], MPFR_RNDN);
+  mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
+  mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
+  mpfr_mul_si(angles[1], angles[1], angles_coefs[2], MPFR_RNDN);
+  mpfr_div_si(angles[1], angles[1], angles_coefs[3], MPFR_RNDN);
+  mpfr_mul_si(angles[2], angles[2], angles_coefs[4], MPFR_RNDN);
+  mpfr_div_si(angles[2], angles[2], angles_coefs[5], MPFR_RNDN);
+
   angles_to_vectors(geometry, angles);
-  geometry.half_boundary = 1;
 
   scaling = new mpfr_t[N_end];
   for (int i = 0; i < N_end; i++) {
