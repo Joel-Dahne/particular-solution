@@ -70,18 +70,17 @@ void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
 }
 
 void particular_solution(struct Geometry geometry, int angles_coefs[],
-                         mpfr_t *scaling, mpfr_t mu0, mpfr_t nu_guess,
-                         int N, int (*index)(int), int output) {
+                         mpfr_t *scaling, mpfr_t mu0, mpfr_t nu_low,
+                         mpfr_t nu_upp, mpfr_t tol, int N, int (*index)(int),
+                         int output) {
 
   mpfr_t *A_arr, *coefs, *values;
-  mpfr_t mu, nu_low, nu_upp, nu_step, nu, eps;
+  mpfr_t mu, nu_step, nu, eps;
   mpreal s;
   int iterations;
   struct Points points, points_eigen;
 
   mpfr_init(mu);
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
   mpfr_init(nu_step);
   mpfr_init(nu);
   mpfr_init(eps);
@@ -114,11 +113,8 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
   if (output == 0) {
     // Plot the values of sigma
     iterations = 400;
-    mpfr_sub_d(nu_low, nu_guess, 1e-4, MPFR_RNDN);
-    mpfr_add_d(nu_upp, nu_guess, 1e-4, MPFR_RNDN);
     mpfr_sub(nu_step, nu_upp, nu_low, MPFR_RNDN);
     mpfr_div_si(nu_step, nu_step, iterations, MPFR_RNDN);
-
     cout << N << " " << iterations << endl;
     for (int i = 0; i < iterations; i++) {
       mpfr_set(nu, nu_step, MPFR_RNDN);
@@ -131,10 +127,9 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
 
   if (output > 0) {
     // Find the value of nu that minimizes sigma
-    mpfr_sub_d(nu_low, nu_guess, 1e-2, MPFR_RNDN);
-    mpfr_add_d(nu_upp, nu_guess, 1e-2, MPFR_RNDN);
+
     minimize_sigma(A_arr, points, scaling, N, nu_low, nu_upp, mu0,
-                   mpreal(1e-10), index);
+                   mpreal(tol), index);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
@@ -192,8 +187,6 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
   points_clear(points_eigen);
 
   mpfr_clear(mu);
-  mpfr_clear(nu_low);
-  mpfr_clear(nu_upp);
   mpfr_clear(nu_step);
   mpfr_clear(nu);
   mpfr_clear(eps);
@@ -209,7 +202,7 @@ int index_function_all(int k) {
 
 int main(int argc, char *argv[]) {
   mpfr_t angles[3], *scaling;
-  mpfr_t mu0, nu_guess, mu;
+  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, mu, tol;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
@@ -223,7 +216,11 @@ int main(int argc, char *argv[]) {
   }
   mpfr_init(mu0);
   mpfr_init(nu_guess);
+  mpfr_init(nu_width);
+  mpfr_init(nu_low);
+  mpfr_init(nu_upp);
   mpfr_init(mu);
+  mpfr_init(tol);
 
   srand(1);
 
@@ -232,7 +229,9 @@ Evaluate the method of particular solution for the spherical triangle given \n\
 by the angles (pi*N1/D1, pi*N2/D2, pi*N3/D3). By default it uses N from 4 to 16\n\
 with a step size of 2.\n\
 Options are:\n\
-  -n <value< - guess for the eigenvalue, used as midpoint (default 4.0631)\n\
+  -n <value> - guess for the eigenvalue, used as midpoint (default 4.0631)\n\
+  -w <value> - width to use around the eigenvalue (default 1e-2)\n\
+  -t <value> - tolerance to use for minimization (default 1e-10)\n\
   -p <value> - set the working precision to this (default 53)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
@@ -251,13 +250,21 @@ Options are:\n\
   N_end = 16;
   N_step = 2;
   mpfr_set_str(nu_guess, "4.0631", 10, MPFR_RNDN);
+  mpfr_set_d(nu_width, 1e-2, MPFR_RNDN);
+  mpfr_set_d(tol, 1e-10, MPFR_RNDN);
   geometry.half_boundary = 0;
   index_function = index_function_all;
 
-  while ((c = getopt (argc, argv, "n:p:o:b:e:s:hi")) != -1)
+  while ((c = getopt (argc, argv, "n:w:t:p:o:b:e:s:hi")) != -1)
     switch(c) {
     case 'n':
       mpfr_set_str(nu_guess, optarg, 10, MPFR_RNDN);
+      break;
+    case 'w':
+      mpfr_set_str(nu_width, optarg, 10, MPFR_RNDN);
+      break;
+    case 't':
+      mpfr_set_str(tol, optarg, 10, MPFR_RNDN);
       break;
     case 'p':
       prec = atoi(optarg);
@@ -342,8 +349,10 @@ Options are:\n\
   }
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    particular_solution(geometry, angles_coefs, scaling, mu0, nu_guess, N,
-                        index_function, output);
+    mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
+    mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
+    particular_solution(geometry, angles_coefs, scaling, mu0, nu_low, nu_upp,
+                        tol, N, index_function, output);
   }
 
   for (int i = 0; i < N_end; i++) {
@@ -360,7 +369,11 @@ Options are:\n\
 
   mpfr_clear(mu0);
   mpfr_clear(nu_guess);
+  mpfr_init(nu_width);
+  mpfr_init(nu_low);
+  mpfr_init(nu_upp);
   mpfr_clear(mu);
+  mpfr_clear(tol);
 
   return 0;
 }
