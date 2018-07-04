@@ -206,21 +206,12 @@ int main(int argc, char *argv[]) {
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
+  char nu_guess_str_default[] = "4.0631";
+  char nu_width_str_default[] = "1e-2";
+  char tol_str_default[] = "1e-10";
+  char *nu_guess_str, *nu_width_str, *tol_str;
   struct Geometry geometry;
   int (*index_function)(int);
-
-  geometry_init(geometry);
-
-  for (int i = 0; i < 3; i++) {
-    mpfr_init(angles[i]);
-  }
-  mpfr_init(mu0);
-  mpfr_init(nu_guess);
-  mpfr_init(nu_width);
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
-  mpfr_init(mu);
-  mpfr_init(tol);
 
   srand(1);
 
@@ -249,22 +240,22 @@ Options are:\n\
   N_beg = 4;
   N_end = 16;
   N_step = 2;
-  mpfr_set_str(nu_guess, "4.0631", 10, MPFR_RNDN);
-  mpfr_set_d(nu_width, 1e-2, MPFR_RNDN);
-  mpfr_set_d(tol, 1e-10, MPFR_RNDN);
+  nu_guess_str = nu_guess_str_default;
+  nu_width_str = nu_width_str_default;
+  tol_str = tol_str_default;
   geometry.half_boundary = 0;
   index_function = index_function_all;
 
   while ((c = getopt (argc, argv, "n:w:t:p:o:b:e:s:hi")) != -1)
     switch(c) {
     case 'n':
-      mpfr_set_str(nu_guess, optarg, 10, MPFR_RNDN);
+      nu_guess_str = optarg;
       break;
     case 'w':
-      mpfr_set_str(nu_width, optarg, 10, MPFR_RNDN);
+      nu_width_str = optarg;
       break;
     case 't':
-      mpfr_set_str(tol, optarg, 10, MPFR_RNDN);
+      tol_str = optarg;
       break;
     case 'p':
       prec = atoi(optarg);
@@ -304,6 +295,23 @@ Options are:\n\
 
   mpfr_set_default_prec(prec);
   cout << setprecision((int)ceil(prec*log10(2)));
+
+  geometry_init(geometry);
+
+  for (int i = 0; i < 3; i++) {
+    mpfr_init(angles[i]);
+  }
+  mpfr_init(mu0);
+  mpfr_init(nu_guess);
+  mpfr_init(nu_width);
+  mpfr_init(nu_low);
+  mpfr_init(nu_upp);
+  mpfr_init(mu);
+  mpfr_init(tol);
+
+  mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
+  mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
+  mpfr_set_str(tol, tol_str, 10, MPFR_RNDN);
 
   mpfr_const_pi(angles[0], MPFR_RNDN);
   mpfr_const_pi(angles[1], MPFR_RNDN);
