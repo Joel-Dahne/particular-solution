@@ -135,9 +135,12 @@ static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
 static int integrand(acb_ptr out, const acb_t inp, void *param_void, slong order,
                      slong prec) {
   acb_ptr param;
+  acb_t tmp;
   slong prec_local;
 
-  /* param = [nu, mu, tmp] */
+  acb_init(tmp);
+
+  /* param = [nu, mu, coef] */
   param = (acb_ptr)(param_void);
 
   if (order > 1)
@@ -146,8 +149,8 @@ static int integrand(acb_ptr out, const acb_t inp, void *param_void, slong order
   acb_cos(out, inp, prec);
 
   if (order == 1) {
-    acb_sub_si(param + 2, out, 1, prec);
-    if (!arb_is_nonpositive(acb_realref(param + 2))) {
+    acb_sub_si(tmp, out, 1, prec);
+    if (!arb_is_nonpositive(acb_realref(tmp))) {
       acb_indeterminate(out);
       return 0;
     }
@@ -155,24 +158,28 @@ static int integrand(acb_ptr out, const acb_t inp, void *param_void, slong order
 
   prec_local = prec;
   do {
-    acb_hypgeom_legendre_p(param + 2, param, param + 1, out, 0, prec_local);
+    acb_hypgeom_legendre_p(tmp, param, param + 1, out, 0, prec_local);
     prec_local *= 2;
-  } while (!acb_is_finite(param + 2) && prec_local <= 16*prec);
+  } while (!acb_is_finite(tmp) && prec_local <= 16*prec);
 
-  acb_sqr(out, param + 2, prec);
+  acb_sqr(out, tmp, prec);
 
-  acb_sin(param + 2, inp, prec);
+  acb_sin(tmp, inp, prec);
+
+  acb_mul(out, out, tmp, prec);
 
   acb_mul(out, out, param + 2, prec);
+
+  acb_clear(tmp);
 
   return 0;
 }
 
 static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
                           arb_t nu, arb_t mu0, int (*index)(int), slong prec) {
-  acb_t zero, theta_bound_c, tmp_c;
+  acb_t zero, theta_bound_c, norm_part;
   acb_ptr params;
-  arb_t integral_phi, mu, norm_part, tmp;
+  arb_t integral_phi, mu, tmp;
   mag_t tol;
   slong prec_local;
 
@@ -180,11 +187,10 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
 
   acb_init(zero);
   acb_init(theta_bound_c);
-  acb_init(tmp_c);
+  acb_init(norm_part);
 
   arb_init(integral_phi);
   arb_init(mu);
-  arb_init(norm_part);
   arb_init(tmp);
 
   mag_init(tol);
@@ -201,39 +207,35 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   arb_neg(integral_phi, integral_phi);
 
   for (slong i = 0; i < N; i++) {
-    /* params[1] = mu */
+    /* params[1] = i*mu0 */
     arb_mul_si(acb_realref(params + 1), mu0, index(i), prec);
+    /* params[2] = sqr(coefs[i]) */
+    arb_sqr(acb_realref(params + 2), coefs + i, prec);
 
     /* Compute the integral corresponding to theta */
     prec_local = prec;
     do {
-      acb_calc_integrate(tmp_c, integrand, params, zero, theta_bound_c, prec, tol,
+      acb_calc_integrate(norm_part, integrand, params, zero, theta_bound_c, prec, tol,
                          NULL, prec_local);
       prec_local *= 2;
-    } while (!acb_is_finite(tmp_c));
-
-    /* Multiply with the integral corresponding to phi */
-    arb_mul(norm_part, acb_realref(tmp_c), integral_phi, prec);
-
-    /* Multiply with the coefficient */
-    arb_sqr(tmp, coefs + i, prec);
-    arb_mul(norm_part, norm_part, tmp, prec);
+    } while (!acb_is_finite(norm_part));
 
     /* Add to the norm */
-    arb_add(norm, norm, norm_part, prec);
-
+    arb_add(norm, norm, acb_realref(norm_part), prec);
   }
+  /* Multiply with the integral corresponding to phi */
+  arb_mul(norm, norm, integral_phi, prec);
+
   arb_sqrt(norm, norm, prec);
 
   acb_clear(zero);
   acb_clear(theta_bound_c);
-  acb_clear(tmp_c);
+  acb_clear(norm_part);
 
   _acb_vec_clear(params, 3);
 
   arb_clear(integral_phi);
   arb_clear(mu);
-  arb_clear(norm_part);
   arb_clear(tmp);
 }
 
