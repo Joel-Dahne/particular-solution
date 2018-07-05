@@ -7,16 +7,16 @@
 using namespace std;
 
 static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
-                                  int angles_coefs[], slong prec) {
+                                  arb_t critical_point, int angles_coefs[],
+                                  slong prec) {
   arb_ptr angles, w;
-  arb_t S, theta1, theta2, critical_point, tmp, tmp2, tmp_dot;
+  arb_t S, theta1, theta2, tmp, tmp2, tmp_dot;
 
   angles = _arb_vec_init(3);
   w = _arb_vec_init(3);
   arb_init(S);
   arb_init(theta1);
   arb_init(theta2);
-  arb_init(critical_point);
   arb_init(tmp);
   arb_init(tmp2);
   arb_init(tmp_dot);
@@ -103,7 +103,12 @@ static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
   /* The critical point */
   arb_div(critical_point, critical_point, tmp, prec);
 
-  /* Compute the angle corresponding to the critical point */
+  /* If the critical point is in the interval [0, 1] compute the angle
+   * corresponding to the critical point */
+  arb_sub_si(tmp, critical_point, 1, prec);
+  if (!(arb_contains_positive(critical_point) && arb_contains_negative(tmp)))
+    arb_set_si(critical_point, 0);
+
   _arb_vec_scalar_mul(w, w, 3, critical_point, prec);
   _arb_vec_add(w, v1, w, 3, prec);
   _arb_vec_dot(tmp_dot, w, w, 3, prec);
@@ -122,7 +127,6 @@ static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
   arb_clear(S);
   arb_clear(theta1);
   arb_clear(theta2);
-  arb_clear(critical_point);
   arb_clear(tmp);
   arb_clear(tmp2);
   arb_clear(tmp_dot);
@@ -197,7 +201,6 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   arb_neg(integral_phi, integral_phi);
 
   for (slong i = 0; i < N; i++) {
-
     /* params[1] = mu */
     arb_mul_si(acb_realref(params + 1), mu0, index(i), prec);
 
@@ -234,21 +237,30 @@ static void integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   arb_clear(tmp);
 }
 
-static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
-                                       slong N, arb_ptr v1, arb_ptr v2,
-                                       arb_t nu, arb_t mu0,
-                                       int (*index)(int), slong prec) {
+/* It is important that the parametrization we have is good and
+ * does not create larger balls then necessary. */
+static void parametrization(arb_t z, arb_t phi, arf_t t_low, arf_t t_upp,
+                             arb_ptr v1, arb_ptr v2, arb_t critical_point,
+                             slong prec) {
   arb_ptr w;
-  arb_t norm_w, phi, mu, term, tmp;
-  slong prec_local;
+  arb_t t, norm_w, z_low, z_upp, z_critical, tmp;
+  arf_t phi_low, phi_upp, tmp2;
+  int contains_critical;
 
   w = _arb_vec_init(3);
-
+  arb_init(t);
   arb_init(norm_w);
-  arb_init(phi);
-  arb_init(mu);
-  arb_init(term);
+  arb_init(z_low);
+  arb_init(z_upp);
+  arb_init(z_critical);
   arb_init(tmp);
+
+  arf_init(phi_low);
+  arf_init(phi_upp);
+  arf_init(tmp2);
+
+  /* Compute with the lower point */
+  arf_set(arb_midref(t), t_low);
 
   _arb_vec_sub(w, v2, v1, 3, prec);
   _arb_vec_scalar_mul(w, w, 3, t, prec);
@@ -258,18 +270,87 @@ static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
   arb_sqrt(norm_w, norm_w, prec);
   _arb_vec_scalar_div(w, w, 3, norm_w, prec);
 
-  arb_atan2(phi, w + 1, w + 0, prec);
+  arb_atan2(tmp, w + 1, w + 0, prec);
+  arb_get_lbound_arf(phi_low, tmp, prec); // phi for the lower point
+  arb_set(z_low, w + 2); // z for the lower point
 
-  //flint_printf("Parameters: \n");
-  //flint_printf("phi = "); arb_printn(phi, 10, 0); flint_printf("\n");
+  /* Compute with the upper point */
+  arf_set(arb_midref(t), t_upp);
 
+  _arb_vec_sub(w, v2, v1, 3, prec);
+  _arb_vec_scalar_mul(w, w, 3, t, prec);
+  _arb_vec_add(w, v1, w, 3, prec);
+
+  _arb_vec_dot(norm_w, w, w, 3, prec);
+  arb_sqrt(norm_w, norm_w, prec);
+  _arb_vec_scalar_div(w, w, 3, norm_w, prec);
+
+  arb_atan2(tmp, w + 1, w + 0, prec);
+  arb_get_lbound_arf(phi_upp, tmp, prec); // phi for the upper point
+  arb_set(z_upp, w + 2); // z for the upper point
+
+  /* Compute with the critical point if relevant */
+  arf_set(arb_midref(tmp), t_low);
+  contains_critical = !arb_gt(tmp, critical_point); // t_low < critical_point
+  arf_set(arb_midref(tmp), t_upp);
+  contains_critical &= !arb_lt(tmp, critical_point); // t_low > critical_point
+
+  if (contains_critical) {
+    _arb_vec_sub(w, v2, v1, 3, prec);
+    _arb_vec_scalar_mul(w, w, 3, t, prec);
+    _arb_vec_add(w, v1, w, 3, prec);
+
+    _arb_vec_dot(norm_w, w, w, 3, prec);
+    arb_sqrt(norm_w, norm_w, prec);
+    _arb_vec_scalar_div(w, w, 3, norm_w, prec);
+
+    arb_atan2(tmp, w + 1, w + 0, prec);
+    arb_set(z_critical, w + 2); // z for the critical point
+  }
+
+  /* phi is strictly increasing so is contained in the ball having
+   * endpoints phi_low and phi_upp */
+  arb_set_interval_arf(phi, phi_low, phi_upp, prec);
+
+  /* z is not strictly increasing but has only one critical point. If
+   * the critical point is not in the interval it is contained in the
+   * ball having endpoint z_low and z_upp (not necessarily in that
+   * order). If the critical point is contained in the interval we
+   * take the ball containing all three values. */
+  arb_union(z, z_low, z_upp, prec);
+  if (contains_critical)
+    arb_union(z, z, z_critical, prec);
+
+  _arb_vec_clear(w, 3);
+  arb_clear(t);
+  arb_clear(norm_w);
+  arb_clear(z_low);
+  arb_clear(z_upp);
+  arb_clear(z_critical);
+  arb_clear(tmp);
+
+  arf_clear(phi_low);
+  arf_clear(phi_upp);
+  arf_clear(tmp2);
+}
+
+static void eigenfunction(arb_t res, arb_t z, arb_t phi,
+                                       arb_ptr coefs, slong N, arb_t nu,
+                                       arb_t mu0, int (*index)(int),
+                                       slong prec) {
+  arb_t mu, term, tmp;
+  slong prec_local;
+
+  arb_init(mu);
+  arb_init(term);
+  arb_init(tmp);
 
   for (slong i = 0; i < N; i++) {
     arb_mul_si(mu, mu0, index(i), prec);
 
     prec_local = prec;
     do {
-      arb_hypgeom_legendre_p(term, nu, mu, w + 2, 0, prec_local);
+      arb_hypgeom_legendre_p(term, nu, mu, z, 0, prec_local);
       prec_local *=2;
     } while (!arb_is_finite(term) && prec_local <= 16*prec);
 
@@ -282,27 +363,29 @@ static void eigenfunction_parametrized(arb_t res, arb_t t, arb_ptr coefs,
     arb_add(res, res, term, prec);
   }
 
-  //flint_printf("res = "); arb_printn(res, 10, 0); flint_printf("\n");
-
-  _arb_vec_clear(w, 3);
-
-  arb_clear(norm_w);
-  arb_clear(phi);
   arb_clear(mu);
   arb_clear(term);
   arb_clear(tmp);
 }
 
 static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
-                     arb_ptr v2, arb_t nu, arb_t mu0, int (*index)(int),
-                     slong prec) {
-  arb_ptr intervals, evals, next_intervals;
+                     arb_ptr v2, arb_t critical_point, arb_t nu, arb_t mu0,
+                     int (*index)(int), slong prec) {
+  arb_ptr evals;
+  arb_t z, phi;
+  arf_t *intervals_low, *next_intervals_low, *intervals_upp, *next_intervals_upp;
   arf_t t_low, t_upp, max_low, max_upp, tmp;
   mag_t tol;
   slong num_intervals, next_num_intervals;
   int k, done;
 
-  intervals = _arb_vec_init(1);
+  intervals_low = new arf_t[1];
+  intervals_upp = new arf_t[1];
+  arf_init(intervals_low[0]);
+  arf_init(intervals_upp[0]);
+
+  arb_init(z);
+  arb_init(phi);
 
   arf_init(t_low);
   arf_init(t_upp);
@@ -314,10 +397,8 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 
   mag_set_ui_2exp_si(tol, 1, -16);
 
-  arf_set_si(t_low, 0);
-  arf_set_si(t_upp, 1);
-
-  arb_set_interval_arf(intervals + 0, t_low, t_upp, prec);
+  arf_set_si(intervals_low[0], 0);
+  arf_set_si(intervals_upp[0], 1);
 
   num_intervals = 1;
 
@@ -326,7 +407,8 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 
   while (!done) {
     evals = _arb_vec_init(num_intervals);
-    next_intervals = _arb_vec_init(num_intervals*2);
+    next_intervals_low = new arf_t[num_intervals*2];
+    next_intervals_upp = new arf_t[num_intervals*2];
 
     arf_zero(max_low);
     arf_zero(max_upp);
@@ -337,8 +419,9 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
     /* Compute the eigenfunction on the intervals and update the bound
      * for the maximum */
     for (slong i = 0; i < num_intervals; i++) {
-      eigenfunction_parametrized(evals + i, intervals + i, coefs, N, v1, v2, nu,
-                                 mu0, index, prec);
+      parametrization(z, phi, intervals_low[i], intervals_upp[i], v1, v2,
+                       critical_point, prec);
+      eigenfunction(evals + i, z, phi, coefs, N, nu, mu0, index, prec);
       if (arb_is_finite(evals + i)){
         arb_get_abs_ubound_arf(tmp, evals + i, prec);
         arf_max(max_upp, max_upp, tmp);
@@ -349,7 +432,7 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 
     /* Check if done */
     arf_sub(tmp, max_upp, max_low, prec, ARF_RND_UP);
-    if (!(k < 40) ||
+    if (!(k < 15) ||
         ((arf_cmpabs_mag(tmp, tol) <= 0) && arf_cmp_si(max_upp, 0) > 0)) {
       done = 1;
     } else {
@@ -358,26 +441,50 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
         arb_get_abs_ubound_arf(tmp, evals + i, prec);
         if (arf_is_nan(tmp) || (arf_cmp(tmp, max_low) >= 0)) {
           /* Split the interval */
-          arb_get_lbound_arf(t_low, intervals + i, prec);
-          arb_get_ubound_arf(t_upp, intervals + i, prec);
-          arb_set_interval_arf(next_intervals + next_num_intervals, t_low,
-                               arb_midref(intervals + i), prec);
-          arb_set_interval_arf(next_intervals + next_num_intervals + 1,
-                               arb_midref(intervals + i), t_upp, prec);
+          arf_init(next_intervals_low[next_num_intervals]);
+          arf_init(next_intervals_low[next_num_intervals + 1]);
+          arf_init(next_intervals_upp[next_num_intervals]);
+          arf_init(next_intervals_upp[next_num_intervals + 1]);
+
+          arf_add(tmp, intervals_low[i], intervals_upp[i], prec, ARF_RND_NEAR);
+          arf_div_si(tmp, tmp, 2, prec, ARF_RND_NEAR);
+          arf_set(next_intervals_low[next_num_intervals], intervals_low[i]); // Lower
+          arf_set(next_intervals_upp[next_num_intervals], tmp);              // Mid
+          arf_set(next_intervals_low[next_num_intervals + 1], tmp);          // Mid
+          arf_set(next_intervals_upp[next_num_intervals + 1], intervals_upp[i]); // Upper
+
           next_num_intervals += 2;
         }
       }
     }
 
     _arb_vec_clear(evals, num_intervals);
-    _arb_vec_clear(intervals, num_intervals);
-    intervals = next_intervals;
+
+    for (slong i = 0; i < num_intervals; i++) {
+      arf_clear(intervals_low[i]);
+      arf_clear(intervals_upp[i]);
+    }
+    delete [] intervals_low;
+    delete [] intervals_upp;
+
+    intervals_low = next_intervals_low;
+    intervals_upp = next_intervals_upp;
+
     num_intervals = next_num_intervals;
   }
 
   arb_set_arf(max, max_upp);
 
-  _arb_vec_clear(intervals, num_intervals);
+  for (slong i = 0; i < num_intervals; i++) {
+    arf_clear(intervals_low[i]);
+    arf_clear(intervals_upp[i]);
+  }
+
+  delete [] intervals_low;
+  delete [] intervals_upp;
+
+  arb_clear(z);
+  arb_clear(phi);
 
   arf_clear(t_low);
   arf_clear(t_upp);
@@ -389,7 +496,7 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
              mpfr_t nu_mpfr, int (*index)(int)) {
   arb_ptr v1, v2, coefs;
-  arb_t eps, nu, mu0, theta_bound, norm, max, tmp;
+  arb_t eps, nu, mu0, theta_bound, critical_point, norm, max, tmp;
   arf_t eps_upp;
   slong prec;
 
@@ -401,6 +508,7 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_init(nu);
   arb_init(mu0);
   arb_init(theta_bound);
+  arb_init(critical_point);
   arb_init(norm);
   arb_init(max);
   arb_init(tmp);
@@ -416,7 +524,7 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
 
   /* Compute enclosures of the required parameters */
-  angles_to_vectors_arb(v1, v2, theta_bound, angles_coefs, prec);
+  angles_to_vectors_arb(v1, v2, theta_bound, critical_point, angles_coefs, prec);
 
   arb_set_si(mu0, -angles_coefs[1]);
   arb_div_si(mu0, mu0, angles_coefs[0], prec);
@@ -424,7 +532,7 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   /* Compute an enclosure of a lower bound of the norm */
   integral_norm(norm, coefs, N, theta_bound, nu, mu0, index, prec);
 
-  maximize(max, coefs, N, v1, v2, nu, mu0, index, prec);
+  maximize(max, coefs, N, v1, v2, critical_point, nu, mu0, index, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++) {
@@ -451,6 +559,7 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_clear(nu);
   arb_clear(mu0);
   arb_clear(theta_bound);
+  arb_clear(critical_point);
   arb_clear(norm);
   arb_clear(max);
   arb_clear(tmp);
