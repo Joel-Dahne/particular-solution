@@ -6,9 +6,9 @@
 
 using namespace std;
 
-static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
-                                  arb_t critical_point, int angles_coefs[],
-                                  slong prec) {
+static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound_low,
+                                  arb_t theta_bound_upp, arb_t critical_point,
+                                  int angles_coefs[], slong prec) {
   arb_ptr angles, w;
   arb_t S, theta1, theta2, tmp, tmp2, tmp_dot;
 
@@ -118,9 +118,12 @@ static void angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound,
   arb_acos(tmp, tmp, prec);
 
 
-  /* Compute the minimum angle */
-  arb_min(theta_bound, theta1, theta2, prec);
-  arb_min(theta_bound, theta_bound, tmp, prec);
+  /* Compute the minimum theta value */
+  arb_min(theta_bound_low, theta1, theta2, prec);
+  arb_min(theta_bound_low, theta_bound_low, tmp, prec);
+  /* Compute the maximum theta value */
+  arb_max(theta_bound_upp, theta1, theta2, prec);
+  arb_max(theta_bound_upp, theta_bound_upp, tmp, prec);
 
   _arb_vec_clear(angles, 3);
   _arb_vec_clear(w, 3);
@@ -498,7 +501,8 @@ static void maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1,
 void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
              mpfr_t nu_mpfr, int (*index)(int)) {
   arb_ptr v1, v2, coefs;
-  arb_t eps, nu, mu0, theta_bound, critical_point, norm, max, tmp;
+  arb_t eps, nu, mu0, theta_bound_low, theta_bound_upp, critical_point, norm,
+    max, tmp;
   arf_t eps_upp;
   slong prec;
 
@@ -509,7 +513,8 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_init(eps);
   arb_init(nu);
   arb_init(mu0);
-  arb_init(theta_bound);
+  arb_init(theta_bound_low);
+  arb_init(theta_bound_upp);
   arb_init(critical_point);
   arb_init(norm);
   arb_init(max);
@@ -526,14 +531,14 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
 
   /* Compute enclosures of the required parameters */
-  angles_to_vectors_arb(v1, v2, theta_bound, critical_point, angles_coefs, prec);
+  angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
+                        critical_point, angles_coefs, prec);
 
   arb_set_si(mu0, -angles_coefs[1]);
   arb_div_si(mu0, mu0, angles_coefs[0], prec);
 
   /* Compute an enclosure of a lower bound of the norm */
-  integral_norm(norm, coefs, N, theta_bound, nu, mu0, index, prec);
-
+  integral_norm(norm, coefs, N, theta_bound_low, nu, mu0, index, prec);
   maximize(max, coefs, N, v1, v2, critical_point, nu, mu0, index, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
@@ -560,7 +565,8 @@ void enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_clear(eps);
   arb_clear(nu);
   arb_clear(mu0);
-  arb_clear(theta_bound);
+  arb_clear(theta_bound_low);
+  arb_clear(theta_bound_upp);
   arb_clear(critical_point);
   arb_clear(norm);
   arb_clear(max);
