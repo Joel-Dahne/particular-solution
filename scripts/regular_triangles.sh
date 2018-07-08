@@ -8,8 +8,9 @@ end="8" # End value for N
 tol="1e-10" # Tolerance to use in the minimization
 wid="1e-4" # Width of the interval around the initial guess
 prec="53" # Precision to use
+type="2"
 
-args="-b $beg -s $step -e $end -t $tol -w $wid -p $prec"
+args="-b $beg -s $step -e $end -t $tol -w $wid -p $prec -o $type"
 dir="data/eigen_"$beg"_"$step"_"$end"_"$tol"_"$wid"_"$prec
 prog="build/particular-solution"
 
@@ -23,6 +24,7 @@ echo "end = "$end   >> $dir/parameters
 echo "tol = "$tol   >> $dir/parameters
 echo "wid = "$wid   >> $dir/parameters
 echo "prec = "$prec >> $dir/parameters
+echo "type = "$type >> $dir/parameters
 
 # This one has some problem at the moment
 #echo "nohup $prog $args -n 3.056691018 -- 3 4 1 3 1 2 &> $dir/3_4_1_3_1_2 &"
