@@ -32,14 +32,14 @@ struct Points {
 
  nu - Value of nu to use in the computations
  */
-mpreal sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
-             mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
+mpreal sigma(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu, mpfr_t mu0,
+             int (*index)(int)) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
   mpreal *A_arr_mpreal;
   A_arr_mpreal = new mpreal[(points.boundary + points.interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_arr, points, scaling, N, nu, mu0,
+  generate_matrix(A_arr, points, N, nu, mu0,
                   index);
 
   // Create an array of mpreals with the same values
@@ -63,15 +63,13 @@ mpreal sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
 }
 
 void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, struct Points points,
-                 mpfr_t *scaling, int N, mpfr_t nu, mpfr_t mu0,
-                 int (*index)(int)) {
+                 int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
   mpreal *A_arr_mpreal;
   A_arr_mpreal = new mpreal[(points.boundary + points.interior)*N];
 
   // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_arr, points, scaling, N, nu, mu0,
-                  index);
+  generate_matrix(A_arr, points, N, nu, mu0, index);
 
   // Create an array of mpreals with the same values
   for (int i = 0; i < (points.boundary + points.interior)*N; i++) {
@@ -92,10 +90,6 @@ void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, struct Points points,
   MatrixXmp coefs;
 
   coefs = qr.solve(Q*(svd.matrixV().col(N-1)));
-
-  for (int i = 0; i < N; i++) {
-    coefs(i) *= mpreal(scaling[i]);
-  }
 
   coefs /= coefs(0);
 

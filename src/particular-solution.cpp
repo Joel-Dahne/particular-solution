@@ -15,9 +15,8 @@
 using namespace std;
 using namespace mpfr;
 
-void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
-                    mpfr_t a, mpfr_t b, mpfr_t mu0, mpreal tol,
-                    int (*index)(int)) {
+void minimize_sigma(mpfr_t *A_arr, struct Points points, int N, mpfr_t a,
+                    mpfr_t b, mpfr_t mu0, mpreal tol, int (*index)(int)) {
   mpfr_t c, d;
   mpreal invphi, invphi2, h, yc, yd;
   int n;
@@ -37,8 +36,8 @@ void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
   mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
   mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
-  yc = sigma(A_arr, points, scaling, N, c, mu0, index);
-  yd = sigma(A_arr, points, scaling, N, d, mu0, index);
+  yc = sigma(A_arr, points, N, c, mu0, index);
+  yd = sigma(A_arr, points, N, d, mu0, index);
 
   for (int k = 0; k < n; k++) {
     if (yc < yd) {
@@ -47,14 +46,14 @@ void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
       yd = yc;
       h = invphi*h;
       mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-      yc = sigma(A_arr, points, scaling, N, c, mu0, index);
+      yc = sigma(A_arr, points, N, c, mu0, index);
     } else {
       mpfr_set(a, c, MPFR_RNDN);
       mpfr_set(c, d, MPFR_RNDN);
       yc = yd;
       h = invphi*h;
       mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-      yd = sigma(A_arr, points, scaling, N, d, mu0, index);
+      yd = sigma(A_arr, points, N, d, mu0, index);
     }
   }
 
@@ -70,9 +69,8 @@ void minimize_sigma(mpfr_t *A_arr, struct Points points, mpfr_t *scaling, int N,
 }
 
 void particular_solution(struct Geometry geometry, int angles_coefs[],
-                         mpfr_t *scaling, mpfr_t mu0, mpfr_t nu_low,
-                         mpfr_t nu_upp, mpfr_t tol, int N, int (*index)(int),
-                         int output) {
+                         mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp, mpfr_t tol,
+                         int N, int (*index)(int), int output) {
 
   mpfr_t *A_arr, *coefs, *values;
   mpfr_t mu, nu_step, nu, eps;
@@ -120,7 +118,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
       mpfr_set(nu, nu_step, MPFR_RNDN);
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
-      s = sigma(A_arr, points, scaling, N, nu, mu0, index);
+      s = sigma(A_arr, points, N, nu, mu0, index);
       cout << mpreal(nu) << " " << s << endl;
     }
   }
@@ -128,8 +126,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
   if (output > 0) {
     // Find the value of nu that minimizes sigma
 
-    minimize_sigma(A_arr, points, scaling, N, nu_low, nu_upp, mu0,
-                   mpreal(tol), index);
+    minimize_sigma(A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol), index);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
@@ -141,7 +138,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
       cout << endl;
 
     // Find the coefficients of the expansion
-    coefs_sigma(coefs, A_arr, points, scaling, N, nu, mu0, index);
+    coefs_sigma(coefs, A_arr, points, N, nu, mu0, index);
 
     if (output == 1)
       // Print the coefficients for the eigenfunction
@@ -201,8 +198,8 @@ int index_function_all(int k) {
 }
 
 int main(int argc, char *argv[]) {
-  mpfr_t angles[3], *scaling;
-  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, mu, tol;
+  mpfr_t angles[3];
+  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
@@ -306,7 +303,6 @@ Options are:\n\
   mpfr_init(nu_width);
   mpfr_init(nu_low);
   mpfr_init(nu_upp);
-  mpfr_init(mu);
   mpfr_init(tol);
 
   mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
@@ -349,25 +345,12 @@ Options are:\n\
 
   angles_to_vectors(geometry, angles);
 
-  scaling = new mpfr_t[N_end];
-  for (int i = 0; i < N_end; i++) {
-    mpfr_init(scaling[i]);
-    mpfr_mul_si(mu, mu0, index_function(i), MPFR_RNDN);
-    scale_norm(scaling[i], geometry.theta_bound, nu_guess, mu);
-  }
-
   for (int N = N_beg; N <= N_end; N+=N_step) {
     mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
     mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
-    particular_solution(geometry, angles_coefs, scaling, mu0, nu_low, nu_upp,
-                        tol, N, index_function, output);
+    particular_solution(geometry, angles_coefs, mu0, nu_low, nu_upp, tol, N,
+                        index_function, output);
   }
-
-  for (int i = 0; i < N_end; i++) {
-    mpfr_clear(scaling[i]);
-  }
-
-  delete [] scaling;
 
   for (int i = 0; i < 3; i++) {
     mpfr_clear(angles[i]);
@@ -380,7 +363,6 @@ Options are:\n\
   mpfr_init(nu_width);
   mpfr_init(nu_low);
   mpfr_init(nu_upp);
-  mpfr_clear(mu);
   mpfr_clear(tol);
 
   return 0;

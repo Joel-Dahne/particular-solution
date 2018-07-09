@@ -40,47 +40,8 @@ int integrand(acb_ptr out, const acb_t inp, void *param, slong order,
   return 0;
 }
 
-void scale_norm(mpfr_t mpfr_scaling, mpfr_t mpfr_theta_bound,
-                mpfr_t mpfr_nu, mpfr_t mpfr_mu) {
-  acb_ptr params;
-  acb_t scaling, zero, theta_bound;
-  mag_t tol;
-  slong prec;
-
-  params = _acb_vec_init(3);
-  acb_init(scaling);
-  acb_init(zero);
-  acb_init(theta_bound);
-  mag_init(tol);
-
-  prec = mpfr_get_default_prec();
-
-  // The parameters are [nu, mu, tmp]
-  arf_set_mpfr(arb_midref(acb_realref(params)), mpfr_nu);
-  arf_set_mpfr(arb_midref(acb_realref(params + 1)), mpfr_mu);
-
-  arb_set_str(acb_realref(zero), "1e-1", prec);
-  arf_set_mpfr(arb_midref(acb_realref(theta_bound)), mpfr_theta_bound);
-
-  mag_zero(tol);
-  do {
-    acb_calc_integrate(scaling, integrand, params, zero, theta_bound, 16, tol,
-                       NULL, prec);
-    prec *= 2;
-  } while (!acb_is_finite(scaling));
-
-  arf_get_mpfr(mpfr_scaling, arb_midref(acb_realref(scaling)), MPFR_RNDN);
-  mpfr_rec_sqrt(mpfr_scaling, mpfr_scaling, MPFR_RNDN);
-
-  _acb_vec_clear(params, 3);
-  acb_clear(scaling);
-  acb_clear(zero);
-  acb_clear(theta_bound);
-  mag_clear(tol);
-}
-
-void generate_matrix(mpfr_t *A_arr, struct Points points, mpfr_t *scaling,
-                     int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
+void generate_matrix(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu,
+                     mpfr_t mu0, int (*index)(int)) {
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, res;
   slong prec, prec_local, n;
 
@@ -118,7 +79,6 @@ void generate_matrix(mpfr_t *A_arr, struct Points points, mpfr_t *scaling,
       arb_mul(res, res, tmp, prec);
 
       arf_get_mpfr(A_arr[j*n + i], arb_midref(res), MPFR_RNDN);
-      mpfr_mul(A_arr[j*n + i], A_arr[j*n + i], scaling[j], MPFR_RNDN);
     }
   }
 
