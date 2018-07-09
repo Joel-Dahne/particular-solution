@@ -33,9 +33,9 @@ echo "nohup $prog $args -n 3.240902298 -- 2 3 1 3 1 2 &> $dir/2_3_1_3_1_2 &"
 nohup $prog $args -n 3.240902298 -- 2 3 1 3 1 2 &> $dir/2_3_1_3_1_2 &
 echo "nohup $prog $args -n 4.063109028 -- 2 3 1 4 1 2 &> $dir/2_3_1_4_1_2 &"
 nohup $prog $args -n 4.063109028 -- 2 3 1 4 1 2 &> $dir/2_3_1_4_1_2 &
-echo "nohup $prog $args -n 4.143210850 -- 2 3 1 3 1 3 &> $dir/2_3_1_3_1_3 &"
-nohup $prog $args -n 4.143210850 -- 2 3 1 3 1 3 &> $dir/2_3_1_3_1_3 &
+echo "nohup $prog $args -h -i -n 4.143210850 -- 2 3 1 3 1 3 &> $dir/2_3_1_3_1_3 &"
+nohup $prog $args -h -i -n 4.143210850 -- 2 3 1 3 1 3 &> $dir/2_3_1_3_1_3 &
 echo "nohup $prog $args -n 4.470604591 -- 3 4 1 4 1 3 &> $dir/3_4_1_4_1_3 &"
 nohup $prog $args -n 4.470604591 -- 3 4 1 4 1 3 &> $dir/3_4_1_4_1_3 &
-echo "nohup $prog $args -n 6.525663100 -- 2 3 1 4 1 4 &> $dir/2_3_1_4_1_4 &"
-nohup $prog $args -n 6.525663100 -- 2 3 1 4 1 4 &> $dir/2_3_1_4_1_4 &
+echo "nohup $prog $args -h -i -n 6.525663100 -- 2 3 1 4 1 4 &> $dir/2_3_1_4_1_4 &"
+nohup $prog $args -h -i -n 6.525663100 -- 2 3 1 4 1 4 &> $dir/2_3_1_4_1_4 &
