@@ -15,14 +15,20 @@
 using namespace std;
 using namespace mpfr;
 
-void minimize_sigma(mpfr_t *A_arr, struct Points points, int N, mpfr_t a,
-                    mpfr_t b, mpfr_t mu0, mpreal tol, int (*index)(int)) {
-  mpfr_t c, d;
+void minimize_sigma(mpfr_t nu, mpfr_t *A_arr, struct Points points, int N,
+                    mpfr_t nu_low, mpfr_t nu_upp, mpfr_t mu0, mpreal tol,
+                    int (*index)(int)) {
+  mpfr_t a, b, c, d;
   mpreal invphi, invphi2, h, yc, yd;
   int n;
 
+  mpfr_init(a);
+  mpfr_init(b);
   mpfr_init(c);
   mpfr_init(d);
+
+  mpfr_set(a, nu_low, MPFR_RNDN);
+  mpfr_set(b, nu_upp, MPFR_RNDN);
 
   invphi = (sqrt(5) - 1)/2;
   invphi2 = (3 - sqrt(5))/2;
@@ -64,6 +70,11 @@ void minimize_sigma(mpfr_t *A_arr, struct Points points, int N, mpfr_t a,
     mpfr_set(d, b, MPFR_RNDN);
   }
 
+  mpfr_add(nu, a, b, MPFR_RNDN);
+  mpfr_div_si(nu, nu, 2, MPFR_RNDN);
+
+  mpfr_clear(a);
+  mpfr_clear(b);
   mpfr_clear(c);
   mpfr_clear(d);
 }
@@ -123,10 +134,8 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     }
   } else {
     // Find the value of nu that minimizes sigma
-    minimize_sigma(A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol), index);
-
-    mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
-    mpfr_div_si(nu, nu, 2, MPFR_RNDN);
+    minimize_sigma(nu, A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol),
+                   index);
 
     cout << N;
     if (output <= 3) {
@@ -348,9 +357,10 @@ Options are:\n\
 
   angles_to_vectors(geometry, angles);
 
+  mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
+  mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
+
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
-    mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
     particular_solution(geometry, angles_coefs, mu0, nu_low, nu_upp, tol, N,
                         index_function, output);
   }
