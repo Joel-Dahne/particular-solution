@@ -140,7 +140,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     cout << N;
     if (output <= 3) {
       cout << " " << mpreal(nu);
-      if (output == 2)
+      if (output == 3)
         cout << " " << points_eigen.boundary << endl;
       else
         cout << endl;
