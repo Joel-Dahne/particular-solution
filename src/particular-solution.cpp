@@ -121,49 +121,50 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
       s = sigma(A_arr, points, N, nu, mu0, index);
       cout << mpreal(nu) << " " << s << endl;
     }
-  }
-
-  if (output > 0) {
+  } else {
     // Find the value of nu that minimizes sigma
-
     minimize_sigma(A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol), index);
 
     mpfr_add(nu, nu_low, nu_upp, MPFR_RNDN);
     mpfr_div_si(nu, nu, 2, MPFR_RNDN);
 
-    cout << N << " " << mpreal(nu);
-    if (output == 2)
-      cout << " " << points_eigen.boundary << endl;
-    else
-      cout << endl;
-
-    // Find the coefficients of the expansion
-    coefs_sigma(coefs, A_arr, points, N, nu, mu0, index);
-
-    if (output == 1)
-      // Print the coefficients for the eigenfunction
-      for (int i = 0; i < N; i++) {
-        cout << mpreal(coefs[i]) << endl;
-      }
-
-    if (output == 2) {
-      // Plotting the eigenfunction
-      boundary(points_eigen, geometry);
-      eigenfunction(values, coefs, points_eigen, N, nu, mu0, index);
-
-      for (int i = 0; i < points_eigen.boundary; i++) {
-        cout << mpreal(points_eigen.phis[i]) << " " << mpreal(values[i]) << endl;
-      }
+    cout << N;
+    if (output <= 3) {
+      cout << " " << mpreal(nu);
+      if (output == 2)
+        cout << " " << points_eigen.boundary << endl;
+      else
+        cout << endl;
     }
 
-    if (output == 3) {
-      // Compute an enclosure for the eigenfunction This part is not
-      // completely safe to rounding errors, the lower bound should be
-      // rounded down and the upper bound up.
-      enclose(eps, angles_coefs, coefs, N, nu, index);
-      cout << mpreal(eps) << endl
-           << mpreal(nu)*(1 + mpreal(nu))/(1 + mpreal(eps)) << " "
-           << mpreal(nu)*(1 + mpreal(nu))/(1 - mpreal(eps)) << endl;
+    if (output >= 2) {
+      // Find the coefficients of the expansion
+      coefs_sigma(coefs, A_arr, points, N, nu, mu0, index);
+
+      if (output == 2) {
+        // Print the coefficients for the eigenfunction
+        for (int i = 0; i < N; i++) {
+          cout << mpreal(coefs[i]) << endl;
+        }
+      }
+
+      if (output == 3) {
+        // Plot the eigenfunction
+        boundary(points_eigen, geometry);
+        eigenfunction(values, coefs, points_eigen, N, nu, mu0, index);
+
+        for (int i = 0; i < points_eigen.boundary; i++) {
+          cout << mpreal(points_eigen.phis[i]) << " " << mpreal(values[i]) << endl;
+        }
+      }
+
+      if (output == 4) {
+        // Compute an enclosure of the eigenvalue. To be sure to get
+        // correct output of the eigenvalue the output of it is
+        // handled inside the function enclose.
+        enclose(eps, angles_coefs, coefs, N, nu, index);
+        cout << endl;
+      }
     }
   }
   /* Clear all variables */
@@ -223,8 +224,10 @@ Options are:\n\
   -p <value> - set the working precision to this (default 53)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
-               1: Output the coefficients of the expansions\n\
-               2: Output data for plotting the approximate eigenfunctions\n\
+               1: Output the nu value minimizing sigma\n\
+               2: Output the coefficients of the expansions\n\
+               3: Output data for plotting the approximate eigenfunctions\n\
+               4: Output the validated enclosure\n\
   -b <value> - start value for N (default 4)\n\
   -e <value> - end value for N (default 16)\n\
   -s <value> - step size for N (default 2)\n\
@@ -233,7 +236,7 @@ Options are:\n\
 
   // Set default values for parameters
   prec = 53;
-  output = 2;
+  output = 1;
   N_beg = 4;
   N_end = 16;
   N_step = 2;
