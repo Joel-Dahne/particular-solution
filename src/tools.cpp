@@ -128,14 +128,15 @@ angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
   mpfr_clear(tmp2);
 }
 
-void boundary(struct Points points, struct Geometry g) {
+void
+boundary(struct Points points, struct Geometry g)
+{
   mpfr_t arcx, arcy, arcz, t, norm, tmp;
   int n;
 
   mpfr_init(arcx);
   mpfr_init(arcy);
   mpfr_init(arcz);
-
   mpfr_init(t);
   mpfr_init(norm);
   mpfr_init(tmp);
@@ -182,19 +183,19 @@ void boundary(struct Points points, struct Geometry g) {
   mpfr_clear(arcx);
   mpfr_clear(arcy);
   mpfr_clear(arcz);
-
   mpfr_clear(t);
   mpfr_clear(norm);
   mpfr_clear(tmp);
 }
 
-void interior(struct Points points, struct Geometry g) {
+void
+interior(struct Points points, struct Geometry g)
+{
   mpfr_t s, t, x, y, z, norm, tmp;
 
   mpfr_init(x);
   mpfr_init(y);
   mpfr_init(z);
-
   mpfr_init(s);
   mpfr_init(t);
   mpfr_init(norm);
@@ -263,7 +264,6 @@ void interior(struct Points points, struct Geometry g) {
   mpfr_clear(x);
   mpfr_clear(y);
   mpfr_clear(z);
-
   mpfr_clear(s);
   mpfr_clear(t);
   mpfr_clear(norm);
