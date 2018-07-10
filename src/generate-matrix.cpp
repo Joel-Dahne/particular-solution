@@ -43,6 +43,7 @@ int integrand(acb_ptr out, const acb_t inp, void *param, slong order,
 void generate_matrix(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu,
                      mpfr_t mu0, int (*index)(int)) {
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, res;
+  fmpz_t mu_int;
   slong prec, prec_local, n;
 
   arb_init(theta);
@@ -52,6 +53,8 @@ void generate_matrix(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu,
   arb_init(tmp);
   arb_init(tmp2);
   arb_init(res);
+
+  fmpz_init(mu_int);
 
   prec = mpfr_get_default_prec();
 
@@ -65,7 +68,9 @@ void generate_matrix(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu,
     arf_set_mpfr(arb_midref(phi), points.phis[i]);
     for (slong j = 0; j < N; j++) {
       arb_mul_si(tmp, arb_mu0, index(j), prec);
-
+      if (arb_get_unique_fmpz(mu_int, tmp)) {
+        arb_set_fmpz(tmp, mu_int);
+      }
       arb_cos(tmp2, theta, prec);
       prec_local = prec;
       do {
@@ -89,12 +94,15 @@ void generate_matrix(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu,
   arb_clear(tmp);
   arb_clear(tmp2);
   arb_clear(res);
+
+  fmpz_clear(mu_int);
 }
 
 void eigenfunction(mpfr_t *res, mpfr_t *coefs, struct Points points, int N,
                    mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   arb_ptr arb_coefs;
   arb_t theta, phi, arb_nu, arb_mu0, tmp, tmp2, term, sum;
+  fmpz_t mu_int;
   slong prec, prec_local;
 
   arb_coefs = _arb_vec_init(N);
@@ -106,6 +114,8 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs, struct Points points, int N,
   arb_init(tmp2);
   arb_init(term);
   arb_init(sum);
+
+  fmpz_init(mu_int);
 
   prec = mpfr_get_default_prec();
 
@@ -124,6 +134,9 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs, struct Points points, int N,
 
     for (slong j = 0; j < N; j++) {
       arb_mul_si(tmp, arb_mu0, index(j), prec);
+      if (arb_get_unique_fmpz(mu_int, tmp)) {
+        arb_set_fmpz(tmp, mu_int);
+      }
 
       arb_cos(tmp2, theta, prec);
       prec_local = prec;
@@ -153,4 +166,6 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs, struct Points points, int N,
   arb_clear(tmp2);
   arb_clear(term);
   arb_clear(sum);
+
+  fmpz_clear(mu_int);
 }
