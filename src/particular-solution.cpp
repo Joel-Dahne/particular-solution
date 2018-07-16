@@ -137,7 +137,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     minimize_sigma(nu, A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol),
                    index);
 
-    cout << N;
+    cout << N << flush;
     if (output <= 3) {
       cout << " " << mpreal(nu);
       if (output == 3)
