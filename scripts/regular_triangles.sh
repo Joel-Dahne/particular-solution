@@ -3,15 +3,15 @@
 
 # Parameters
 beg="4" # Starting value for N
-step="4" # Steps in N
-end="8" # End value for N
-tol="1e-10" # Tolerance to use in the minimization
+step="2" # Steps in N
+end="16" # End value for N
+tol="1e-5" # Relative tolerance to use in the minimization
 wid="1e-4" # Width of the interval around the initial guess
 prec="53" # Precision to use
-type="1" # Type of output
+type="4" # Type of output
 
 args="-b $beg -s $step -e $end -t $tol -w $wid -p $prec -o $type"
-dir="data/nus_"$beg"_"$step"_"$end"_"$tol"_"$wid"_"$prec
+dir="data/enclsures_"$beg"_"$step"_"$end"_"$tol"_"$wid"_"$prec
 prog="build/particular-solution"
 
 echo $args
