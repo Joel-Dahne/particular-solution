@@ -35,39 +35,38 @@ void minimize_sigma(mpfr_t nu, mpfr_t *A_arr, struct Points points, int N,
 
   h = mpreal(b) - mpreal(a);
 
-  if (h <= tol)
-    return;
+  if (h > tol) {
+    n = (int) ceil(log(tol/h)/log(invphi));
+    mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
+    mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
-  n = (int) ceil(log(tol/h)/log(invphi));
-  mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-  mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
+    yc = sigma(A_arr, points, N, c, mu0, index);
+    yd = sigma(A_arr, points, N, d, mu0, index);
 
-  yc = sigma(A_arr, points, N, c, mu0, index);
-  yd = sigma(A_arr, points, N, d, mu0, index);
+    for (int k = 0; k < n; k++) {
+      if (yc < yd) {
+        mpfr_set(b, d, MPFR_RNDN);
+        mpfr_set(d, c, MPFR_RNDN);
+        yd = yc;
+        h = invphi*h;
+        mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
+        yc = sigma(A_arr, points, N, c, mu0, index);
+      } else {
+        mpfr_set(a, c, MPFR_RNDN);
+        mpfr_set(c, d, MPFR_RNDN);
+        yc = yd;
+        h = invphi*h;
+        mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
+        yd = sigma(A_arr, points, N, d, mu0, index);
+      }
+    }
 
-  for (int k = 0; k < n; k++) {
     if (yc < yd) {
       mpfr_set(b, d, MPFR_RNDN);
-      mpfr_set(d, c, MPFR_RNDN);
-      yd = yc;
-      h = invphi*h;
-      mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-      yc = sigma(A_arr, points, N, c, mu0, index);
     } else {
       mpfr_set(a, c, MPFR_RNDN);
-      mpfr_set(c, d, MPFR_RNDN);
-      yc = yd;
-      h = invphi*h;
-      mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-      yd = sigma(A_arr, points, N, d, mu0, index);
+      mpfr_set(d, b, MPFR_RNDN);
     }
-  }
-
-  if (yc < yd) {
-    mpfr_set(b, d, MPFR_RNDN);
-  } else {
-    mpfr_set(a, c, MPFR_RNDN);
-    mpfr_set(d, b, MPFR_RNDN);
   }
 
   mpfr_add(nu, a, b, MPFR_RNDN);
@@ -171,8 +170,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
         // Compute an enclosure of the eigenvalue. To be sure to get
         // correct output of the eigenvalue the output of it is
         // handled inside the function enclose.
-        enclose(eps, angles_coefs, coefs, N, nu, index);
-        cout << endl;
+        enclose(nu_low, nu_upp, angles_coefs, coefs, N, nu, index);
       }
     }
   }

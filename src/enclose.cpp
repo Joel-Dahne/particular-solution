@@ -712,12 +712,11 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 }
 
 void
-enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
-        mpfr_t nu_mpfr, int (*index)(int)) {
+enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
+        int N, mpfr_t nu_mpfr, int (*index)(int)) {
   arb_ptr v1, v2, coefs;
   arb_t eps, nu, mu0, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
-  arf_t eps_upp;
   slong prec;
 
   v1 = _arb_vec_init(3);
@@ -734,8 +733,6 @@ enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_init(max);
   arb_init(eigenvalue);
   arb_init(tmp);
-
-  arf_init(eps_upp);
 
   prec = mpfr_get_default_prec();
 
@@ -782,9 +779,18 @@ enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
 
   flint_printf(" ");
   arb_printn(eigenvalue, (slong)ceil(prec*log10(2)), 0);
+  flint_printf("\n");
 
-  arb_get_abs_ubound_arf(eps_upp, eps, prec);
-  arf_get_mpfr(eps_mpfr, eps_upp, MPFR_RNDU);
+  /* Compute lower and upper bounds for the value of nu */
+  arb_set_si(nu, 1);
+  arb_div_si(nu, nu, 4, prec);
+  arb_add(nu, nu, eigenvalue, prec);
+  arb_sqrt(nu, nu, prec);
+  arb_set_si(tmp, 1);
+  arb_div_si(tmp, tmp, 2, prec);
+  arb_sub(nu, nu, tmp, prec);
+
+  arb_get_interval_mpfr(nu_low, nu_upp, nu);
 
   _arb_vec_clear(v1, 3);
   _arb_vec_clear(v2, 3);
@@ -799,6 +805,4 @@ enclose(mpfr_t eps_mpfr, int angles_coefs[], mpfr_t *coefs_mpfr, int N,
   arb_clear(max);
   arb_clear(eigenvalue);
   arb_clear(tmp);
-
-  arf_clear(eps_upp);
 }
