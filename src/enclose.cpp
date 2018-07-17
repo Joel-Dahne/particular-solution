@@ -183,7 +183,7 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   acb_ptr params;
   arb_t integral_phi, mu;
   mag_t tol;
-  slong prec_local;
+  slong prec_local, n;
 
   params = _acb_vec_init(3);
 
@@ -206,7 +206,16 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   arb_div(integral_phi, integral_phi, mu0, prec);
   arb_neg(integral_phi, integral_phi);
 
-  for (slong i = 0; i < N; i++)
+  /* The norms of the basis functions are rapidly decreasing so it is
+     enough to only compute the first few to get a good lower
+     bound. */
+
+  if (N < 4)
+    n = N;
+  else
+    n = 4;
+
+  for (slong i = 0; i < n; i++)
   {
     /* params[1] = i*mu0 */
     arb_mul_si(acb_realref(params + 1), mu0, index(i), prec);
