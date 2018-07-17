@@ -207,14 +207,14 @@ int index_function_all(int k) {
 
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
-  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol;
+  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
   char nu_guess_str_default[] = "4.0631";
   char nu_width_str_default[] = "1e-2";
-  char tol_str_default[] = "1e-10";
-  char *nu_guess_str, *nu_width_str, *tol_str;
+  char tol_rel_str_default[] = "1e-5";
+  char *nu_guess_str, *nu_width_str, *tol_rel_str;
   struct Geometry geometry;
   int (*index_function)(int);
 
@@ -227,7 +227,7 @@ with a step size of 2.\n\
 Options are:\n\
   -n <value> - guess for the eigenvalue, used as midpoint (default 4.0631)\n\
   -w <value> - width to use around the eigenvalue (default 1e-2)\n\
-  -t <value> - tolerance to use for minimization (default 1e-10)\n\
+  -t <value> - relative, to the width, tolerance to use for minimization (default 1e-5)\n\
   -p <value> - set the working precision to this (default 53)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
@@ -249,7 +249,7 @@ Options are:\n\
   N_step = 2;
   nu_guess_str = nu_guess_str_default;
   nu_width_str = nu_width_str_default;
-  tol_str = tol_str_default;
+  tol_rel_str = tol_rel_str_default;
   geometry.half_boundary = 0;
   index_function = index_function_all;
 
@@ -262,7 +262,7 @@ Options are:\n\
       nu_width_str = optarg;
       break;
     case 't':
-      tol_str = optarg;
+      tol_rel_str = optarg;
       break;
     case 'p':
       prec = atoi(optarg);
@@ -313,11 +313,12 @@ Options are:\n\
   mpfr_init(nu_width);
   mpfr_init(nu_low);
   mpfr_init(nu_upp);
+  mpfr_init(tol_rel);
   mpfr_init(tol);
 
   mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
   mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
-  mpfr_set_str(tol, tol_str, 10, MPFR_RNDN);
+  mpfr_set_str(tol_rel, tol_rel_str, 10, MPFR_RNDN);
 
   mpfr_const_pi(angles[0], MPFR_RNDN);
   mpfr_const_pi(angles[1], MPFR_RNDN);
@@ -359,6 +360,8 @@ Options are:\n\
   mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
 
   for (int N = N_beg; N <= N_end; N+=N_step) {
+    mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
+    mpfr_mul(tol, tol, tol_rel, MPFR_RNDN);
     particular_solution(geometry, angles_coefs, mu0, nu_low, nu_upp, tol, N,
                         index_function, output);
   }
