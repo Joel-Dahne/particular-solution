@@ -597,7 +597,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
   slong order, num_intervals, next_num_intervals;
   int k, done;
 
-  order = 16;
+  order = N;
 
   intervals_low = new arf_t[1];
   intervals_upp = new arf_t[1];
