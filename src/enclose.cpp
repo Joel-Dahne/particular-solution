@@ -722,7 +722,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 
 void
 enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
-        int N, mpfr_t nu_mpfr, int (*index)(int)) {
+        int N, mpfr_t nu_mpfr, int (*index)(int), int output) {
   arb_ptr v1, v2, coefs;
   arb_t eps, nu, mu0, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
@@ -786,10 +786,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   arb_add_error(tmp, eps);
   arb_div(eigenvalue, eigenvalue, tmp, prec);
 
-  flint_printf(" ");
-  arb_printn(eigenvalue, (slong)ceil(prec*log10(2)), 0);
-  flint_printf("\n");
-
   /* Compute lower and upper bounds for the value of nu */
   arb_set_si(nu, 1);
   arb_div_si(nu, nu, 4, prec);
@@ -798,6 +794,18 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   arb_set_si(tmp, 1);
   arb_div_si(tmp, tmp, 2, prec);
   arb_sub(nu, nu, tmp, prec);
+
+  if (output == 4)
+  {
+    flint_printf(" ");
+    arb_printn(eigenvalue, (slong)ceil(prec*log10(2)), 0);
+    flint_printf("\n");
+  } else if (output == 5)
+  {
+    flint_printf(" ");
+    arb_printn(nu, (slong)ceil(prec*log10(2)), 0);
+    flint_printf("\n");
+  }
 
   arb_get_interval_mpfr(nu_low, nu_upp, nu);
 
