@@ -594,7 +594,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
   arf_t *intervals_low, *next_intervals_low, *intervals_upp, *next_intervals_upp;
   arb_t t;
   arf_t t_low, t_upp, max_low, max_upp, tmp;
-  slong order, num_intervals, next_num_intervals;
+  slong order, num_intervals, next_num_intervals, total_intervals, limit;
   int k, done;
 
   order = N;
@@ -616,6 +616,8 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
   arf_set_d(intervals_upp[0], 1);
 
   num_intervals = 1;
+  total_intervals = num_intervals;
+  limit = 500;
 
   k = 0;
   done = 0;
@@ -700,6 +702,13 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
     intervals_upp = next_intervals_upp;
 
     num_intervals = next_num_intervals;
+    total_intervals += num_intervals;
+
+    if (total_intervals > limit)
+    {
+      prec *= 2;
+      limit *= 2;
+    }
   }
 
   for (slong i = 0; i < num_intervals; i++)
@@ -754,7 +763,7 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
 
   /* Compute enclosures of the required parameters */
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
-                        critical_point, angles_coefs, prec);
+                        critical_point, angles_coefs, 2*prec);
 
   arb_set_si(mu0, -angles_coefs[1]);
   arb_div_si(mu0, mu0, angles_coefs[0], prec);
