@@ -834,7 +834,12 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
     flint_printf("\n");
   }
 
-  arb_get_interval_mpfr(nu_low, nu_upp, nu);
+  arb_set_interval_mpfr(tmp, nu_low, nu_upp, prec);
+
+  if (arb_is_finite(nu) && arb_intersection(tmp, tmp, nu, prec))
+  {
+    arb_get_interval_mpfr(nu_low, nu_upp, tmp);
+  }
 
   _arb_vec_clear(v1, 3);
   _arb_vec_clear(v2, 3);
