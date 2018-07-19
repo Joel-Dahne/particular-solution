@@ -177,12 +177,13 @@ integrand(acb_ptr out, const acb_t inp, void *param_void, slong order,
 
 static void
 integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
-                          arb_t nu, arb_t mu0, int (*index)(int), slong prec)
+                          arb_t nu, fmpq_t mu0, int (*index)(int), slong prec)
 {
   acb_t zero, theta_bound_c, norm_part;
   acb_ptr params;
-  arb_t integral_phi, mu;
+  arb_t integral_phi, mu_arb;
   mag_t tol;
+  fmpq_t mu;
   slong prec_local, n;
 
   params = _acb_vec_init(3);
@@ -191,9 +192,11 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   acb_init(theta_bound_c);
   acb_init(norm_part);
   arb_init(integral_phi);
-  arb_init(mu);
+  arb_init(mu_arb);
 
   mag_init(tol);
+
+  fmpq_init(mu);
 
   arb_set(acb_realref(params + 0), nu); /* params[0] = nu */
 
@@ -203,7 +206,8 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   /* Compute the integral corresponding to phi */
   arb_const_pi(integral_phi, prec);
   arb_div_si(integral_phi, integral_phi, 2, prec);
-  arb_div(integral_phi, integral_phi, mu0, prec);
+  arb_set_fmpq(mu_arb, mu0, prec);
+  arb_div(integral_phi, integral_phi, mu_arb, prec);
   arb_neg(integral_phi, integral_phi);
 
   /* The norms of the basis functions are rapidly decreasing so it is
@@ -218,7 +222,9 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   for (slong i = 0; i < n; i++)
   {
     /* params[1] = i*mu0 */
-    arb_mul_si(acb_realref(params + 1), mu0, index(i), prec);
+    fmpq_set_si(mu, index(i), 1);
+    fmpq_mul(mu, mu, mu0);
+    arb_set_fmpq(acb_realref(params + 1), mu, prec);
     /* params[2] = sqr(coefs[i]) */
     arb_sqr(acb_realref(params + 2), coefs + i, prec);
 
@@ -245,7 +251,11 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   acb_clear(theta_bound_c);
   acb_clear(norm_part);
   arb_clear(integral_phi);
-  arb_clear(mu);
+  arb_clear(mu_arb);
+
+  mag_clear(tol);
+
+  fmpq_clear(mu);
 }
 
 static void
@@ -512,26 +522,31 @@ legendre_taylor(arb_ptr res, arb_ptr z, slong order, arb_t nu, arb_t mu,
 
 static void
 eigenfunction_taylor(arb_ptr res, arb_ptr z, arb_ptr phi, arb_ptr coefs,
-                     slong order, slong N, arb_t nu, arb_t mu0, int (*index)(int),
+                     slong order, slong N, arb_t nu, fmpq_t mu0, int (*index)(int),
                      slong prec)
 {
   arb_ptr term_sin, term_legendre, tmp;
-  arb_t mu;
+  arb_t mu_arb;
+  fmpq_t mu;
 
   term_sin = _arb_vec_init(order);
   term_legendre = _arb_vec_init(order);
   tmp = _arb_vec_init(order);
 
-  arb_init(mu);
+  arb_init(mu_arb);
+
+  fmpq_init(mu);
 
   _arb_vec_zero(res, order);
 
   for (slong i = 0; i < N; i++)
   {
-    arb_mul_si(mu, mu0, index(i), prec);
-    _arb_vec_scalar_mul(tmp, phi, order, mu, prec);
+    fmpq_set_si(mu, index(i), 1);
+    fmpq_mul(mu, mu, mu0);
+    arb_set_fmpq(mu_arb, mu, prec);
+    _arb_vec_scalar_mul(tmp, phi, order, mu_arb, prec);
     _arb_poly_sin_series(term_sin, tmp, order, order, prec);
-    legendre_taylor(term_legendre, z, order, nu, mu, prec);
+    legendre_taylor(term_legendre, z, order, nu, mu_arb, prec);
     _arb_poly_mullow(tmp, term_sin, order, term_legendre, order, order, prec);
     _arb_vec_scalar_addmul(res, tmp, order, coefs + i, prec);
   }
@@ -540,12 +555,14 @@ eigenfunction_taylor(arb_ptr res, arb_ptr z, arb_ptr phi, arb_ptr coefs,
   _arb_vec_clear(term_legendre, order);
   _arb_vec_clear(tmp, order);
 
-  arb_clear(mu);
+  arb_clear(mu_arb);
+
+  fmpq_clear(mu);
 }
 
 static void
 maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
-                arb_ptr v1, arb_ptr v2, arb_t nu, arb_t mu0, int (*index)(int),
+                arb_ptr v1, arb_ptr v2, arb_t nu, fmpq_t mu0, int (*index)(int),
                 slong prec) {
   arb_ptr z, phi, poly;
   arb_t x, rest_term;
@@ -589,7 +606,7 @@ maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
 
 static void
 maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
-         arb_t nu, arb_t mu0, int (*index)(int), slong prec) {
+         arb_t nu, fmpq_t mu0, int (*index)(int), slong prec) {
   arb_ptr evals;
   arf_t *intervals_low, *next_intervals_low, *intervals_upp, *next_intervals_upp;
   arb_t t;
@@ -733,8 +750,9 @@ void
 enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
         int N, mpfr_t nu_mpfr, int (*index)(int), int output) {
   arb_ptr v1, v2, coefs;
-  arb_t eps, nu, mu0, theta_bound_low, theta_bound_upp, critical_point, norm,
+  arb_t eps, nu, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
+  fmpq_t mu0;
   slong prec;
 
   v1 = _arb_vec_init(3);
@@ -743,7 +761,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
 
   arb_init(eps);
   arb_init(nu);
-  arb_init(mu0);
   arb_init(theta_bound_low);
   arb_init(theta_bound_upp);
   arb_init(critical_point);
@@ -751,6 +768,8 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   arb_init(max);
   arb_init(eigenvalue);
   arb_init(tmp);
+
+  fmpq_init(mu0);
 
   prec = mpfr_get_default_prec();
 
@@ -765,8 +784,7 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
                         critical_point, angles_coefs, 2*prec);
 
-  arb_set_si(mu0, -angles_coefs[1]);
-  arb_div_si(mu0, mu0, angles_coefs[0], prec);
+  fmpq_set_si(mu0, -angles_coefs[1], angles_coefs[0]);
 
   /* Compute an enclosure of a lower bound of the norm */
   integral_norm(norm, coefs, N, theta_bound_low, nu, mu0, index, prec);
@@ -823,7 +841,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   _arb_vec_clear(coefs, N);
   arb_clear(eps);
   arb_clear(nu);
-  arb_clear(mu0);
   arb_clear(theta_bound_low);
   arb_clear(theta_bound_upp);
   arb_clear(critical_point);
@@ -831,4 +848,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   arb_clear(max);
   arb_clear(eigenvalue);
   arb_clear(tmp);
+
+  fmpq_clear(mu0);
 }
