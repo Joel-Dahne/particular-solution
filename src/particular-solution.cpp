@@ -208,6 +208,7 @@ int index_function_all(int k) {
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
   mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol;
+  double prec_factor;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
@@ -228,7 +229,9 @@ Options are:\n\
   -n <value> - guess for the eigenvalue, used as midpoint (default 4.0631)\n\
   -w <value> - width to use around the eigenvalue (default 1e-2)\n\
   -t <value> - relative, to the width, tolerance to use for minimization (default 1e-5)\n\
-  -p <value> - set the working precision to this (default 53)\n\
+  -p <value> - set the minimum working precision to this (default 53)\n\
+  -f <value> - set the factor used when computing the working precision needed\n\
+               to achieve a given tolerance (default 1.2)\n\
   -o <value> - set output type, valid values are 0, 1, 2.\n\
                0: Output data for plotting the values of sigma\n\
                1: Output the nu value minimizing sigma\n\
@@ -243,6 +246,7 @@ Options are:\n\
   -i         - set this flag to use only odd indices in the expansion";
 
   // Set default values for parameters
+  prec_factor = 1.2;
   prec = 53;
   output = 1;
   N_beg = 4;
@@ -254,7 +258,7 @@ Options are:\n\
   geometry.half_boundary = 0;
   index_function = index_function_all;
 
-  while ((c = getopt (argc, argv, "n:w:t:p:o:b:e:s:hi")) != -1)
+  while ((c = getopt (argc, argv, "n:w:t:p:f:o:b:e:s:hi")) != -1)
     switch(c) {
     case 'n':
       nu_guess_str = optarg;
@@ -267,6 +271,9 @@ Options are:\n\
       break;
     case 'p':
       prec = atoi(optarg);
+      break;
+    case 'f':
+      prec_factor = atof(optarg);
       break;
     case 'o':
       output = atoi(optarg);
@@ -349,7 +356,7 @@ Options are:\n\
     mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
     mpfr_mul(tol, tol, tol_rel, MPFR_RNDN);
 
-    prec = mpfr_get_ui(max(-1.2*log2(mpreal(tol)), prec).mpfr_srcptr(),
+    prec = mpfr_get_ui(max(-prec_factor*log2(mpreal(tol)), prec).mpfr_srcptr(),
                        MPFR_RNDN);
     mpfr_set_default_prec(prec);
 
