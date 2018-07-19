@@ -24,6 +24,8 @@ void points_clear(struct Points & points);
 
 void geometry_init(struct Geometry & geometry);
 
+void geometry_set_prec(struct Geometry & geometry, mpfr_prec_t prec);
+
 void geometry_clear(struct Geometry & geometry);
 
 void angles_to_vectors(struct Geometry &geometry, mpfr_t *angles);

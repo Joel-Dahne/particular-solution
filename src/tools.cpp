@@ -37,6 +37,17 @@ geometry_init(struct Geometry & geometry)
 }
 
 void
+geometry_set_prec(struct Geometry & geometry, mpfr_prec_t prec)
+{
+  for (int i = 0; i < 3; i++) {
+    mpfr_set_prec(geometry.v1[i], prec);
+    mpfr_set_prec(geometry.v2[i], prec);
+    mpfr_set_prec(geometry.v3[i], prec);
+  }
+  mpfr_set_prec(geometry.theta_bound, prec);
+}
+
+void
 geometry_clear(struct Geometry & geometry)
 {
   for (int i = 0; i < 3; i++) {

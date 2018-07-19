@@ -301,29 +301,6 @@ Options are:\n\
       abort ();
     }
 
-  mpfr_set_default_prec(prec);
-  cout << setprecision((int)ceil(prec*log10(2)));
-
-  geometry_init(geometry);
-
-  for (int i = 0; i < 3; i++) {
-    mpfr_init(angles[i]);
-  }
-  mpfr_init(mu0);
-  mpfr_init(nu_guess);
-  mpfr_init(nu_width);
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
-  mpfr_init(tol_rel);
-  mpfr_init(tol);
-
-  mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
-  mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
-  mpfr_set_str(tol_rel, tol_rel_str, 10, MPFR_RNDN);
-
-  mpfr_const_pi(angles[0], MPFR_RNDN);
-  mpfr_const_pi(angles[1], MPFR_RNDN);
-  mpfr_const_pi(angles[2], MPFR_RNDN);
   if (argc - optind > 1) {
     angles_coefs[0] = atoi(argv[optind]);
     angles_coefs[1] = atoi(argv[optind + 1]);
@@ -346,16 +323,24 @@ Options are:\n\
     angles_coefs[5] = 2;
   }
 
-  mpfr_mul_si(angles[0], angles[0], angles_coefs[0], MPFR_RNDN);
-  mpfr_div_si(angles[0], angles[0], angles_coefs[1], MPFR_RNDN);
-  mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
-  mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
-  mpfr_mul_si(angles[1], angles[1], angles_coefs[2], MPFR_RNDN);
-  mpfr_div_si(angles[1], angles[1], angles_coefs[3], MPFR_RNDN);
-  mpfr_mul_si(angles[2], angles[2], angles_coefs[4], MPFR_RNDN);
-  mpfr_div_si(angles[2], angles[2], angles_coefs[5], MPFR_RNDN);
+  mpfr_set_default_prec(prec);
+  cout << setprecision((int)ceil(prec*log10(2)));
 
-  angles_to_vectors(geometry, angles);
+  geometry_init(geometry);
+  for (int i = 0; i < 3; i++) {
+    mpfr_init(angles[i]);
+  }
+  mpfr_init(mu0);
+  mpfr_init(nu_guess);
+  mpfr_init(nu_width);
+  mpfr_init(nu_low);
+  mpfr_init(nu_upp);
+  mpfr_init(tol_rel);
+  mpfr_init(tol);
+
+  mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
+  mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
+  mpfr_set_str(tol_rel, tol_rel_str, 10, MPFR_RNDN);
 
   mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
   mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
@@ -363,16 +348,45 @@ Options are:\n\
   for (int N = N_beg; N <= N_end; N+=N_step) {
     mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
     mpfr_mul(tol, tol, tol_rel, MPFR_RNDN);
+
+    prec = mpfr_get_ui(max(-1.2*log2(mpreal(tol)), prec).mpfr_srcptr(),
+                       MPFR_RNDN);
+    mpfr_set_default_prec(prec);
+
+    /* Round values to the new precision */
+    mpfr_prec_round(nu_low, prec, MPFR_RNDN);
+    mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
+
+    /* Recompute values with new precision */
+    geometry_set_prec(geometry, prec);
+    for (int i = 0; i < 3; i++) {
+      mpfr_set_prec(angles[i], prec);
+    }
+    mpfr_set_prec(mu0, prec);
+
+    mpfr_const_pi(angles[0], MPFR_RNDN);
+    mpfr_const_pi(angles[1], MPFR_RNDN);
+    mpfr_const_pi(angles[2], MPFR_RNDN);
+
+    mpfr_mul_si(angles[0], angles[0], angles_coefs[0], MPFR_RNDN);
+    mpfr_div_si(angles[0], angles[0], angles_coefs[1], MPFR_RNDN);
+    mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
+    mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
+    mpfr_mul_si(angles[1], angles[1], angles_coefs[2], MPFR_RNDN);
+    mpfr_div_si(angles[1], angles[1], angles_coefs[3], MPFR_RNDN);
+    mpfr_mul_si(angles[2], angles[2], angles_coefs[4], MPFR_RNDN);
+    mpfr_div_si(angles[2], angles[2], angles_coefs[5], MPFR_RNDN);
+
+    angles_to_vectors(geometry, angles);
+
     particular_solution(geometry, angles_coefs, mu0, nu_low, nu_upp, tol, N,
                         index_function, output);
   }
 
+  geometry_clear(geometry);
   for (int i = 0; i < 3; i++) {
     mpfr_clear(angles[i]);
   }
-
-  geometry_clear(geometry);
-
   mpfr_clear(mu0);
   mpfr_clear(nu_guess);
   mpfr_init(nu_width);
