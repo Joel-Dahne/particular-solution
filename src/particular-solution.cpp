@@ -166,7 +166,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
         }
       }
 
-      if (output == 4 || output == 5) {
+      if (output == 4 || output == 5 || output == 6 || output == 7) {
         // Compute an enclosure of the eigenvalue. To be sure to get
         // correct output of the eigenvalue the output of it is
         // handled inside the function enclose.
@@ -238,7 +238,9 @@ Options are:\n\
                2: Output the coefficients of the expansions\n\
                3: Output data for plotting the approximate eigenfunctions\n\
                4: Output the validated enclosure of the eigenvalue\n\
-               4: Output the validated enclosure of nu\n\
+               5: Output the validated enclosure of nu\n\
+               6: Output the width of the validated enclosure of the eigenvalue\n\
+               7: Output the width of the validated enclosure of nu\n\
   -b <value> - start value for N (default 4)\n\
   -e <value> - end value for N (default 16)\n\
   -s <value> - step size for N (default 2)\n\

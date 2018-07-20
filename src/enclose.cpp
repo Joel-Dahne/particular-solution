@@ -832,6 +832,12 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
     flint_printf(" ");
     arb_printn(nu, (slong)ceil(prec*log10(2)), 0);
     flint_printf("\n");
+  } else if (output == 6)
+  {
+    flint_printf(" %e\n", mag_get_d(arb_radref(eigenvalue)));
+  } else if (output == 7)
+  {
+    flint_printf(" %e\n", mag_get_d(arb_radref(nu)));
   }
 
   arb_set_interval_mpfr(tmp, nu_low, nu_upp, prec);
