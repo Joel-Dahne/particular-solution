@@ -359,6 +359,7 @@ Options are:\n\
     prec = mpfr_get_ui(max(-prec_factor*log2(mpreal(tol)), prec).mpfr_srcptr(),
                        MPFR_RNDN);
     mpfr_set_default_prec(prec);
+    cout << setprecision((int)ceil(prec*log10(2)));
 
     /* Round values to the new precision */
     mpfr_prec_round(nu_low, prec, MPFR_RNDN);
