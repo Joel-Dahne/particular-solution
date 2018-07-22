@@ -136,9 +136,9 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     minimize_sigma(nu, A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol),
                    index);
 
-    cout << N << flush;
+    cout << N << " " << flush;
     if (output <= 3) {
-      cout << " " << mpreal(nu);
+      cout << mpreal(nu);
       if (output == 3)
         cout << " " << points_eigen.boundary << endl;
       else
@@ -171,6 +171,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
         // correct output of the eigenvalue the output of it is
         // handled inside the function enclose.
         enclose(nu_low, nu_upp, angles_coefs, coefs, N, nu, index, output);
+        cout << endl;
       }
     }
   }
