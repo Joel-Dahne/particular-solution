@@ -1,65 +1,46 @@
-#include "tools.h"
-
-#include "mpfr.h"
-#include "stdlib.h"
+#include "geom.h"
 
 void
-points_init(struct Points & points)
+geom_init(geom_t g)
 {
-  points.thetas = new mpfr_t[(points.boundary + points.interior)];
-  points.phis = new mpfr_t[(points.boundary + points.interior)];
-  for (int i = 0; i < points.interior + points.boundary; i++) {
-    mpfr_init(points.thetas[i]);
-    mpfr_init(points.phis[i]);
+  g->v1 = new mpfr_t[3];
+  g->v2 = new mpfr_t[3];
+  g->v3 = new mpfr_t[3];
+  for (int i = 0; i < 3; i++) {
+    mpfr_init((g->v1)[i]);
+    mpfr_init(g->v2[i]);
+    mpfr_init(g->v3[i]);
   }
+  mpfr_init(g->theta_bound);
 }
 
 void
-points_clear(struct Points & points)
-{
-  for (int i = 0; i < points.interior + points.boundary; i++) {
-    mpfr_clear(points.thetas[i]);
-    mpfr_clear(points.phis[i]);
-  }
-  delete [] points.thetas;
-  delete [] points.phis;
-}
-
-void
-geometry_init(struct Geometry & geometry)
+geom_clear(geom_t g)
 {
   for (int i = 0; i < 3; i++) {
-    mpfr_init(geometry.v1[i]);
-    mpfr_init(geometry.v2[i]);
-    mpfr_init(geometry.v3[i]);
+    mpfr_clear(g->v1[i]);
+    mpfr_clear(g->v2[i]);
+    mpfr_clear(g->v3[i]);
   }
-  mpfr_init(geometry.theta_bound);
+  mpfr_clear(g->theta_bound);
+  delete [] g->v1;
+  delete [] g->v2;
+  delete [] g->v3;
 }
 
 void
-geometry_set_prec(struct Geometry & geometry, mpfr_prec_t prec)
+geom_set_prec(geom_t g, mpfr_prec_t prec)
 {
   for (int i = 0; i < 3; i++) {
-    mpfr_set_prec(geometry.v1[i], prec);
-    mpfr_set_prec(geometry.v2[i], prec);
-    mpfr_set_prec(geometry.v3[i], prec);
+    mpfr_set_prec(g->v1[i], prec);
+    mpfr_set_prec(g->v2[i], prec);
+    mpfr_set_prec(g->v3[i], prec);
   }
-  mpfr_set_prec(geometry.theta_bound, prec);
+  mpfr_set_prec(g->theta_bound, prec);
 }
 
 void
-geometry_clear(struct Geometry & geometry)
-{
-  for (int i = 0; i < 3; i++) {
-    mpfr_clear(geometry.v1[i]);
-    mpfr_clear(geometry.v2[i]);
-    mpfr_clear(geometry.v3[i]);
-  }
-  mpfr_clear(geometry.theta_bound);
-}
-
-void
-angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
+geom_set(geom_t g, mpfr_t *angles)
 {
   mpfr_t S, tmp1, tmp2;
 
@@ -74,9 +55,9 @@ angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
   mpfr_div_si(S, S, 2, MPFR_RNDN);
 
   /* v1 = [0, 0, 1] */
-  mpfr_set_si(geometry.v1[0], 0, MPFR_RNDN);
-  mpfr_set_si(geometry.v1[1], 0, MPFR_RNDN);
-  mpfr_set_si(geometry.v1[2], 1, MPFR_RNDN);
+  mpfr_set_si(g->v1[0], 0, MPFR_RNDN);
+  mpfr_set_si(g->v1[1], 0, MPFR_RNDN);
+  mpfr_set_si(g->v1[2], 1, MPFR_RNDN);
 
   /* Compute theta for v2*/
   mpfr_cos(tmp1, S, MPFR_RNDN);
@@ -97,12 +78,12 @@ angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
   mpfr_mul_si(tmp1, tmp1, 2, MPFR_RNDN);
 
   /* Add theta to theta_bound */
-  mpfr_set(geometry.theta_bound, tmp1, MPFR_RNDN);
+  mpfr_set(g->theta_bound, tmp1, MPFR_RNDN);
 
   /* Compute v2 from knowing theta */
-  mpfr_sin(geometry.v2[0], tmp1, MPFR_RNDN);
-  mpfr_set_si(geometry.v2[1], 0, MPFR_RNDN);
-  mpfr_cos(geometry.v2[2], tmp1, MPFR_RNDN);
+  mpfr_sin(g->v2[0], tmp1, MPFR_RNDN);
+  mpfr_set_si(g->v2[1], 0, MPFR_RNDN);
+  mpfr_cos(g->v2[2], tmp1, MPFR_RNDN);
 
   /* Compute theta for v3*/
   mpfr_cos(tmp1, S, MPFR_RNDN);
@@ -123,16 +104,16 @@ angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
   mpfr_mul_si(tmp1, tmp1, 2, MPFR_RNDN);
 
   /* Add theta to theta_bound and divide by 2*/
-  mpfr_add(geometry.theta_bound, geometry.theta_bound, tmp1, MPFR_RNDN);
-  mpfr_div_si(geometry.theta_bound, geometry.theta_bound, 2, MPFR_RNDN);
+  mpfr_add(g->theta_bound, g->theta_bound, tmp1, MPFR_RNDN);
+  mpfr_div_si(g->theta_bound, g->theta_bound, 2, MPFR_RNDN);
 
   /* Compute v3 from knowing theta */
   mpfr_sin(tmp2, tmp1, MPFR_RNDN);
-  mpfr_cos(geometry.v3[0], angles[0], MPFR_RNDN);
-  mpfr_mul(geometry.v3[0], geometry.v3[0], tmp2, MPFR_RNDN);
-  mpfr_sin(geometry.v3[1], angles[0], MPFR_RNDN);
-  mpfr_mul(geometry.v3[1], geometry.v3[1], tmp2, MPFR_RNDN);
-  mpfr_cos(geometry.v3[2], tmp1, MPFR_RNDN);
+  mpfr_cos(g->v3[0], angles[0], MPFR_RNDN);
+  mpfr_mul(g->v3[0], g->v3[0], tmp2, MPFR_RNDN);
+  mpfr_sin(g->v3[1], angles[0], MPFR_RNDN);
+  mpfr_mul(g->v3[1], g->v3[1], tmp2, MPFR_RNDN);
+  mpfr_cos(g->v3[2], tmp1, MPFR_RNDN);
 
   mpfr_clear(S);
   mpfr_clear(tmp1);
@@ -140,7 +121,29 @@ angles_to_vectors(struct Geometry &geometry, mpfr_t *angles)
 }
 
 void
-boundary(struct Points points, struct Geometry g)
+points_init(points_t p)
+{
+  p->thetas = new mpfr_t[(p->boundary + p->interior)];
+  p->phis = new mpfr_t[(p->boundary + p->interior)];
+  for (int i = 0; i < p->interior + p->boundary; i++) {
+    mpfr_init(p->thetas[i]);
+    mpfr_init(p->phis[i]);
+  }
+}
+
+void
+points_clear(points_t p)
+{
+  for (int i = 0; i < p->interior + p->boundary; i++) {
+    mpfr_clear(p->thetas[i]);
+    mpfr_clear(p->phis[i]);
+  }
+  delete [] p->thetas;
+  delete [] p->phis;
+}
+
+void
+boundary(points_t p, geom_t g)
 {
   mpfr_t arcx, arcy, arcz, t, norm, tmp;
   int n;
@@ -152,26 +155,26 @@ boundary(struct Points points, struct Geometry g)
   mpfr_init(norm);
   mpfr_init(tmp);
 
-  n = points.boundary;
+  n = p->boundary;
 
   for (int i = 0; i < n; i++) {
     mpfr_set_si(t, i + 1, MPFR_RNDN);
-    if (g.half_boundary)
+    if (g->half_boundary)
       mpfr_div_si(t, t, 2*n, MPFR_RNDN);
     else
       mpfr_div_si(t, t, n + 1, MPFR_RNDN);
 
-    mpfr_sub(arcx, g.v3[0], g.v2[0], MPFR_RNDN);
+    mpfr_sub(arcx, g->v3[0], g->v2[0], MPFR_RNDN);
     mpfr_mul(arcx, arcx, t, MPFR_RNDN);
-    mpfr_add(arcx, arcx, g.v2[0], MPFR_RNDN);
+    mpfr_add(arcx, arcx, g->v2[0], MPFR_RNDN);
 
-    mpfr_sub(arcy, g.v3[1], g.v2[1], MPFR_RNDN);
+    mpfr_sub(arcy, g->v3[1], g->v2[1], MPFR_RNDN);
     mpfr_mul(arcy, arcy, t, MPFR_RNDN);
-    mpfr_add(arcy, arcy, g.v2[1], MPFR_RNDN);
+    mpfr_add(arcy, arcy, g->v2[1], MPFR_RNDN);
 
-    mpfr_sub(arcz, g.v3[2], g.v2[2], MPFR_RNDN);
+    mpfr_sub(arcz, g->v3[2], g->v2[2], MPFR_RNDN);
     mpfr_mul(arcz, arcz, t, MPFR_RNDN);
-    mpfr_add(arcz, arcz, g.v2[2], MPFR_RNDN);
+    mpfr_add(arcz, arcz, g->v2[2], MPFR_RNDN);
 
     mpfr_sqr(norm, arcx, MPFR_RNDN);
 
@@ -187,8 +190,8 @@ boundary(struct Points points, struct Geometry g)
     mpfr_div(arcy, arcy, norm, MPFR_RNDN);
     mpfr_div(arcz, arcz, norm, MPFR_RNDN);
 
-    mpfr_acos(points.thetas[i], arcz, MPFR_RNDN);
-    mpfr_atan2(points.phis[i], arcy, arcx, MPFR_RNDN);
+    mpfr_acos(p->thetas[i], arcz, MPFR_RNDN);
+    mpfr_atan2(p->phis[i], arcy, arcx, MPFR_RNDN);
   }
 
   mpfr_clear(arcx);
@@ -200,7 +203,7 @@ boundary(struct Points points, struct Geometry g)
 }
 
 void
-interior(struct Points points, struct Geometry g)
+interior(points_t p, geom_t g)
 {
   mpfr_t s, t, x, y, z, norm, tmp;
 
@@ -212,7 +215,7 @@ interior(struct Points points, struct Geometry g)
   mpfr_init(norm);
   mpfr_init(tmp);
 
-  for (int i = points.boundary; i < points.boundary + points.interior; i++)
+  for (int i = p->boundary; i < p->boundary + p->interior; i++)
     {
         /* We take s and t random with s in [0, 1) and s < 1 - t*/
       mpfr_set_d(s, ((double)rand()/RAND_MAX), MPFR_RNDN);
@@ -233,26 +236,26 @@ interior(struct Points points, struct Geometry g)
             mpfr_set(s, tmp, MPFR_RNDN);
         }
 
-        mpfr_sub(x, g.v2[0], g.v1[0], MPFR_RNDN);
+        mpfr_sub(x, g->v2[0], g->v1[0], MPFR_RNDN);
         mpfr_mul(x, x, s, MPFR_RNDN);
-        mpfr_sub(tmp, g.v3[0], g.v1[0], MPFR_RNDN);
+        mpfr_sub(tmp, g->v3[0], g->v1[0], MPFR_RNDN);
         mpfr_mul(tmp, tmp, t, MPFR_RNDN);
         mpfr_add(x, x, tmp, MPFR_RNDN);
-        mpfr_add(x, x, g.v1[0], MPFR_RNDN);
+        mpfr_add(x, x, g->v1[0], MPFR_RNDN);
 
-        mpfr_sub(y, g.v2[1], g.v1[1], MPFR_RNDN);
+        mpfr_sub(y, g->v2[1], g->v1[1], MPFR_RNDN);
         mpfr_mul(y, y, s, MPFR_RNDN);
-        mpfr_sub(tmp, g.v3[1], g.v1[1], MPFR_RNDN);
+        mpfr_sub(tmp, g->v3[1], g->v1[1], MPFR_RNDN);
         mpfr_mul(tmp, tmp, t, MPFR_RNDN);
         mpfr_add(y, y, tmp, MPFR_RNDN);
-        mpfr_add(y, y, g.v1[1], MPFR_RNDN);
+        mpfr_add(y, y, g->v1[1], MPFR_RNDN);
 
-        mpfr_sub(z, g.v2[2], g.v1[2], MPFR_RNDN);
+        mpfr_sub(z, g->v2[2], g->v1[2], MPFR_RNDN);
         mpfr_mul(z, z, s, MPFR_RNDN);
-        mpfr_sub(tmp, g.v3[2], g.v1[2], MPFR_RNDN);
+        mpfr_sub(tmp, g->v3[2], g->v1[2], MPFR_RNDN);
         mpfr_mul(tmp, tmp, t, MPFR_RNDN);
         mpfr_add(z, z, tmp, MPFR_RNDN);
-        mpfr_add(z, z, g.v1[2], MPFR_RNDN);
+        mpfr_add(z, z, g->v1[2], MPFR_RNDN);
 
         mpfr_sqr(norm, x, MPFR_RNDN);
 
@@ -268,8 +271,8 @@ interior(struct Points points, struct Geometry g)
         mpfr_div(y, y, norm, MPFR_RNDN);
         mpfr_div(z, z, norm, MPFR_RNDN);
 
-        mpfr_acos(points.thetas[i], z, MPFR_RNDN);
-        mpfr_atan2(points.phis[i], y, x, MPFR_RNDN);
+        mpfr_acos(p->thetas[i], z, MPFR_RNDN);
+        mpfr_atan2(p->phis[i], y, x, MPFR_RNDN);
     }
 
   mpfr_clear(x);

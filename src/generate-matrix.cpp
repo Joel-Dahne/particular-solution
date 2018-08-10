@@ -1,4 +1,4 @@
-#include "tools.h"
+#include "generate-matrix.h"
 
 #include "arb.h"
 #include "acb.h"
@@ -6,7 +6,7 @@
 #include "acb_hypgeom.h"
 #include "acb_calc.h"
 
-void generate_matrix(mpfr_t *A, struct Points points, int N, mpfr_t nu_mpfr,
+void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
                      mpfr_t mu0_mpfr, int (*index)(int)) {
   arb_t theta, phi, nu, mu0, mu, tmp, res;
   fmpz_t mu_int;
@@ -27,11 +27,11 @@ void generate_matrix(mpfr_t *A, struct Points points, int N, mpfr_t nu_mpfr,
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
   arf_set_mpfr(arb_midref(mu0), mu0_mpfr);
 
-  n = points.boundary + points.interior;
+  n = points->boundary + points->interior;
 
   for (slong i = 0; i < n; i++) {
-    arf_set_mpfr(arb_midref(theta), points.thetas[i]);
-    arf_set_mpfr(arb_midref(phi), points.phis[i]);
+    arf_set_mpfr(arb_midref(theta), points->thetas[i]);
+    arf_set_mpfr(arb_midref(phi), points->phis[i]);
     for (slong j = 0; j < N; j++) {
       arb_mul_si(mu, mu0, index(j), prec);
       if (arb_get_unique_fmpz(mu_int, mu)) {
@@ -64,7 +64,7 @@ void generate_matrix(mpfr_t *A, struct Points points, int N, mpfr_t nu_mpfr,
   fmpz_clear(mu_int);
 }
 
-void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, struct Points points, int N,
+void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
                    mpfr_t nu_mpfr, mpfr_t mu0_mpfr, int (*index)(int)) {
   arb_ptr coefs;
   arb_t theta, phi, nu, mu0, mu, tmp, term, sum;
@@ -92,9 +92,9 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, struct Points points, int N,
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
   arf_set_mpfr(arb_midref(mu0), mu0_mpfr);
 
-  for (slong i = 0; i < points.boundary + points.interior; i++) {
-    arf_set_mpfr(arb_midref(theta), points.thetas[i]);
-    arf_set_mpfr(arb_midref(phi), points.phis[i]);
+  for (slong i = 0; i < points->boundary + points->interior; i++) {
+    arf_set_mpfr(arb_midref(theta), points->thetas[i]);
+    arf_set_mpfr(arb_midref(phi), points->phis[i]);
 
     arb_zero(sum);
 

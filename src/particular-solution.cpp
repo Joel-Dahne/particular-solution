@@ -1,4 +1,4 @@
-#include "tools.h"
+#include "geom.h"
 #include "generate-matrix.h"
 #include "sigma.h"
 #include "enclose.h"
@@ -15,7 +15,7 @@
 using namespace std;
 using namespace mpfr;
 
-void minimize_sigma(mpfr_t nu, mpfr_t *A_arr, struct Points points, int N,
+void minimize_sigma(mpfr_t nu, mpfr_t *A_arr, points_t points, int N,
                     mpfr_t nu_low, mpfr_t nu_upp, mpfr_t mu0, mpreal tol,
                     int (*index)(int)) {
   mpfr_t a, b, c, d;
@@ -78,7 +78,7 @@ void minimize_sigma(mpfr_t nu, mpfr_t *A_arr, struct Points points, int N,
   mpfr_clear(d);
 }
 
-void particular_solution(struct Geometry geometry, int angles_coefs[],
+void particular_solution(geom_t geometry, int angles_coefs[],
                          mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp, mpfr_t tol,
                          int N, int (*index)(int), int output) {
 
@@ -86,32 +86,32 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
   mpfr_t mu, nu_step, nu, eps;
   mpreal s;
   int iterations;
-  struct Points points, points_eigen;
+  points_t points, points_eigen;
 
   mpfr_init(mu);
   mpfr_init(nu_step);
   mpfr_init(nu);
   mpfr_init(eps);
 
-  points.boundary = 2*N;
-  points.interior = 2*N;
-  points_eigen.boundary = 500;
-  points_eigen.interior = 0;
+  points->boundary = 2*N;
+  points->interior = 2*N;
+  points_eigen->boundary = 500;
+  points_eigen->interior = 0;
 
   points_init(points);
   points_init(points_eigen);
 
-  A_arr = new mpfr_t[(points.boundary + points.interior)*N];
+  A_arr = new mpfr_t[(points->boundary + points->interior)*N];
   coefs = new mpfr_t[N];
-  values = new mpfr_t[points_eigen.boundary + points_eigen.interior];
+  values = new mpfr_t[points_eigen->boundary + points_eigen->interior];
 
-  for (int i = 0; i < (points.boundary + points.interior)*N; i++) {
+  for (int i = 0; i < (points->boundary + points->interior)*N; i++) {
     mpfr_init(A_arr[i]);
   }
   for (int i = 0; i < N; i++) {
     mpfr_init(coefs[i]);
   }
-  for (int i = 0; i < points_eigen.interior + points_eigen.boundary; i++) {
+  for (int i = 0; i < points_eigen->interior + points_eigen->boundary; i++) {
     mpfr_init(values[i]);
   }
 
@@ -140,7 +140,7 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     if (output <= 3) {
       cout << mpreal(nu);
       if (output == 3)
-        cout << " " << points_eigen.boundary << endl;
+        cout << " " << points_eigen->boundary << endl;
       else
         cout << endl;
     }
@@ -161,8 +161,8 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
         boundary(points_eigen, geometry);
         eigenfunction(values, coefs, points_eigen, N, nu, mu0, index);
 
-        for (int i = 0; i < points_eigen.boundary; i++) {
-          cout << mpreal(points_eigen.phis[i]) << " " << mpreal(values[i]) << endl;
+        for (int i = 0; i < points_eigen->boundary; i++) {
+          cout << mpreal(points_eigen->phis[i]) << " " << mpreal(values[i]) << endl;
         }
       }
 
@@ -176,13 +176,13 @@ void particular_solution(struct Geometry geometry, int angles_coefs[],
     }
   }
   /* Clear all variables */
-  for (int i = 0; i < (points.boundary + points.interior)*N; i++) {
+  for (int i = 0; i < (points->boundary + points->interior)*N; i++) {
     mpfr_clear(A_arr[i]);
   }
   for (int i = 0; i < N; i++) {
     mpfr_clear(coefs[i]);
   }
-  for (int i = 0; i < points_eigen.boundary + points_eigen.interior; i++) {
+  for (int i = 0; i < points_eigen->boundary + points_eigen->interior; i++) {
     mpfr_clear(values[i]);
   }
   delete [] A_arr;
@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
   char nu_width_str_default[] = "1e-2";
   char tol_rel_str_default[] = "1e-5";
   char *nu_guess_str, *nu_width_str, *tol_rel_str;
-  struct Geometry geometry;
+  geom_t geometry;
   int (*index_function)(int);
 
   srand(1);
@@ -258,7 +258,7 @@ Options are:\n\
   nu_guess_str = nu_guess_str_default;
   nu_width_str = nu_width_str_default;
   tol_rel_str = tol_rel_str_default;
-  geometry.half_boundary = 0;
+  geometry->half_boundary = 0;
   index_function = index_function_all;
 
   while ((c = getopt (argc, argv, "n:w:t:p:f:o:b:e:s:hi")) != -1)
@@ -291,7 +291,7 @@ Options are:\n\
       N_step = atoi(optarg);
       break;
     case 'h':
-      geometry.half_boundary = 1;
+      geometry->half_boundary = 1;
       break;
     case 'i':
       index_function = index_function_odd;
@@ -336,10 +336,12 @@ Options are:\n\
   mpfr_set_default_prec(prec);
   cout << setprecision((int)ceil(prec*log10(2)));
 
-  geometry_init(geometry);
+  geom_init(geometry);
+
   for (int i = 0; i < 3; i++) {
     mpfr_init(angles[i]);
   }
+
   mpfr_init(mu0);
   mpfr_init(nu_guess);
   mpfr_init(nu_width);
@@ -369,7 +371,8 @@ Options are:\n\
     mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
 
     /* Recompute values with new precision */
-    geometry_set_prec(geometry, prec);
+
+    geom_set_prec(geometry, prec);
     for (int i = 0; i < 3; i++) {
       mpfr_set_prec(angles[i], prec);
     }
@@ -388,13 +391,13 @@ Options are:\n\
     mpfr_mul_si(angles[2], angles[2], angles_coefs[4], MPFR_RNDN);
     mpfr_div_si(angles[2], angles[2], angles_coefs[5], MPFR_RNDN);
 
-    angles_to_vectors(geometry, angles);
+    geom_set(geometry, angles);
 
     particular_solution(geometry, angles_coefs, mu0, nu_low, nu_upp, tol, N,
                         index_function, output);
   }
 
-  geometry_clear(geometry);
+  geom_clear(geometry);
   for (int i = 0; i < 3; i++) {
     mpfr_clear(angles[i]);
   }

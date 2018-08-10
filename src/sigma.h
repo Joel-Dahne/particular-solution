@@ -6,10 +6,10 @@
 
 using namespace mpfr;
 
-mpreal sigma(mpfr_t *A_arr, struct Points points, int N, mpfr_t nu, mpfr_t mu0,
+mpreal sigma(mpfr_t *A_arr, points_t points, int N, mpfr_t nu, mpfr_t mu0,
              int (*index)(int));
 
-void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, struct Points points,
+void coefs_sigma(mpfr_t *coefs_arr, mpfr_t *A_arr, points_t points,
                  int N, mpfr_t nu, mpfr_t mu0, int (*index)(int));
 
 #endif
