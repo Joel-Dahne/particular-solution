@@ -28,13 +28,8 @@ void particular_solution(geom_t geometry, int angles_coefs[],
   mpfr_init(nu);
   mpfr_init(eps);
 
-  points->boundary = 2*N;
-  points->interior = 2*N;
-  points_eigen->boundary = 500;
-  points_eigen->interior = 0;
-
-  points_init(points);
-  points_init(points_eigen);
+  points_init(points, 2*N, 2*N);
+  points_init(points_eigen, 500, 0);
 
   coefs = new mpfr_t[N];
   values = new mpfr_t[points_eigen->boundary + points_eigen->interior];

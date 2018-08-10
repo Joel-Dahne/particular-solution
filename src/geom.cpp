@@ -121,8 +121,10 @@ geom_set(geom_t g, mpfr_t *angles)
 }
 
 void
-points_init(points_t p)
+points_init(points_t p, int boundary, int interior)
 {
+  p->boundary = boundary;
+  p->interior = interior;
   p->thetas = new mpfr_t[(p->boundary + p->interior)];
   p->phis = new mpfr_t[(p->boundary + p->interior)];
   for (int i = 0; i < p->interior + p->boundary; i++) {

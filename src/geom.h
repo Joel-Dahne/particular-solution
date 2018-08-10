@@ -33,7 +33,7 @@ void geom_set_prec(geom_t g, mpfr_prec_t prec);
 
 void geom_set(geom_t g, mpfr_t *angles);
 
-void points_init(points_t p);
+void points_init(points_t p, int boundary, int interior);
 
 void points_clear(points_t p);
 
