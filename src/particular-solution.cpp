@@ -3,14 +3,12 @@
 #include "sigma.h"
 #include "enclose.h"
 
-#include "Eigen/Core"
 #include "mpreal.h"
 #include "time.h"
 
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
-#include <math.h>
 
 using namespace std;
 using namespace mpfr;
@@ -19,7 +17,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
                          mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp, mpfr_t tol,
                          int N, int (*index)(int), int output) {
 
-  mpfr_t *A_arr, *coefs, *values;
+  mpfr_t *coefs, *values;
   mpfr_t mu, nu_step, nu, eps;
   mpreal s;
   int iterations;
@@ -38,13 +36,9 @@ void particular_solution(geom_t geometry, int angles_coefs[],
   points_init(points);
   points_init(points_eigen);
 
-  A_arr = new mpfr_t[(points->boundary + points->interior)*N];
   coefs = new mpfr_t[N];
   values = new mpfr_t[points_eigen->boundary + points_eigen->interior];
 
-  for (int i = 0; i < (points->boundary + points->interior)*N; i++) {
-    mpfr_init(A_arr[i]);
-  }
   for (int i = 0; i < N; i++) {
     mpfr_init(coefs[i]);
   }
@@ -65,12 +59,12 @@ void particular_solution(geom_t geometry, int angles_coefs[],
       mpfr_set(nu, nu_step, MPFR_RNDN);
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
-      s = sigma(A_arr, points, N, nu, mu0, index);
+      s = sigma(points, N, nu, mu0, index);
       cout << mpreal(nu) << " " << s << endl;
     }
   } else {
     // Find the value of nu that minimizes sigma
-    minimize_sigma(nu, A_arr, points, N, nu_low, nu_upp, mu0, mpreal(tol),
+    minimize_sigma(nu, points, N, nu_low, nu_upp, mu0, mpreal(tol),
                    index);
 
     cout << N << " " << flush;
@@ -84,7 +78,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
 
     if (output >= 2) {
       // Find the coefficients of the expansion
-      coefs_sigma(coefs, A_arr, points, N, nu, mu0, index);
+      coefs_sigma(coefs, points, N, nu, mu0, index);
 
       if (output == 2) {
         // Print the coefficients for the eigenfunction
@@ -113,16 +107,12 @@ void particular_solution(geom_t geometry, int angles_coefs[],
     }
   }
   /* Clear all variables */
-  for (int i = 0; i < (points->boundary + points->interior)*N; i++) {
-    mpfr_clear(A_arr[i]);
-  }
   for (int i = 0; i < N; i++) {
     mpfr_clear(coefs[i]);
   }
   for (int i = 0; i < points_eigen->boundary + points_eigen->interior; i++) {
     mpfr_clear(values[i]);
   }
-  delete [] A_arr;
   delete [] coefs;
   delete [] values;
 
