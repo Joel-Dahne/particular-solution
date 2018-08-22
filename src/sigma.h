@@ -6,7 +6,7 @@
 
 using namespace mpfr;
 
-mpreal sigma(points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int));
+void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int));
 
 void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
                     mpfr_t nu_upp, mpfr_t mu0, mpreal tol, int (*index)(int));

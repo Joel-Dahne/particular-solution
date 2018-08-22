@@ -10,7 +10,7 @@ using namespace Eigen;
 
 typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
 
-mpreal sigma(points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
+void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
   mpreal *A_mpreal;
   MatrixXmp A, Q;
@@ -49,14 +49,15 @@ mpreal sigma(points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
     mpfr_clear(A_mpfr[i]);
   }
 
+  mpfr_set(res, svd.singularValues()(N-1).mpfr_srcptr(), MPFR_RNDN);
+
   delete [] A_mpfr;
   delete [] A_mpreal;
-  return svd.singularValues()(N-1);
 }
 
 void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
                     mpfr_t nu_upp, mpfr_t mu0, mpreal tol, int (*index)(int)) {
-  mpfr_t a, b, c, d;
+  mpfr_t a, b, c, d, tmp;
   mpreal invphi, invphi2, h, yc, yd;
   int n;
 
@@ -64,6 +65,7 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
   mpfr_init(b);
   mpfr_init(c);
   mpfr_init(d);
+  mpfr_init(tmp);
 
   mpfr_set(a, nu_low, MPFR_RNDN);
   mpfr_set(b, nu_upp, MPFR_RNDN);
@@ -78,8 +80,10 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
     mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
     mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
 
-    yc = sigma(points, N, c, mu0, index);
-    yd = sigma(points, N, d, mu0, index);
+    sigma(tmp, points, N, c, mu0, index);
+    yc = mpreal(tmp);
+    sigma(tmp, points, N, d, mu0, index);
+    yd = mpreal(tmp);
 
     for (int k = 0; k < n; k++) {
       if (yc < yd) {
@@ -88,14 +92,16 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
         yd = yc;
         h = invphi*h;
         mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-        yc = sigma(points, N, c, mu0, index);
+        sigma(tmp, points, N, c, mu0, index);
+        yc = mpreal(tmp);
       } else {
         mpfr_set(a, c, MPFR_RNDN);
         mpfr_set(c, d, MPFR_RNDN);
         yc = yd;
         h = invphi*h;
         mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-        yd = sigma(points, N, d, mu0, index);
+        sigma(tmp, points, N, d, mu0, index);
+        yd = mpreal(tmp);
       }
     }
 
@@ -114,6 +120,7 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
   mpfr_clear(b);
   mpfr_clear(c);
   mpfr_clear(d);
+  mpfr_clear(tmp);
 }
 
 void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, mpfr_t nu,

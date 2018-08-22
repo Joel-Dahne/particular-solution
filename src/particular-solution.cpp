@@ -18,8 +18,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
                          int N, int (*index)(int), int output) {
 
   mpfr_t *coefs, *values;
-  mpfr_t mu, nu_step, nu, eps;
-  mpreal s;
+  mpfr_t mu, nu_step, nu, eps, s;
   int iterations;
   points_t points, points_eigen;
 
@@ -27,6 +26,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
   mpfr_init(nu_step);
   mpfr_init(nu);
   mpfr_init(eps);
+  mpfr_init(s);
 
   points_init(points, 2*N, 2*N);
   points_init(points_eigen, 500, 0);
@@ -54,8 +54,8 @@ void particular_solution(geom_t geometry, int angles_coefs[],
       mpfr_set(nu, nu_step, MPFR_RNDN);
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
-      s = sigma(points, N, nu, mu0, index);
-      cout << mpreal(nu) << " " << s << endl;
+      sigma(s, points, N, nu, mu0, index);
+      cout << mpreal(nu) << " " << mpreal(s) << endl;
     }
   } else {
     // Find the value of nu that minimizes sigma
@@ -118,6 +118,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
   mpfr_clear(nu_step);
   mpfr_clear(nu);
   mpfr_clear(eps);
+  mpfr_clear(s);
 }
 
 int index_function_odd(int k) {
