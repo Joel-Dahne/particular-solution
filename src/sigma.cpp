@@ -56,9 +56,9 @@ void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*inde
 }
 
 void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
-                    mpfr_t nu_upp, mpfr_t mu0, mpreal tol, int (*index)(int)) {
+                    mpfr_t nu_upp, mpfr_t mu0, mpfr_t tol_mpfr, int (*index)(int)) {
   mpfr_t a, b, c, d, tmp;
-  mpreal invphi, invphi2, h, yc, yd;
+  mpreal tol, invphi, invphi2, h, yc, yd;
   int n;
 
   mpfr_init(a);
@@ -74,6 +74,7 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
   invphi2 = (3 - sqrt(5))/2;
 
   h = mpreal(b) - mpreal(a);
+  tol = mpreal(tol_mpfr);
 
   if (h > tol) {
     n = (int) ceil(log(tol/h)/log(invphi));

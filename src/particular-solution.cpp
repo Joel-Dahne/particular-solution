@@ -3,7 +3,6 @@
 #include "sigma.h"
 #include "enclose.h"
 
-#include "mpreal.h"
 #include "time.h"
 
 #include <iostream>
@@ -11,7 +10,6 @@
 #include <unistd.h>
 
 using namespace std;
-using namespace mpfr;
 
 void particular_solution(geom_t geometry, int angles_coefs[],
                          mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp, mpfr_t tol,
@@ -49,26 +47,26 @@ void particular_solution(geom_t geometry, int angles_coefs[],
     iterations = 400;
     mpfr_sub(nu_step, nu_upp, nu_low, MPFR_RNDN);
     mpfr_div_si(nu_step, nu_step, iterations, MPFR_RNDN);
-    cout << N << " " << iterations << endl;
+    mpfr_printf("%i, %i", N, iterations);
     for (int i = 0; i < iterations; i++) {
       mpfr_set(nu, nu_step, MPFR_RNDN);
       mpfr_mul_si(nu, nu, i, MPFR_RNDN);
       mpfr_add(nu, nu, nu_low, MPFR_RNDN);
       sigma(s, points, N, nu, mu0, index);
-      cout << mpreal(nu) << " " << mpreal(s) << endl;
+      mpfr_printf("%Re %Re\n", nu, s);
     }
   } else {
     // Find the value of nu that minimizes sigma
-    minimize_sigma(nu, points, N, nu_low, nu_upp, mu0, mpreal(tol),
-                   index);
+    minimize_sigma(nu, points, N, nu_low, nu_upp, mu0, tol, index);
 
-    cout << N << " " << flush;
+    mpfr_printf("%i ", N);
+    fflush(stdout);
     if (output <= 3) {
-      cout << mpreal(nu);
+      mpfr_printf("%Re", nu);
       if (output == 3)
-        cout << " " << points_eigen->boundary << endl;
+        mpfr_printf(" %i", points_eigen->boundary);
       else
-        cout << endl;
+        mpfr_printf("\n");
     }
 
     if (output >= 2) {
@@ -78,7 +76,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
       if (output == 2) {
         // Print the coefficients for the eigenfunction
         for (int i = 0; i < N; i++) {
-          cout << mpreal(coefs[i]) << endl;
+          mpfr_printf("%Re\n", coefs[i]);
         }
       }
 
@@ -88,7 +86,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
         eigenfunction(values, coefs, points_eigen, N, nu, mu0, index);
 
         for (int i = 0; i < points_eigen->boundary; i++) {
-          cout << mpreal(points_eigen->phis[i]) << " " << mpreal(values[i]) << endl;
+          mpfr_printf("%Re %Re\n", points_eigen->phis[i], values[i]);
         }
       }
 
@@ -97,7 +95,7 @@ void particular_solution(geom_t geometry, int angles_coefs[],
         // correct output of the eigenvalue the output of it is
         // handled inside the function enclose.
         enclose(nu_low, nu_upp, angles_coefs, coefs, N, nu, index, output);
-        cout << endl;
+        mpfr_printf("\n");
       }
     }
   }
@@ -131,7 +129,7 @@ int index_function_all(int k) {
 
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
-  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol;
+  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol, tmp;
   double prec_factor;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
@@ -257,7 +255,6 @@ Options are:\n\
   }
 
   mpfr_set_default_prec(prec);
-  cout << setprecision((int)ceil(prec*log10(2)));
 
   geom_init(geometry);
 
@@ -272,6 +269,7 @@ Options are:\n\
   mpfr_init(nu_upp);
   mpfr_init(tol_rel);
   mpfr_init(tol);
+  mpfr_init(tmp);
 
   mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
   mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
@@ -284,10 +282,12 @@ Options are:\n\
     mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
     mpfr_mul(tol, tol, tol_rel, MPFR_RNDN);
 
-    prec = mpfr_get_ui(max(-prec_factor*log2(mpreal(tol)), prec).mpfr_srcptr(),
-                       MPFR_RNDN);
+    mpfr_log2(tmp, tol, MPFR_RNDN);
+    mpfr_mul_d(tmp, tmp, -prec_factor, MPFR_RNDN);
+    if (mpfr_get_si(tmp, MPFR_RNDN) > prec)
+      prec = mpfr_get_si(tmp, MPFR_RNDN);
+
     mpfr_set_default_prec(prec);
-    cout << setprecision((int)ceil(prec*log10(2)));
 
     /* Round values to the new precision */
     mpfr_prec_round(nu_low, prec, MPFR_RNDN);
@@ -330,6 +330,7 @@ Options are:\n\
   mpfr_init(nu_low);
   mpfr_init(nu_upp);
   mpfr_clear(tol);
+  mpfr_clear(tmp);
 
   return 0;
 }
