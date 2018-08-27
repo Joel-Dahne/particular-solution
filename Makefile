@@ -1,7 +1,7 @@
 CXX=g++
 CFLAGS=-Wall -O3
 
-INCS=-I/home/urathai/Sources/mpreal/ -I/home/urathai/Sources/eigen-git-mirror
+INCS=-I/usr/include/eigen3/
 LIBS=-L$(CURDIR) -larb -lflint -lmpfr -lgmp
 
 LINK_TARGETS = build/particular-solution
