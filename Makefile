@@ -1,25 +1,62 @@
-CXX=g++
-CFLAGS=-Wall -O3
+# Makefile for particular-solutions
 
-INCS=-I/usr/include/eigen3/
+SHELL=/bin/sh
+
+INCS=-I/usr/include/eigen3/ -I$(CURDIR)/src/
 LIBS=-L$(CURDIR) -larb -lflint -lmpfr -lgmp
 
-LINK_TARGETS = build/particular-solution
-OBJS = build/geom.o build/generate-matrix.o build/sigma.o build/enclose.o build/particular-solution.o
-REBUILDABLES = $(OBJS) $(LINK_TARGETS)
+CC=gcc
+CXX=g++
 
-.SECONDARY: $(OBJS)
+CFLAGS=-Wall -O3
 
-all: $(LINK_TARGETS)
+AT=@
+
+BUILD_DIRS = src
+
+export
+
+SOURCES = $(wildcard $(patsubst %, %/*.cpp, $(BUILD_DIRS)))
+
+HEADERS = $(patsubst %, %/*.h, $(BUILD_DIRS))
+
+OBJS = $(patsubst src/%.cpp, build/%.o, $(SOURCES))
+
+EXMP_SOURCES = $(wildcard examples/*.cpp)
+EXMPS = $(patsubst %.cpp, build/%, $(EXMP_SOURCES))
+
+TEST_SOURCES = $(wildcard tests/*.cpp)
+TESTS = $(patsubst %.cpp, build/%, $(TEST_SOURCES))
+
+all: build/particular-solution
 
 clean:
-	rm -f $(REBUILDABLES)
+	rm -rf build
 
-build/%.o: src/%.cpp | build
-	$(CXX) $(CFLAGS) $(INCS) -c $^ -o $@
+examples: $(EXMPS)
+
+tests: $(TESTS)
+
+check: $(TESTS)
+	$(AT)$(foreach prog, $(TESTS), $(prog) || exit $$?;)
+
+build:
+	mkdir -p build
+
+build/%.o: src/%.cpp $(HEADERS) | build
+	$(CXX) $(CFLAGS) $(INCS) -c $< -o $@
 
 build/particular-solution: $(OBJS) | build
 	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
 
-build:
-	mkdir -p build
+build/tests/%: tests/%.cpp $(OBJS) | build/tests
+	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+
+build/tests:
+	mkdir -p build/tests
+
+build/examples/%: examples/%.cpp $(OBJS) | build/examples
+	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+
+build/examples:
+	mkdir -p build/examples
