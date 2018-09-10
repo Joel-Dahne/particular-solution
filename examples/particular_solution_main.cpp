@@ -184,27 +184,14 @@ Options are:\n\
     mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
 
     /* Recompute values with new precision */
-
     geom_set_prec(geometry, prec);
-    for (int i = 0; i < 3; i++) {
-      mpfr_set_prec(angles[i], prec);
-    }
+
     mpfr_set_prec(mu0, prec);
 
-    mpfr_const_pi(angles[0], MPFR_RNDN);
-    mpfr_const_pi(angles[1], MPFR_RNDN);
-    mpfr_const_pi(angles[2], MPFR_RNDN);
-
-    mpfr_mul_si(angles[0], angles[0], angles_coefs[0], MPFR_RNDN);
-    mpfr_div_si(angles[0], angles[0], angles_coefs[1], MPFR_RNDN);
     mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
     mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
-    mpfr_mul_si(angles[1], angles[1], angles_coefs[2], MPFR_RNDN);
-    mpfr_div_si(angles[1], angles[1], angles_coefs[3], MPFR_RNDN);
-    mpfr_mul_si(angles[2], angles[2], angles_coefs[4], MPFR_RNDN);
-    mpfr_div_si(angles[2], angles[2], angles_coefs[5], MPFR_RNDN);
 
-    geom_set(geometry, angles);
+    geom_set(geometry, angles_coefs);
 
     particular_solution_enclosure(geometry, angles_coefs, mu0, nu_low, nu_upp, tol,
                                   options);

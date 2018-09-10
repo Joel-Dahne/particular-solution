@@ -40,18 +40,35 @@ geom_set_prec(geom_t g, mpfr_prec_t prec)
 }
 
 void
-geom_set(geom_t g, mpfr_t *angles)
+geom_set(geom_t g, int angles[])
 {
+  mpfr_t angles_mpfr[3];
   mpfr_t S, tmp1, tmp2;
+
+  for (int i = 0; i < 3; i++) {
+    mpfr_init(angles_mpfr[i]);
+  }
 
   mpfr_init(S);
   mpfr_init(tmp1);
   mpfr_init(tmp2);
 
+  /* Compute the angles from the quotient */
+  mpfr_const_pi(angles_mpfr[0], MPFR_RNDN);
+  mpfr_const_pi(angles_mpfr[1], MPFR_RNDN);
+  mpfr_const_pi(angles_mpfr[2], MPFR_RNDN);
+
+  mpfr_mul_si(angles_mpfr[0], angles_mpfr[0], angles[0], MPFR_RNDN);
+  mpfr_div_si(angles_mpfr[0], angles_mpfr[0], angles[1], MPFR_RNDN);
+  mpfr_mul_si(angles_mpfr[1], angles_mpfr[1], angles[2], MPFR_RNDN);
+  mpfr_div_si(angles_mpfr[1], angles_mpfr[1], angles[3], MPFR_RNDN);
+  mpfr_mul_si(angles_mpfr[2], angles_mpfr[2], angles[4], MPFR_RNDN);
+  mpfr_div_si(angles_mpfr[2], angles_mpfr[2], angles[5], MPFR_RNDN);
+
   /* Compute the vectors for the spherical triangle */
-  /* S = (angles[0] + angles[1] + angles[2])/2 */
-  mpfr_add(S, angles[0], angles[1], MPFR_RNDN);
-  mpfr_add(S, S, angles[2], MPFR_RNDN);
+  /* S = (angles_mpfr[0] + angles_mpfr[1] + angles_mpfr[2])/2 */
+  mpfr_add(S, angles_mpfr[0], angles_mpfr[1], MPFR_RNDN);
+  mpfr_add(S, S, angles_mpfr[2], MPFR_RNDN);
   mpfr_div_si(S, S, 2, MPFR_RNDN);
 
   /* v1 = [0, 0, 1] */
@@ -62,14 +79,14 @@ geom_set(geom_t g, mpfr_t *angles)
   /* Compute theta for v2*/
   mpfr_cos(tmp1, S, MPFR_RNDN);
 
-  mpfr_sub(tmp2, S, angles[1], MPFR_RNDN);
+  mpfr_sub(tmp2, S, angles_mpfr[1], MPFR_RNDN);
   mpfr_cos(tmp2, tmp2, MPFR_RNDN);
   mpfr_mul(tmp1, tmp1, tmp2, MPFR_RNDN);
 
-  mpfr_sin(tmp2, angles[0], MPFR_RNDN);
+  mpfr_sin(tmp2, angles_mpfr[0], MPFR_RNDN);
   mpfr_div(tmp1, tmp1, tmp2, MPFR_RNDN);
 
-  mpfr_sin(tmp2, angles[2], MPFR_RNDN);
+  mpfr_sin(tmp2, angles_mpfr[2], MPFR_RNDN);
   mpfr_div(tmp1, tmp1, tmp2, MPFR_RNDN);
 
   mpfr_neg(tmp1, tmp1, MPFR_RNDN);
@@ -88,14 +105,14 @@ geom_set(geom_t g, mpfr_t *angles)
   /* Compute theta for v3*/
   mpfr_cos(tmp1, S, MPFR_RNDN);
 
-  mpfr_sub(tmp2, S, angles[2], MPFR_RNDN);
+  mpfr_sub(tmp2, S, angles_mpfr[2], MPFR_RNDN);
   mpfr_cos(tmp2, tmp2, MPFR_RNDN);
   mpfr_mul(tmp1, tmp1, tmp2, MPFR_RNDN);
 
-  mpfr_sin(tmp2, angles[0], MPFR_RNDN);
+  mpfr_sin(tmp2, angles_mpfr[0], MPFR_RNDN);
   mpfr_div(tmp1, tmp1, tmp2, MPFR_RNDN);
 
-  mpfr_sin(tmp2, angles[1], MPFR_RNDN);
+  mpfr_sin(tmp2, angles_mpfr[1], MPFR_RNDN);
   mpfr_div(tmp1, tmp1, tmp2, MPFR_RNDN);
 
   mpfr_neg(tmp1, tmp1, MPFR_RNDN);
@@ -109,9 +126,9 @@ geom_set(geom_t g, mpfr_t *angles)
 
   /* Compute v3 from knowing theta */
   mpfr_sin(tmp2, tmp1, MPFR_RNDN);
-  mpfr_cos(g->v3[0], angles[0], MPFR_RNDN);
+  mpfr_cos(g->v3[0], angles_mpfr[0], MPFR_RNDN);
   mpfr_mul(g->v3[0], g->v3[0], tmp2, MPFR_RNDN);
-  mpfr_sin(g->v3[1], angles[0], MPFR_RNDN);
+  mpfr_sin(g->v3[1], angles_mpfr[0], MPFR_RNDN);
   mpfr_mul(g->v3[1], g->v3[1], tmp2, MPFR_RNDN);
   mpfr_cos(g->v3[2], tmp1, MPFR_RNDN);
 
@@ -218,64 +235,64 @@ interior(points_t p, geom_t g)
   mpfr_init(tmp);
 
   for (int i = p->boundary; i < p->boundary + p->interior; i++)
+  {
+    /* We take s and t random with s in [0, 1) and s < 1 - t*/
+    mpfr_set_d(s, ((double)rand()/RAND_MAX), MPFR_RNDN);
+    mpfr_set_d(t, ((double)rand()/RAND_MAX), MPFR_RNDN);
+
+    /* Set tmp to 1 - t */
+    mpfr_sub_si(tmp, t, 1, MPFR_RNDN);
+    mpfr_neg(tmp, tmp, MPFR_RNDN);
+    /* If s < 1 - t set s = 1 - t, t = 1 - s to make them satisfy
+       s < 1 - t. */
+    if (mpfr_cmp(s, tmp) >= 0)
     {
-        /* We take s and t random with s in [0, 1) and s < 1 - t*/
-      mpfr_set_d(s, ((double)rand()/RAND_MAX), MPFR_RNDN);
-      mpfr_set_d(t, ((double)rand()/RAND_MAX), MPFR_RNDN);
+      /* Set t to 1 - s */
+      mpfr_sub_si(t, s, 1, MPFR_RNDN);
+      mpfr_neg(t, t, MPFR_RNDN);
 
-        /* Set tmp to 1 - t */
-        mpfr_sub_si(tmp, t, 1, MPFR_RNDN);
-        mpfr_neg(tmp, tmp, MPFR_RNDN);
-        /* If s < 1 - t set s = 1 - t, t = 1 - s to make them satisfy
-           s < 1 - t. */
-        if (mpfr_cmp(s, tmp) >= 0)
-        {
-            /* Set t to 1 - s */
-            mpfr_sub_si(t, s, 1, MPFR_RNDN);
-            mpfr_neg(t, t, MPFR_RNDN);
-
-            /* Set s to 1 - t */
-            mpfr_set(s, tmp, MPFR_RNDN);
-        }
-
-        mpfr_sub(x, g->v2[0], g->v1[0], MPFR_RNDN);
-        mpfr_mul(x, x, s, MPFR_RNDN);
-        mpfr_sub(tmp, g->v3[0], g->v1[0], MPFR_RNDN);
-        mpfr_mul(tmp, tmp, t, MPFR_RNDN);
-        mpfr_add(x, x, tmp, MPFR_RNDN);
-        mpfr_add(x, x, g->v1[0], MPFR_RNDN);
-
-        mpfr_sub(y, g->v2[1], g->v1[1], MPFR_RNDN);
-        mpfr_mul(y, y, s, MPFR_RNDN);
-        mpfr_sub(tmp, g->v3[1], g->v1[1], MPFR_RNDN);
-        mpfr_mul(tmp, tmp, t, MPFR_RNDN);
-        mpfr_add(y, y, tmp, MPFR_RNDN);
-        mpfr_add(y, y, g->v1[1], MPFR_RNDN);
-
-        mpfr_sub(z, g->v2[2], g->v1[2], MPFR_RNDN);
-        mpfr_mul(z, z, s, MPFR_RNDN);
-        mpfr_sub(tmp, g->v3[2], g->v1[2], MPFR_RNDN);
-        mpfr_mul(tmp, tmp, t, MPFR_RNDN);
-        mpfr_add(z, z, tmp, MPFR_RNDN);
-        mpfr_add(z, z, g->v1[2], MPFR_RNDN);
-
-        mpfr_sqr(norm, x, MPFR_RNDN);
-
-        mpfr_sqr(tmp, y, MPFR_RNDN);
-        mpfr_add(norm, norm, tmp, MPFR_RNDN);
-
-        mpfr_sqr(tmp, z, MPFR_RNDN);
-        mpfr_add(norm, norm, tmp, MPFR_RNDN);
-
-        mpfr_sqrt(norm, norm, MPFR_RNDN);
-
-        mpfr_div(x, x, norm, MPFR_RNDN);
-        mpfr_div(y, y, norm, MPFR_RNDN);
-        mpfr_div(z, z, norm, MPFR_RNDN);
-
-        mpfr_acos(p->thetas[i], z, MPFR_RNDN);
-        mpfr_atan2(p->phis[i], y, x, MPFR_RNDN);
+      /* Set s to 1 - t */
+      mpfr_set(s, tmp, MPFR_RNDN);
     }
+
+    mpfr_sub(x, g->v2[0], g->v1[0], MPFR_RNDN);
+    mpfr_mul(x, x, s, MPFR_RNDN);
+    mpfr_sub(tmp, g->v3[0], g->v1[0], MPFR_RNDN);
+    mpfr_mul(tmp, tmp, t, MPFR_RNDN);
+    mpfr_add(x, x, tmp, MPFR_RNDN);
+    mpfr_add(x, x, g->v1[0], MPFR_RNDN);
+
+    mpfr_sub(y, g->v2[1], g->v1[1], MPFR_RNDN);
+    mpfr_mul(y, y, s, MPFR_RNDN);
+    mpfr_sub(tmp, g->v3[1], g->v1[1], MPFR_RNDN);
+    mpfr_mul(tmp, tmp, t, MPFR_RNDN);
+    mpfr_add(y, y, tmp, MPFR_RNDN);
+    mpfr_add(y, y, g->v1[1], MPFR_RNDN);
+
+    mpfr_sub(z, g->v2[2], g->v1[2], MPFR_RNDN);
+    mpfr_mul(z, z, s, MPFR_RNDN);
+    mpfr_sub(tmp, g->v3[2], g->v1[2], MPFR_RNDN);
+    mpfr_mul(tmp, tmp, t, MPFR_RNDN);
+    mpfr_add(z, z, tmp, MPFR_RNDN);
+    mpfr_add(z, z, g->v1[2], MPFR_RNDN);
+
+    mpfr_sqr(norm, x, MPFR_RNDN);
+
+    mpfr_sqr(tmp, y, MPFR_RNDN);
+    mpfr_add(norm, norm, tmp, MPFR_RNDN);
+
+    mpfr_sqr(tmp, z, MPFR_RNDN);
+    mpfr_add(norm, norm, tmp, MPFR_RNDN);
+
+    mpfr_sqrt(norm, norm, MPFR_RNDN);
+
+    mpfr_div(x, x, norm, MPFR_RNDN);
+    mpfr_div(y, y, norm, MPFR_RNDN);
+    mpfr_div(z, z, norm, MPFR_RNDN);
+
+    mpfr_acos(p->thetas[i], z, MPFR_RNDN);
+    mpfr_atan2(p->phis[i], y, x, MPFR_RNDN);
+  }
 
   mpfr_clear(x);
   mpfr_clear(y);

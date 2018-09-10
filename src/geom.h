@@ -10,6 +10,7 @@ typedef struct
     mpfr_t *v2;
     mpfr_t *v3;
     mpfr_t theta_bound;
+    int angles[6];
     int half_boundary;
 } geom_struct;
 
@@ -31,7 +32,7 @@ void geom_clear(geom_t g);
 
 void geom_set_prec(geom_t g, mpfr_prec_t prec);
 
-void geom_set(geom_t g, mpfr_t *angles);
+void geom_set(geom_t g, int angles_coefs[]);
 
 void points_init(points_t p, int boundary, int interior);
 
