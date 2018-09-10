@@ -28,7 +28,7 @@ EXMPS = $(patsubst %.cpp, build/%, $(EXMP_SOURCES))
 TEST_SOURCES = $(wildcard tests/*.cpp)
 TESTS = $(patsubst %.cpp, build/%, $(TEST_SOURCES))
 
-all: build/particular-solution
+all: examples
 
 clean:
 	rm -rf build
@@ -45,9 +45,6 @@ build:
 
 build/%.o: src/%.cpp $(HEADERS) | build
 	$(CXX) $(CFLAGS) $(INCS) -c $< -o $@
-
-build/particular-solution: $(OBJS) | build
-	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
 
 build/tests/%: tests/%.cpp $(OBJS) | build/tests
 	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
