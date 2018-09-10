@@ -6,6 +6,7 @@
 typedef struct
 {
     double prec_factor;
+    double tol_relative;
     int N_beg;
     int N_end;
     int N_step;
@@ -24,7 +25,7 @@ int index_function_all(int k);
 void particular_solution_opt_init(particular_solution_opt_t options);
 
 void particular_solution_enclosure(geom_t geometry, int angles_coefs[],
-                                   mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp, mpfr_t tol,
+                                   mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp,
                                    particular_solution_opt_t options);
 
 #endif

@@ -185,7 +185,7 @@ Options are:\n\
 
     geom_set(geometry, angles_coefs);
 
-    particular_solution_enclosure(geometry, angles_coefs, mu0, nu_low, nu_upp, tol,
+    particular_solution_enclosure(geometry, angles_coefs, mu0, nu_low, nu_upp,
                                   options);
   }
 
