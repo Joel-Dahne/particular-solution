@@ -17,6 +17,10 @@ particular_solution_opt_struct;
 
 typedef particular_solution_opt_struct particular_solution_opt_t[1];
 
+int index_function_odd(int k);
+
+int index_function_all(int k);
+
 void particular_solution_opt_init(particular_solution_opt_t options);
 
 void particular_solution_enclosure(geom_t geometry, int angles_coefs[],

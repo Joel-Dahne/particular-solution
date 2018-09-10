@@ -6,14 +6,6 @@
 
 using namespace std;
 
-int index_function_odd(int k) {
-  return 2*k + 1;
-}
-
-int index_function_all(int k) {
-  return k + 1;
-}
-
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
   mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol, tmp;

@@ -3,11 +3,13 @@
 #include "sigma.h"
 #include "enclose.h"
 
-static int index_function_odd(int k) {
+int
+index_function_odd(int k) {
   return 2*k + 1;
 }
 
-static int index_function_all(int k) {
+int
+index_function_all(int k) {
   return k + 1;
 }
 
