@@ -28,6 +28,8 @@ EXMPS = $(patsubst %.cpp, build/%, $(EXMP_SOURCES))
 TEST_SOURCES = $(wildcard tests/*.cpp)
 TESTS = $(patsubst %.cpp, build/%, $(TEST_SOURCES))
 
+.SECONDARY: $(OBJS)
+
 all: examples
 
 clean:
