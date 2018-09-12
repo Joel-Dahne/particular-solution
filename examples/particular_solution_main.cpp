@@ -176,14 +176,12 @@ Options are:\n\
     mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
 
     /* Recompute values with new precision */
-    geom_set_prec(geometry, prec);
-
     mpfr_set_prec(mu0, prec);
 
     mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
     mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
 
-    geom_set(geometry, angles_coefs);
+    geom_set(geometry, angles_coefs, prec);
 
     particular_solution_enclosure(geometry, angles_coefs, mu0, nu_low, nu_upp,
                                   options);

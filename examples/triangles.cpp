@@ -254,8 +254,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t mu0, mpfr_t nu_low,
   }
 
   /* Set up the geometry */
-  geom_set_prec(geometry, prec);
-  geom_set(geometry, angles);
+  geom_set(geometry, angles, prec);
 
   /* Set mu0 */
   mpfr_set_prec(mu0, prec);

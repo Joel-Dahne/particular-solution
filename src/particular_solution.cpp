@@ -61,8 +61,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[], mpfr_t mu0,
     mpfr_prec_round(nu, prec, MPFR_RNDN);
 
     /* Recompute variables to new precision */
-    geom_set_prec(geometry, prec);
-    geom_set(geometry, angles_coefs);
+    geom_set(geometry, angles_coefs, prec);
 
     mpfr_set_prec(mu0, prec);
     mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
@@ -76,8 +75,8 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[], mpfr_t mu0,
 
     points_init(points, 2*N, 2*N);
 
-    boundary(points, geometry);
-    interior(points, geometry);
+    boundary(points, geometry, prec);
+    interior(points, geometry, prec);
 
     /* Find the value of nu that minimizes sigma */
     minimize_sigma(nu, points, N, nu_low, nu_upp, mu0, tol,

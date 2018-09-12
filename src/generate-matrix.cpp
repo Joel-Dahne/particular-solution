@@ -8,12 +8,10 @@
 
 void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
                      mpfr_t mu0_mpfr, int (*index)(int)) {
-  arb_t theta, phi, nu, mu0, mu, tmp, res;
+  arb_t nu, mu0, mu, tmp, res;
   fmpz_t mu_int;
   slong prec, prec_local, n;
 
-  arb_init(theta);
-  arb_init(phi);
   arb_init(nu);
   arb_init(mu0);
   arb_init(mu);
@@ -30,21 +28,19 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
   n = points->boundary + points->interior;
 
   for (slong i = 0; i < n; i++) {
-    arf_set_mpfr(arb_midref(theta), points->thetas[i]);
-    arf_set_mpfr(arb_midref(phi), points->phis[i]);
     for (slong j = 0; j < N; j++) {
       arb_mul_si(mu, mu0, index(j), prec);
       if (arb_get_unique_fmpz(mu_int, mu)) {
         arb_set_fmpz(mu, mu_int);
       }
-      arb_cos(tmp, theta, prec);
+      arb_cos(tmp, points->thetas + i, prec);
       prec_local = prec;
       do {
         arb_hypgeom_legendre_p(res, nu, mu, tmp, 0, prec_local);
         prec_local *=2;
       } while (!arb_is_finite(res));
 
-      arb_mul(tmp, mu, phi, prec);
+      arb_mul(tmp, mu, points->phis + i, prec);
       arb_sin(tmp, tmp, prec);
 
       arb_mul(res, res, tmp, prec);
@@ -53,8 +49,6 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
     }
   }
 
-  arb_clear(theta);
-  arb_clear(phi);
   arb_clear(nu);
   arb_clear(mu0);
   arb_clear(mu);
@@ -67,13 +61,11 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
 void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
                    mpfr_t nu_mpfr, mpfr_t mu0_mpfr, int (*index)(int)) {
   arb_ptr coefs;
-  arb_t theta, phi, nu, mu0, mu, tmp, term, sum;
+  arb_t nu, mu0, mu, tmp, term, sum;
   fmpz_t mu_int;
   slong prec, prec_local;
 
   coefs = _arb_vec_init(N);
-  arb_init(theta);
-  arb_init(phi);
   arb_init(nu);
   arb_init(mu0);
   arb_init(mu);
@@ -93,39 +85,33 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
   arf_set_mpfr(arb_midref(mu0), mu0_mpfr);
 
   for (slong i = 0; i < points->boundary + points->interior; i++) {
-    arf_set_mpfr(arb_midref(theta), points->thetas[i]);
-    arf_set_mpfr(arb_midref(phi), points->phis[i]);
-
     arb_zero(sum);
-
     for (slong j = 0; j < N; j++) {
       arb_mul_si(mu, mu0, index(j), prec);
       if (arb_get_unique_fmpz(mu_int, mu)) {
         arb_set_fmpz(mu, mu_int);
       }
 
-      arb_cos(tmp, theta, prec);
+      arb_cos(tmp, points->thetas + i, prec);
       prec_local = prec;
       do {
         arb_hypgeom_legendre_p(term, nu, mu, tmp, 0, prec_local);
         prec_local *=2;
       } while (!arb_is_finite(term));
 
-      arb_mul(tmp, mu, phi, prec);
+      arb_mul(tmp, mu, points->phis + i, prec);
       arb_sin(tmp, tmp, prec);
 
       arb_mul(term, term, tmp, prec);
-      arb_mul(term, term, coefs + j, prec);
 
-      arb_add(sum, sum, term, prec);
+      arb_addmul(sum, term, coefs + j, prec);
     }
 
     arf_get_mpfr(res[i], arb_midref(sum), MPFR_RNDN);
   }
 
   _arb_vec_clear(coefs, N);
-  arb_clear(theta);
-  arb_clear(phi);
+
   arb_clear(nu);
   arb_clear(mu0);
   arb_clear(mu);
