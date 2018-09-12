@@ -1,28 +1,13 @@
 #include "generate-matrix.h"
-
-#include "unsupported/Eigen/MPRealSupport"
-#include "Eigen/QR"
-#include "Eigen/SVD"
-#include "mpreal.h"
-
-using namespace mpfr;
-using namespace Eigen;
-
-typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
+#include "sigma_eigen.h"
 
 void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
-  mpreal *A_mpreal;
-  MatrixXmp A, Q;
-  HouseholderQR<MatrixXmp> qr;
-  BDCSVD<MatrixXmp> svd;
   int rows;
 
   rows = points->boundary + points->interior;
 
   A_mpfr = new mpfr_t[rows*N];
-  A_mpreal = new mpreal[rows*N];
-
   for (int i = 0; i < rows*N; i++) {
     mpfr_init(A_mpfr[i]);
   }
@@ -30,35 +15,19 @@ void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*inde
   // Fill A_mpfr with the coefficients for the matrix A
   generate_matrix(A_mpfr, points, N, nu, mu0, index);
 
-  // Create an array of mpreals with the same values
-  for (int i = 0; i < rows*N; i++)
-    A_mpreal[i] = mpreal(A_mpfr[i]);
-
-  // Create the matrix A from the coefficients
-  A = Map<MatrixXmp>(A_mpreal, rows, N);
-
-  // Perform QR decomposition
-  Q = MatrixXmp::Identity(rows, N);
-  qr = HouseholderQR<MatrixXmp>(A);
-  Q = qr.householderQ() * Q;
-
-  // Find the smallest singular values
-  svd = BDCSVD<MatrixXmp>(Q.block(0, 0, points->interior, N));
+  sigma_eigen(res, A_mpfr, points->interior, rows, N);
 
   for (int i = 0; i < rows*N; i++) {
     mpfr_clear(A_mpfr[i]);
   }
 
-  mpfr_set(res, svd.singularValues()(N-1).mpfr_srcptr(), MPFR_RNDN);
-
   delete [] A_mpfr;
-  delete [] A_mpreal;
 }
 
 void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
-                    mpfr_t nu_upp, mpfr_t mu0, mpfr_t tol_mpfr, int (*index)(int)) {
-  mpfr_t a, b, c, d, tmp;
-  mpreal tol, invphi, invphi2, h, yc, yd;
+                    mpfr_t nu_upp, mpfr_t mu0, mpfr_t tol, int (*index)(int)) {
+  mpfr_t a, b, c, d, tmp, tmp2;
+  mpfr_t invphi, invphi2, h, yc, yd;
   int n;
 
   mpfr_init(a);
@@ -66,43 +35,65 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
   mpfr_init(c);
   mpfr_init(d);
   mpfr_init(tmp);
+  mpfr_init(tmp2);
+  mpfr_init(invphi);
+  mpfr_init(invphi2);
+  mpfr_init(h);
+  mpfr_init(yc);
+  mpfr_init(yd);
 
   mpfr_set(a, nu_low, MPFR_RNDN);
   mpfr_set(b, nu_upp, MPFR_RNDN);
 
-  invphi = (sqrt(5) - 1)/2;
-  invphi2 = (3 - sqrt(5))/2;
+  mpfr_sqrt_ui(invphi, 5, MPFR_RNDN);
+  mpfr_sub_si(invphi, invphi, 1, MPFR_RNDN);
+  mpfr_div_si(invphi, invphi, 2, MPFR_RNDN);
 
-  h = mpreal(b) - mpreal(a);
-  tol = mpreal(tol_mpfr);
+  mpfr_sqrt_ui(invphi2, 5, MPFR_RNDN);
+  mpfr_sub_si(invphi2, invphi2, 3, MPFR_RNDN);
+  mpfr_div_si(invphi2, invphi2, 2, MPFR_RNDN);
+  mpfr_neg(invphi2, invphi2, MPFR_RNDN);
 
-  if (h > tol) {
-    n = (int) ceil(log(tol/h)/log(invphi));
-    mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-    mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
+  mpfr_sub(h, b, a, MPFR_RNDN);
 
-    sigma(tmp, points, N, c, mu0, index);
-    yc = mpreal(tmp);
-    sigma(tmp, points, N, d, mu0, index);
-    yd = mpreal(tmp);
+  if (mpfr_cmp(h, tol) > 0) {
+    mpfr_div(tmp, tol, h, MPFR_RNDN);
+    mpfr_log(tmp, tmp, MPFR_RNDN);
+    mpfr_log(tmp2, invphi, MPFR_RNDN);
+    mpfr_div(tmp, tmp, tmp2, MPFR_RNDN);
+    n = mpfr_get_si(tmp, MPFR_RNDU);
+
+    mpfr_mul(tmp, invphi2, h, MPFR_RNDN);
+    mpfr_add(c, a, tmp, MPFR_RNDN);
+    mpfr_mul(tmp, invphi, h, MPFR_RNDN);
+    mpfr_add(d, a, tmp, MPFR_RNDN);
+
+    sigma(yc, points, N, c, mu0, index);
+    sigma(yd, points, N, d, mu0, index);
 
     for (int k = 0; k < n; k++) {
-      if (yc < yd) {
+      if (mpfr_cmp(yc, yd) < 0) {
         mpfr_set(b, d, MPFR_RNDN);
         mpfr_set(d, c, MPFR_RNDN);
-        yd = yc;
-        h = invphi*h;
-        mpfr_add(c, a, (invphi2*h).mpfr_srcptr(), MPFR_RNDN);
-        sigma(tmp, points, N, c, mu0, index);
-        yc = mpreal(tmp);
+        mpfr_set(yd, yc, MPFR_RNDN);
+
+        mpfr_mul(h, h, invphi, MPFR_RNDN);
+
+        mpfr_mul(tmp, invphi2, h, MPFR_RNDN);
+        mpfr_add(c, a, tmp, MPFR_RNDN);
+
+        sigma(yc, points, N, c, mu0, index);
       } else {
         mpfr_set(a, c, MPFR_RNDN);
         mpfr_set(c, d, MPFR_RNDN);
-        yc = yd;
-        h = invphi*h;
-        mpfr_add(d, a, (invphi*h).mpfr_srcptr(), MPFR_RNDN);
-        sigma(tmp, points, N, d, mu0, index);
-        yd = mpreal(tmp);
+        mpfr_set(yc, yd, MPFR_RNDN);
+
+        mpfr_mul(h, h, invphi, MPFR_RNDN);
+
+        mpfr_mul(tmp, invphi, h, MPFR_RNDN);
+        mpfr_add(d, a, tmp, MPFR_RNDN);
+
+        sigma(yd, points, N, d, mu0, index);
       }
     }
 
@@ -122,57 +113,36 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
   mpfr_clear(c);
   mpfr_clear(d);
   mpfr_clear(tmp);
+  mpfr_clear(tmp2);
+  mpfr_clear(invphi);
+  mpfr_clear(invphi2);
+  mpfr_clear(h);
+  mpfr_clear(yc);
+  mpfr_clear(yd);
 }
 
 void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, mpfr_t nu,
                  mpfr_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
-  mpreal *A_mpreal;
-  MatrixXmp A, Q, coefs;
-  HouseholderQR<MatrixXmp> qr;
-  BDCSVD<MatrixXmp> svd;
   int rows;
 
   rows = points->boundary + points->interior;
 
   A_mpfr = new mpfr_t[rows*N];
-  A_mpreal = new mpreal[rows*N];
-
-  for (int i = 0; i < rows*N; i++) {
+  for (int i = 0; i < rows*N; i++)
+  {
     mpfr_init(A_mpfr[i]);
   }
 
   // Fill A_arr with the coefficients for the matrix A
   generate_matrix(A_mpfr, points, N, nu, mu0, index);
 
-  // Create an array of mpreals with the same values
+  coefs_sigma_eigen(coefs_mpfr, A_mpfr, points->interior, rows, N);
+
   for (int i = 0; i < rows*N; i++)
-    A_mpreal[i] = mpreal(A_mpfr[i]);
-
-  // Create the matrix A from the coefficients
-  A = Map<MatrixXmp>(A_mpreal, rows, N);
-
-  // Perform QR decomposition
-  Q = MatrixXmp::Identity(rows, N);
-  qr = HouseholderQR<MatrixXmp>(A);
-  Q = qr.householderQ() * Q;
-
-  // Compute the right singular vector corresponding to the smallest
-  // singular value
-  svd = BDCSVD<MatrixXmp>(Q.block(0, 0, points->interior, N), ComputeThinV);
-
-  // Compute the coefficients
-  coefs = qr.solve(Q*(svd.matrixV().col(N-1)));;
-
-  coefs /= coefs(0);
-
-  for (int i = 0; i < N; i++)
-    mpfr_set(coefs_mpfr[i], coefs(i).mpfr_srcptr(), MPFR_RNDN);
-
-  for (int i = 0; i < rows*N; i++) {
+  {
     mpfr_clear(A_mpfr[i]);
   }
 
   delete [] A_mpfr;
-  delete [] A_mpreal;
 }
