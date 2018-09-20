@@ -1,7 +1,7 @@
 #include "generate-matrix.h"
 #include "sigma_eigen.h"
 
-void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, arb_t mu0, int (*index)(int)) {
+void sigma(mpfr_t res, points_t points, int N, arb_t nu, arb_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
   int rows;
 
@@ -24,104 +24,109 @@ void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, arb_t mu0, int (*index
   delete [] A_mpfr;
 }
 
-void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
-                    mpfr_t nu_upp, arb_t mu0, mpfr_t tol, int (*index)(int)) {
-  mpfr_t a, b, c, d, tmp, tmp2;
-  mpfr_t invphi, invphi2, h, yc, yd;
+void minimize_sigma(arb_t nu, points_t points, int N, mpfr_t nu_low,
+                    mpfr_t nu_upp, arb_t mu0, arb_t tol, int (*index)(int)) {
+  mpfr_t yc, yd;
+  arb_t a, b, c, d, h, invphi, invphi2, tmp, tmp2;;
+  slong prec;
   int n;
 
-  mpfr_init(a);
-  mpfr_init(b);
-  mpfr_init(c);
-  mpfr_init(d);
-  mpfr_init(tmp);
-  mpfr_init(tmp2);
-  mpfr_init(invphi);
-  mpfr_init(invphi2);
-  mpfr_init(h);
   mpfr_init(yc);
   mpfr_init(yd);
 
-  mpfr_set(a, nu_low, MPFR_RNDN);
-  mpfr_set(b, nu_upp, MPFR_RNDN);
+  arb_init(a);
+  arb_init(b);
+  arb_init(c);
+  arb_init(d);
+  arb_init(invphi);
+  arb_init(invphi2);
+  arb_init(h);
+  arb_init(tmp);
+  arb_init(tmp2);
 
-  mpfr_sqrt_ui(invphi, 5, MPFR_RNDN);
-  mpfr_sub_si(invphi, invphi, 1, MPFR_RNDN);
-  mpfr_div_si(invphi, invphi, 2, MPFR_RNDN);
+  prec = mpfr_get_default_prec();
 
-  mpfr_sqrt_ui(invphi2, 5, MPFR_RNDN);
-  mpfr_sub_si(invphi2, invphi2, 3, MPFR_RNDN);
-  mpfr_div_si(invphi2, invphi2, 2, MPFR_RNDN);
-  mpfr_neg(invphi2, invphi2, MPFR_RNDN);
+  arb_set_interval_mpfr(a, nu_low, nu_low, prec);
+  arb_set_interval_mpfr(b, nu_upp, nu_upp, prec);
 
-  mpfr_sub(h, b, a, MPFR_RNDN);
+  arb_sqrt_ui(invphi, 5, prec);
+  arb_sub_si(invphi, invphi, 1, prec);
+  arb_div_si(invphi, invphi, 2, prec);
 
-  if (mpfr_cmp(h, tol) > 0) {
-    mpfr_div(tmp, tol, h, MPFR_RNDN);
-    mpfr_log(tmp, tmp, MPFR_RNDN);
-    mpfr_log(tmp2, invphi, MPFR_RNDN);
-    mpfr_div(tmp, tmp, tmp2, MPFR_RNDN);
-    n = mpfr_get_si(tmp, MPFR_RNDU);
+  arb_sqrt_ui(invphi2, 5, prec);
+  arb_sub_si(invphi2, invphi2, 3, prec);
+  arb_div_si(invphi2, invphi2, 2, prec);
+  arb_neg(invphi2, invphi2);
 
-    mpfr_mul(tmp, invphi2, h, MPFR_RNDN);
-    mpfr_add(c, a, tmp, MPFR_RNDN);
-    mpfr_mul(tmp, invphi, h, MPFR_RNDN);
-    mpfr_add(d, a, tmp, MPFR_RNDN);
+  arb_sub(h, b, a, prec);
+
+  if (arb_ge(h, tol)) {
+    arb_div(tmp, tol, h, prec);
+    arb_log(tmp, tmp, prec);
+    arb_log(tmp2, invphi, prec);
+    arb_div(tmp, tmp, tmp2, prec);
+    n = arf_get_si(arb_midref(tmp),  ARF_RND_CEIL);
+
+    arb_mul(tmp, invphi2, h, prec);
+    arb_add(c, a, tmp, prec);
+    arb_mul(tmp, invphi, h, prec);
+    arb_add(d, a, tmp, prec);
 
     sigma(yc, points, N, c, mu0, index);
     sigma(yd, points, N, d, mu0, index);
 
     for (int k = 0; k < n; k++) {
       if (mpfr_cmp(yc, yd) < 0) {
-        mpfr_set(b, d, MPFR_RNDN);
-        mpfr_set(d, c, MPFR_RNDN);
+        arb_set(b, d);
+        arb_set(d, c);
         mpfr_set(yd, yc, MPFR_RNDN);
 
-        mpfr_mul(h, h, invphi, MPFR_RNDN);
+        arb_mul(h, h, invphi, prec);
 
-        mpfr_mul(tmp, invphi2, h, MPFR_RNDN);
-        mpfr_add(c, a, tmp, MPFR_RNDN);
+        arb_mul(tmp, invphi2, h, prec);
+        arb_add(c, a, tmp, prec);
 
         sigma(yc, points, N, c, mu0, index);
       } else {
-        mpfr_set(a, c, MPFR_RNDN);
-        mpfr_set(c, d, MPFR_RNDN);
+        arb_set(a, c);
+        arb_set(c, d);
         mpfr_set(yc, yd, MPFR_RNDN);
 
-        mpfr_mul(h, h, invphi, MPFR_RNDN);
+        arb_mul(h, h, invphi, prec);
 
-        mpfr_mul(tmp, invphi, h, MPFR_RNDN);
-        mpfr_add(d, a, tmp, MPFR_RNDN);
+        arb_mul(tmp, invphi, h, prec);
+        arb_add(d, a, tmp, prec);
 
         sigma(yd, points, N, d, mu0, index);
       }
     }
 
     if (yc < yd) {
-      mpfr_set(b, d, MPFR_RNDN);
+      arb_set(b, d);
     } else {
-      mpfr_set(a, c, MPFR_RNDN);
-      mpfr_set(d, b, MPFR_RNDN);
+      arb_set(a, c);
+      arb_set(d, b);
     }
   }
 
-  mpfr_add(nu, a, b, MPFR_RNDN);
-  mpfr_div_si(nu, nu, 2, MPFR_RNDN);
+  arb_add(nu, a, b, prec);
+  arb_div_si(nu, nu, 2, prec);
 
-  mpfr_clear(a);
-  mpfr_clear(b);
-  mpfr_clear(c);
-  mpfr_clear(d);
-  mpfr_clear(tmp);
-  mpfr_clear(tmp2);
-  mpfr_clear(invphi);
-  mpfr_clear(invphi2);
-  mpfr_clear(h);
   mpfr_clear(yc);
   mpfr_clear(yd);
+
+  arb_clear(a);
+  arb_clear(b);
+  arb_clear(c);
+  arb_clear(d);
+  arb_clear(invphi);
+  arb_clear(invphi2);
+  arb_clear(h);
+  arb_clear(tmp);
+  arb_clear(tmp2);
 }
 
-void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, mpfr_t nu,
+void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, arb_t nu,
                  arb_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
   int rows;

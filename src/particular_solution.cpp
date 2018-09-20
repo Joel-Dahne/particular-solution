@@ -16,8 +16,15 @@ index_function_all(int k) {
 void
 particular_solution_opt_init(particular_solution_opt_t options)
 {
-  options->prec_factor = 1.2;
-  options->tol_relative = 1e-5;
+  arb_init(options->prec_factor);
+  arb_init(options->tol_relative);
+}
+
+void
+particular_solution_opt_default(particular_solution_opt_t options)
+{
+  arb_set_d(options->prec_factor, 1.2);
+  arb_set_d(options->tol_relative, 1e-5);
   options->N_beg = 4;
   options->N_end = 16;
   options->N_step = 2;
@@ -26,42 +33,51 @@ particular_solution_opt_init(particular_solution_opt_t options)
 }
 
 void
+particular_solution_opt_clear(particular_solution_opt_t options)
+{
+  arb_clear(options->prec_factor);
+  arb_clear(options->tol_relative);
+}
+
+void
 particular_solution_enclosure(geom_t geometry, int angles_coefs[],
                               mpfr_t nu_low, mpfr_t nu_upp,
                               particular_solution_opt_t options)
 {
   mpfr_t *coefs;
-  mpfr_t nu, tol, tmp;
-  arb_t mu0;
+  arb_t nu, mu0, tol, tmp;
   points_t points;
   int prec;
 
-  mpfr_init(nu);
-  mpfr_init(tol);
-  mpfr_init(tmp);
-
+  arb_init(nu);
   arb_init(mu0);
+  arb_init(tol);
+  arb_init(tmp);
 
   prec = mpfr_get_default_prec();
 
   for (int N = options->N_beg; N <= options->N_end; N += options->N_step)
   {
     /* Compute tolerance and precision to use */
-    mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
-    mpfr_mul_d(tol, tol, options->tol_relative, MPFR_RNDN);
+    arb_set_interval_mpfr(tol, nu_low, nu_upp, prec);
+    arb_get_rad_arb(tol, tol);
+    arb_mul(tol, tol, options->tol_relative, prec);
 
     /* FIXME: Use the size of nu in the computations for the precision */
-    mpfr_log2(tmp, tol, MPFR_RNDN);
-    mpfr_mul_d(tmp, tmp, -options->prec_factor, MPFR_RNDN);
-    if (mpfr_get_si(tmp, MPFR_RNDN) > prec)
-      prec = mpfr_get_si(tmp, MPFR_RNDN);
+    arb_log_base_ui(tmp, tol, 2, prec);
+    arb_mul(tmp, tmp, options->prec_factor, prec);
+    arb_neg(tmp, tmp);
+
+    if (arf_get_si(arb_midref(tmp), ARF_RND_CEIL) > prec)
+    {
+      prec = arf_get_si(arb_midref(tmp), ARF_RND_CEIL);
+    }
 
     mpfr_set_default_prec(prec);
 
     /* Round variables to new precision */
     mpfr_prec_round(nu_low, prec, MPFR_RNDN);
     mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
-    mpfr_prec_round(nu, prec, MPFR_RNDN);
 
     /* Recompute variables to new precision */
     geom_set(geometry, angles_coefs, prec);
@@ -105,9 +121,8 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     points_clear(points);
   }
 
-  mpfr_clear(nu);
-  mpfr_clear(tol);
-  mpfr_clear(tmp);
-
+  arb_clear(nu);
   arb_clear(mu0);
+  arb_clear(tol);
+  arb_clear(tmp);
 }

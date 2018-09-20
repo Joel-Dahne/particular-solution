@@ -6,8 +6,8 @@
 
 typedef struct
 {
-    double prec_factor;
-    double tol_relative;
+    arb_t prec_factor;
+    arb_t tol_relative;
     int N_beg;
     int N_end;
     int N_step;
@@ -24,6 +24,10 @@ int index_function_odd(int k);
 int index_function_all(int k);
 
 void particular_solution_opt_init(particular_solution_opt_t options);
+
+void particular_solution_opt_default(particular_solution_opt_t options);
+
+void particular_solution_opt_clear(particular_solution_opt_t options);
 
 void particular_solution_enclosure(geom_t geometry, int angles_coefs[],
                                    mpfr_t nu_low, mpfr_t nu_upp,

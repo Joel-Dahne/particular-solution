@@ -33,7 +33,8 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 2;
 
     /* Set custom options */
-    options->prec_factor = 2;
+    arb_set_d(options->prec_factor, 2);
+    options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
     geometry->half_boundary = 0;
@@ -55,7 +56,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 2;
 
     /* Set custom options */
-    options->prec_factor = 2;
+    arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
@@ -78,7 +79,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 2;
 
     /* Set custom options */
-    options->prec_factor = 2;
+    arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
@@ -101,7 +102,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 3;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
@@ -124,7 +125,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 3;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
@@ -147,7 +148,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 4;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
     /* Set if only half of the boundary is to be used or not */
@@ -170,7 +171,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 4;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
     /* Set if only half of the boundary is to be used or not */
@@ -193,7 +194,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 3;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
     /* Set if only half of the boundary is to be used or not */
@@ -216,7 +217,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 4;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
     /* Set if only half of the boundary is to be used or not */
@@ -239,7 +240,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     angles[5] = 3;
 
     /* Set custom options */
-    options->prec_factor = 1.2;
+    arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
     /* Set if only half of the boundary is to be used or not */
@@ -366,12 +367,13 @@ main(int argc, char *argv[])
     }
     else if (!strcmp(argv[i], "-tol"))
     {
-      options->tol_relative = atof(argv[i + 1]);
+      arb_set_d(options->tol_relative, atof(argv[i + 1]));
     }
   }
 
   for (int i = ifrom; i <= ito; i++)
   {
+    particular_solution_opt_default(options);
     get_triangle(geometry, angles, nu_low, nu_upp, options, i, prec);
 
     particular_solution_enclosure(geometry, angles, nu_low, nu_upp,
@@ -382,6 +384,8 @@ main(int argc, char *argv[])
   mpfr_clear(nu_upp);
 
   geom_clear(geometry);
+
+  particular_solution_opt_clear(options);
 
   flint_cleanup();
 

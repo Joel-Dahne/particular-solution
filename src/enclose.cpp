@@ -748,9 +748,9 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 
 void
 enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
-        int N, mpfr_t nu_mpfr, int (*index)(int), int output) {
+        int N, arb_t nu, int (*index)(int), int output) {
   arb_ptr v1, v2, coefs;
-  arb_t eps, nu, theta_bound_low, theta_bound_upp, critical_point, norm,
+  arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
   fmpq_t mu0;
   slong prec;
@@ -760,7 +760,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   coefs = _arb_vec_init(N);
 
   arb_init(eps);
-  arb_init(nu);
   arb_init(theta_bound_low);
   arb_init(theta_bound_upp);
   arb_init(critical_point);
@@ -777,8 +776,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   {
     arf_set_mpfr(arb_midref(coefs + i), coefs_mpfr[i]);
   }
-
-  arf_set_mpfr(arb_midref(nu), nu_mpfr);
 
   /* Compute enclosures of the required parameters */
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
@@ -847,7 +844,6 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], mpfr_t *coefs_mpfr,
   _arb_vec_clear(v2, 3);
   _arb_vec_clear(coefs, N);
   arb_clear(eps);
-  arb_clear(nu);
   arb_clear(theta_bound_low);
   arb_clear(theta_bound_upp);
   arb_clear(critical_point);
