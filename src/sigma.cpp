@@ -126,17 +126,22 @@ void minimize_sigma(arb_t nu, points_t points, int N, mpfr_t nu_low,
   arb_clear(tmp2);
 }
 
-void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, arb_t nu,
+void coefs_sigma(arb_ptr coefs, points_t points, int N, arb_t nu,
                  arb_t mu0, int (*index)(int)) {
-  mpfr_t *A_mpfr;
+  mpfr_t *A_mpfr, *coefs_mpfr;
   int rows;
 
   rows = points->boundary + points->interior;
 
   A_mpfr = new mpfr_t[rows*N];
+  coefs_mpfr = new mpfr_t[N];
   for (int i = 0; i < rows*N; i++)
   {
     mpfr_init(A_mpfr[i]);
+  }
+  for (int i = 0; i < N; i++)
+  {
+    mpfr_init(coefs_mpfr[i]);
   }
 
   // Fill A_arr with the coefficients for the matrix A
@@ -144,10 +149,21 @@ void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, arb_t nu,
 
   coefs_sigma_eigen(coefs_mpfr, A_mpfr, points->interior, rows, N);
 
+  for (int i = 0; i < N; i++)
+  {
+    arf_set_mpfr(arb_midref(coefs + i), coefs_mpfr[i]);
+    mag_zero(arb_radref(coefs + i));
+  }
+
   for (int i = 0; i < rows*N; i++)
   {
     mpfr_clear(A_mpfr[i]);
   }
+  for (int i = 0; i < N; i++)
+  {
+    mpfr_clear(coefs_mpfr[i]);
+  }
 
   delete [] A_mpfr;
+  delete [] coefs_mpfr;
 }

@@ -47,14 +47,12 @@ void generate_matrix(mpfr_t *A, points_t points, int N, arb_t nu,
   fmpz_clear(mu_int);
 }
 
-void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
+void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, int N,
                    arb_t nu, arb_t mu0, int (*index)(int)) {
-  arb_ptr coefs;
   arb_t mu, tmp, term, sum;
   fmpz_t mu_int;
   slong prec, prec_local;
 
-  coefs = _arb_vec_init(N);
   arb_init(mu);
   arb_init(tmp);
   arb_init(term);
@@ -63,10 +61,6 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
   fmpz_init(mu_int);
 
   prec = mpfr_get_default_prec();
-
-  for (slong j = 0; j < N; j++) {
-    arf_set_mpfr(arb_midref(coefs + j), coefs_mpfr[j]);
-  }
 
   for (slong i = 0; i < points->boundary + points->interior; i++) {
     arb_zero(sum);
@@ -93,8 +87,6 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
 
     arf_get_mpfr(res[i], arb_midref(sum), MPFR_RNDN);
   }
-
-  _arb_vec_clear(coefs, N);
 
   arb_clear(mu);
   arb_clear(tmp);

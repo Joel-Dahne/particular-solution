@@ -44,7 +44,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
                               mpfr_t nu_low, mpfr_t nu_upp,
                               particular_solution_opt_t options)
 {
-  mpfr_t *coefs;
+  arb_ptr coefs;
   arb_t nu, mu0, tol, tmp;
   points_t points;
   int prec;
@@ -86,10 +86,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     arb_div_si(mu0, mu0, angles_coefs[0], prec);
 
     /* Initiate new variables */
-    coefs = new mpfr_t[N];
-    for (int i = 0; i < N; i++) {
-      mpfr_init(coefs[i]);
-    }
+    coefs = _arb_vec_init(N);
 
     points_init(points, 2*N, 2*N);
 
@@ -113,10 +110,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
             options->index_function, 4);
     mpfr_printf("\n");
 
-    for (int i = 0; i < N; i++) {
-      mpfr_clear(coefs[i]);
-    }
-    delete [] coefs;
+    _arb_vec_clear(coefs, N);
 
     points_clear(points);
   }
