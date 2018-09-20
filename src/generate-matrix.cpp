@@ -1,19 +1,14 @@
 #include "generate-matrix.h"
 
-#include "arb.h"
-#include "acb.h"
 #include "arb_hypgeom.h"
-#include "acb_hypgeom.h"
-#include "acb_calc.h"
 
 void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
-                     mpfr_t mu0_mpfr, int (*index)(int)) {
-  arb_t nu, mu0, mu, tmp, res;
+                     arb_t mu0, int (*index)(int)) {
+  arb_t nu, mu, tmp, res;
   fmpz_t mu_int;
   slong prec, prec_local, n;
 
   arb_init(nu);
-  arb_init(mu0);
   arb_init(mu);
   arb_init(tmp);
   arb_init(res);
@@ -23,7 +18,6 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
   prec = mpfr_get_default_prec();
 
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
-  arf_set_mpfr(arb_midref(mu0), mu0_mpfr);
 
   n = points->boundary + points->interior;
 
@@ -50,7 +44,6 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
   }
 
   arb_clear(nu);
-  arb_clear(mu0);
   arb_clear(mu);
   arb_clear(tmp);
   arb_clear(res);
@@ -59,15 +52,14 @@ void generate_matrix(mpfr_t *A, points_t points, int N, mpfr_t nu_mpfr,
 }
 
 void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
-                   mpfr_t nu_mpfr, mpfr_t mu0_mpfr, int (*index)(int)) {
+                   mpfr_t nu_mpfr, arb_t mu0, int (*index)(int)) {
   arb_ptr coefs;
-  arb_t nu, mu0, mu, tmp, term, sum;
+  arb_t nu, mu, tmp, term, sum;
   fmpz_t mu_int;
   slong prec, prec_local;
 
   coefs = _arb_vec_init(N);
   arb_init(nu);
-  arb_init(mu0);
   arb_init(mu);
   arb_init(tmp);
   arb_init(term);
@@ -82,7 +74,6 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
   }
 
   arf_set_mpfr(arb_midref(nu), nu_mpfr);
-  arf_set_mpfr(arb_midref(mu0), mu0_mpfr);
 
   for (slong i = 0; i < points->boundary + points->interior; i++) {
     arb_zero(sum);
@@ -113,7 +104,6 @@ void eigenfunction(mpfr_t *res, mpfr_t *coefs_mpfr, points_t points, int N,
   _arb_vec_clear(coefs, N);
 
   arb_clear(nu);
-  arb_clear(mu0);
   arb_clear(mu);
   arb_clear(tmp);
   arb_clear(term);

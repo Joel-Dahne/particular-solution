@@ -16,9 +16,8 @@
 /* ------------------------------------------------------------------------- */
 
 void
-get_triangle(geom_t geometry, int angles[], mpfr_t mu0, mpfr_t nu_low,
-             mpfr_t nu_upp, particular_solution_opt_t options, int triangle,
-             int prec)
+get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
+             particular_solution_opt_t options, int triangle, int prec)
 {
   /* Set default precision */
   mpfr_set_default_prec(prec);
@@ -256,11 +255,6 @@ get_triangle(geom_t geometry, int angles[], mpfr_t mu0, mpfr_t nu_low,
   /* Set up the geometry */
   geom_set(geometry, angles, prec);
 
-  /* Set mu0 */
-  mpfr_set_prec(mu0, prec);
-  mpfr_set_si(mu0, -angles[1], MPFR_RNDN);
-  mpfr_div_si(mu0, mu0, angles[0], MPFR_RNDN);
-
   /* Set starting enclosure of nu */
   mpfr_sub_d(nu_low, nu_low, 1e-2, MPFR_RNDN);
   mpfr_add_d(nu_upp, nu_upp, 1e-2, MPFR_RNDN);
@@ -289,7 +283,7 @@ const char * descr[NUM_TRIANGLES] =
 int
 main(int argc, char *argv[])
 {
-  mpfr_t mu0, nu_low, nu_upp;
+  mpfr_t nu_low, nu_upp;
   int angles[6];
   geom_t geometry;
   particular_solution_opt_t options;
@@ -345,7 +339,6 @@ main(int argc, char *argv[])
 
   prec = 64;
 
-  mpfr_init(mu0);
   mpfr_init(nu_low);
   mpfr_init(nu_upp);
 
@@ -379,13 +372,12 @@ main(int argc, char *argv[])
 
   for (int i = ifrom; i <= ito; i++)
   {
-    get_triangle(geometry, angles, mu0, nu_low, nu_upp, options, i, prec);
+    get_triangle(geometry, angles, nu_low, nu_upp, options, i, prec);
 
-    particular_solution_enclosure(geometry, angles, mu0, nu_low, nu_upp,
+    particular_solution_enclosure(geometry, angles, nu_low, nu_upp,
                                   options);
   }
 
-  mpfr_clear(mu0);
   mpfr_clear(nu_low);
   mpfr_clear(nu_upp);
 

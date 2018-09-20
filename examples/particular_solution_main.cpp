@@ -8,7 +8,7 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
   mpfr_t angles[3];
-  mpfr_t mu0, nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol, tmp;
+  mpfr_t nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol, tmp;
   double prec_factor;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
@@ -144,7 +144,6 @@ Options are:\n\
     mpfr_init(angles[i]);
   }
 
-  mpfr_init(mu0);
   mpfr_init(nu_guess);
   mpfr_init(nu_width);
   mpfr_init(nu_low);
@@ -176,14 +175,9 @@ Options are:\n\
     mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
 
     /* Recompute values with new precision */
-    mpfr_set_prec(mu0, prec);
-
-    mpfr_set_si(mu0, -angles_coefs[1], MPFR_RNDN);
-    mpfr_div_si(mu0, mu0, angles_coefs[0], MPFR_RNDN);
-
     geom_set(geometry, angles_coefs, prec);
 
-    particular_solution_enclosure(geometry, angles_coefs, mu0, nu_low, nu_upp,
+    particular_solution_enclosure(geometry, angles_coefs, nu_low, nu_upp,
                                   options);
   }
 
@@ -191,7 +185,6 @@ Options are:\n\
   for (int i = 0; i < 3; i++) {
     mpfr_clear(angles[i]);
   }
-  mpfr_clear(mu0);
   mpfr_clear(nu_guess);
   mpfr_init(nu_width);
   mpfr_init(nu_low);

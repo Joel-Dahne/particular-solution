@@ -1,7 +1,7 @@
 #include "generate-matrix.h"
 #include "sigma_eigen.h"
 
-void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*index)(int)) {
+void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, arb_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
   int rows;
 
@@ -25,7 +25,7 @@ void sigma(mpfr_t res, points_t points, int N, mpfr_t nu, mpfr_t mu0, int (*inde
 }
 
 void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
-                    mpfr_t nu_upp, mpfr_t mu0, mpfr_t tol, int (*index)(int)) {
+                    mpfr_t nu_upp, arb_t mu0, mpfr_t tol, int (*index)(int)) {
   mpfr_t a, b, c, d, tmp, tmp2;
   mpfr_t invphi, invphi2, h, yc, yd;
   int n;
@@ -122,7 +122,7 @@ void minimize_sigma(mpfr_t nu, points_t points, int N, mpfr_t nu_low,
 }
 
 void coefs_sigma(mpfr_t *coefs_mpfr, points_t points, int N, mpfr_t nu,
-                 mpfr_t mu0, int (*index)(int)) {
+                 arb_t mu0, int (*index)(int)) {
   mpfr_t *A_mpfr;
   int rows;
 

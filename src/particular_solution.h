@@ -2,6 +2,7 @@
 #define PARTICULAR_SOLUTIONS
 
 #include "geom.h"
+#include "arb.h"
 
 typedef struct
 {
@@ -25,7 +26,7 @@ int index_function_all(int k);
 void particular_solution_opt_init(particular_solution_opt_t options);
 
 void particular_solution_enclosure(geom_t geometry, int angles_coefs[],
-                                   mpfr_t mu0, mpfr_t nu_low, mpfr_t nu_upp,
+                                   mpfr_t nu_low, mpfr_t nu_upp,
                                    particular_solution_opt_t options);
 
 #endif
