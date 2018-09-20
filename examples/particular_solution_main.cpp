@@ -168,10 +168,9 @@ Options are:\n\
     mpfr_set_default_prec(prec);
 
     /* Recompute values with new precision */
-    geom_set(geometry, angles_coefs, prec);
+    geom_set_angles(geometry, angles_coefs);
 
-    particular_solution_enclosure(geometry, angles_coefs, nu_enclosure,
-                                  options);
+    particular_solution_enclosure(geometry, nu_enclosure, options);
   }
 
   geom_clear(geometry);

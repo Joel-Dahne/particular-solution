@@ -1,11 +1,13 @@
+#include "enclose.h"
+
 #include "arb_hypgeom.h"
 #include "acb_hypgeom.h"
 #include "acb_calc.h"
 
 static void
 angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound_low,
-                                  arb_t theta_bound_upp, arb_t critical_point,
-                                  int angles_coefs[], slong prec)
+                      arb_t theta_bound_upp, arb_t critical_point,
+                      fmpq * angles_fmpq, slong prec)
 {
   arb_ptr angles, w;
   arb_t S, theta1, theta2, tmp, tmp_dot;
@@ -18,11 +20,9 @@ angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound_low,
   arb_init(tmp);
   arb_init(tmp_dot);
 
-  for (slong i = 0; i < 3; i++)
-  {
-    arb_set_si(angles + i, angles_coefs[2*i]);
-    arb_div_si(angles + i, angles + i, angles_coefs[2*i + 1], prec);
-  }
+  arb_set_fmpq(angles + 0, angles_fmpq + 0, prec);
+  arb_set_fmpq(angles + 1, angles_fmpq + 1, prec);
+  arb_set_fmpq(angles + 2, angles_fmpq + 2, prec);
 
   /* Compute the sum of the angles */
   arb_add(S, angles, angles + 1, prec);
@@ -747,7 +747,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 }
 
 void
-enclose(arb_t nu_enclosure, int angles_coefs[], arb_ptr coefs,
+enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
         int N, arb_t nu, int (*index)(int), int output) {
   arb_ptr v1, v2;
   arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
@@ -773,9 +773,11 @@ enclose(arb_t nu_enclosure, int angles_coefs[], arb_ptr coefs,
 
   /* Compute enclosures of the required parameters */
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
-                        critical_point, angles_coefs, 2*prec);
+                        critical_point, geometry->angles, 2*prec);
 
-  fmpq_set_si(mu0, -angles_coefs[1], angles_coefs[0]);
+  fmpq_set(mu0, geometry->angles);
+  fmpq_inv(mu0, mu0);
+  fmpq_neg(mu0, mu0);
 
   /* Compute an enclosure of a lower bound of the norm */
   integral_norm(norm, coefs, N, theta_bound_low, nu, mu0, index, prec);
@@ -784,8 +786,7 @@ enclose(arb_t nu_enclosure, int angles_coefs[], arb_ptr coefs,
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++)
   {
-    arb_set_si(tmp, angles_coefs[2*i]);
-    arb_div_si(tmp, tmp, angles_coefs[2*i + 1], prec);
+    arb_set_fmpq(tmp, geometry->angles + i, prec);
     arb_add(eps, eps, tmp, prec);
   }
   arb_const_pi(tmp, prec);

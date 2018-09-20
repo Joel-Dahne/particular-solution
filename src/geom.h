@@ -9,7 +9,7 @@ typedef struct
   arb_ptr v2;
   arb_ptr v3;
   arb_t theta_bound;
-  int angles[6];
+  fmpq * angles;
   int half_boundary;
 } geom_struct;
 
@@ -29,7 +29,9 @@ void geom_init(geom_t g);
 
 void geom_clear(geom_t g);
 
-void geom_set(geom_t g, int angles_coefs[], slong prec);
+void geom_set_angles(geom_t g, int angles_coefs[]);
+
+void geom_compute(geom_t g, slong prec);
 
 void points_init(points_t p, int boundary, int interior);
 

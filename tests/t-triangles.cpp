@@ -201,7 +201,7 @@ get_triangle(geom_t geometry, int angles[], arb_t nu_enclosure,
   }
 
   /* Set up the geometry */
-  geom_set(geometry, angles, prec);
+  geom_set_angles(geometry, angles);
 
   /* Set starting enclosure of nu */
   mag_set_d(arb_radref(nu_enclosure), 1e-2);
@@ -245,8 +245,7 @@ int main()
   {
     particular_solution_opt_default(options);
     get_triangle(geometry, angles, nu_enclosure, options, i, prec);
-    particular_solution_enclosure(geometry, angles, nu_enclosure,
-                                  options);
+    particular_solution_enclosure(geometry, nu_enclosure, options);
     arb_set(res, nu_enclosure);
     arb_add_si(ans, res, 1, prec);
     arb_mul(res, res, ans, prec);

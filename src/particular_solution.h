@@ -29,8 +29,7 @@ void particular_solution_opt_default(particular_solution_opt_t options);
 
 void particular_solution_opt_clear(particular_solution_opt_t options);
 
-void particular_solution_enclosure(geom_t geometry, int angles_coefs[],
-                                   arb_t nu_enclosure,
+void particular_solution_enclosure(geom_t geometry, arb_t nu_enclosure,
                                    particular_solution_opt_t options);
 
 #endif

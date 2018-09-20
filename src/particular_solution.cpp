@@ -40,8 +40,7 @@ particular_solution_opt_clear(particular_solution_opt_t options)
 }
 
 void
-particular_solution_enclosure(geom_t geometry, int angles_coefs[],
-                              arb_t nu_enclosure,
+particular_solution_enclosure(geom_t geometry, arb_t nu_enclosure,
                               particular_solution_opt_t options)
 {
   arb_ptr coefs;
@@ -75,10 +74,11 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     mpfr_set_default_prec(prec);
 
     /* Recompute variables to new precision */
-    geom_set(geometry, angles_coefs, prec);
+    geom_compute(geometry, prec);
 
-    arb_set_si(mu0, -angles_coefs[1]);
-    arb_div_si(mu0, mu0, angles_coefs[0], prec);
+    arb_set_fmpq(mu0, geometry->angles, prec);
+    arb_inv(mu0, mu0, prec);
+    arb_neg(mu0, mu0);
 
     /* Initiate new variables */
     coefs = _arb_vec_init(N);
@@ -101,7 +101,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     /* Compute an enclosure of the eigenvalue. To be sure to get correct
        output of the eigenvalue the output of it is handled inside the
        function enclose. */
-    enclose(nu_enclosure, angles_coefs, coefs, N, nu, options->index_function,
+    enclose(nu_enclosure, geometry, coefs, N, nu, options->index_function,
             4);
     flint_printf("\n");
 

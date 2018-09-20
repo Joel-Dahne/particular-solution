@@ -7,6 +7,7 @@ geom_init(geom_t g)
   g->v2 = _arb_vec_init(3);
   g->v3 = _arb_vec_init(3);
   arb_init(g->theta_bound);
+  g->angles = _fmpq_vec_init(3);
 }
 
 void
@@ -16,10 +17,19 @@ geom_clear(geom_t g)
   _arb_vec_clear(g->v2, 3);
   _arb_vec_clear(g->v3, 3);
   arb_clear(g->theta_bound);
+  _fmpq_vec_clear(g->angles, 3);
 }
 
 void
-geom_set(geom_t g, int angles[], slong prec)
+geom_set_angles(geom_t g, int angles[])
+{
+  fmpq_set_si(g->angles + 0, angles[0], angles[1]);
+  fmpq_set_si(g->angles + 1, angles[2], angles[3]);
+  fmpq_set_si(g->angles + 2, angles[4], angles[5]);
+}
+
+void
+geom_compute(geom_t g, slong prec)
 {
   arb_ptr angles_arb;
   arb_t S, tmp1, tmp2;
@@ -35,12 +45,12 @@ geom_set(geom_t g, int angles[], slong prec)
   arb_const_pi(angles_arb + 1, prec);
   arb_const_pi(angles_arb + 2, prec);
 
-  arb_mul_si(angles_arb + 0, angles_arb + 0, angles[0], prec);
-  arb_div_si(angles_arb + 0, angles_arb + 0, angles[1], prec);
-  arb_mul_si(angles_arb + 1, angles_arb + 1, angles[2], prec);
-  arb_div_si(angles_arb + 1, angles_arb + 1, angles[3], prec);
-  arb_mul_si(angles_arb + 2, angles_arb + 2, angles[4], prec);
-  arb_div_si(angles_arb + 2, angles_arb + 2, angles[5], prec);
+  arb_mul_fmpz(angles_arb + 0, angles_arb + 0, fmpq_numref(g->angles + 0), prec);
+  arb_div_fmpz(angles_arb + 0, angles_arb + 0, fmpq_denref(g->angles + 0), prec);
+  arb_mul_fmpz(angles_arb + 1, angles_arb + 1, fmpq_numref(g->angles + 1), prec);
+  arb_div_fmpz(angles_arb + 1, angles_arb + 1, fmpq_denref(g->angles + 1), prec);
+  arb_mul_fmpz(angles_arb + 2, angles_arb + 2, fmpq_numref(g->angles + 2), prec);
+  arb_div_fmpz(angles_arb + 2, angles_arb + 2, fmpq_denref(g->angles + 2), prec);
 
   /* Compute the vectors for the spherical triangle */
   /* S = (angles_arb[0] + angles_arb[1] + angles_arb[2])/2 */
