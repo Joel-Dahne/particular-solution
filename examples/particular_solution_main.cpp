@@ -7,8 +7,9 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
+  arb_t nu_enclosure;
   mpfr_t angles[3];
-  mpfr_t nu_guess, nu_width, nu_low, nu_upp, tol_rel, tol, tmp;
+  mpfr_t nu_guess, nu_width, tol_rel, tol, tmp;
   double prec_factor;
   int angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
@@ -146,21 +147,17 @@ Options are:\n\
 
   mpfr_init(nu_guess);
   mpfr_init(nu_width);
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
   mpfr_init(tol_rel);
   mpfr_init(tol);
   mpfr_init(tmp);
 
-  mpfr_set_str(nu_guess, nu_guess_str, 10, MPFR_RNDN);
-  mpfr_set_str(nu_width, nu_width_str, 10, MPFR_RNDN);
+  arb_init(nu_enclosure);
+  arb_set_str(nu_enclosure, nu_guess_str, prec);
+  mag_set_d(arb_radref(nu_enclosure), atof(nu_width_str));
+
   mpfr_set_str(tol_rel, tol_rel_str, 10, MPFR_RNDN);
 
-  mpfr_sub(nu_low, nu_guess, nu_width, MPFR_RNDN);
-  mpfr_add(nu_upp, nu_guess, nu_width, MPFR_RNDN);
-
   for (int N = N_beg; N <= N_end; N+=N_step) {
-    mpfr_sub(tol, nu_upp, nu_low, MPFR_RNDN);
     mpfr_mul(tol, tol, tol_rel, MPFR_RNDN);
 
     mpfr_log2(tmp, tol, MPFR_RNDN);
@@ -170,14 +167,10 @@ Options are:\n\
 
     mpfr_set_default_prec(prec);
 
-    /* Round values to the new precision */
-    mpfr_prec_round(nu_low, prec, MPFR_RNDN);
-    mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
-
     /* Recompute values with new precision */
     geom_set(geometry, angles_coefs, prec);
 
-    particular_solution_enclosure(geometry, angles_coefs, nu_low, nu_upp,
+    particular_solution_enclosure(geometry, angles_coefs, nu_enclosure,
                                   options);
   }
 
@@ -187,8 +180,6 @@ Options are:\n\
   }
   mpfr_clear(nu_guess);
   mpfr_init(nu_width);
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
   mpfr_clear(tol);
   mpfr_clear(tmp);
 

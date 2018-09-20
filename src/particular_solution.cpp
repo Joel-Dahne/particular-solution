@@ -41,7 +41,7 @@ particular_solution_opt_clear(particular_solution_opt_t options)
 
 void
 particular_solution_enclosure(geom_t geometry, int angles_coefs[],
-                              mpfr_t nu_low, mpfr_t nu_upp,
+                              arb_t nu_enclosure,
                               particular_solution_opt_t options)
 {
   arb_ptr coefs;
@@ -59,8 +59,7 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
   for (int N = options->N_beg; N <= options->N_end; N += options->N_step)
   {
     /* Compute tolerance and precision to use */
-    arb_set_interval_mpfr(tol, nu_low, nu_upp, prec);
-    arb_get_rad_arb(tol, tol);
+    arb_get_rad_arb(tol, nu_enclosure);
     arb_mul(tol, tol, options->tol_relative, prec);
 
     /* FIXME: Use the size of nu in the computations for the precision */
@@ -74,10 +73,6 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     }
 
     mpfr_set_default_prec(prec);
-
-    /* Round variables to new precision */
-    mpfr_prec_round(nu_low, prec, MPFR_RNDN);
-    mpfr_prec_round(nu_upp, prec, MPFR_RNDN);
 
     /* Recompute variables to new precision */
     geom_set(geometry, angles_coefs, prec);
@@ -94,10 +89,10 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     interior(points, geometry, prec);
 
     /* Find the value of nu that minimizes sigma */
-    minimize_sigma(nu, points, N, nu_low, nu_upp, mu0, tol,
+    minimize_sigma(nu, points, N, nu_enclosure, mu0, tol,
                    options->index_function);
 
-    mpfr_printf("%i ", N);
+    flint_printf("%i ", N);
     fflush(stdout);
 
     /* Find the coefficients of the expansion */
@@ -106,9 +101,9 @@ particular_solution_enclosure(geom_t geometry, int angles_coefs[],
     /* Compute an enclosure of the eigenvalue. To be sure to get correct
        output of the eigenvalue the output of it is handled inside the
        function enclose. */
-    enclose(nu_low, nu_upp, angles_coefs, coefs, N, nu,
-            options->index_function, 4);
-    mpfr_printf("\n");
+    enclose(nu_enclosure, angles_coefs, coefs, N, nu, options->index_function,
+            4);
+    flint_printf("\n");
 
     _arb_vec_clear(coefs, N);
 

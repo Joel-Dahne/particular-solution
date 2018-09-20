@@ -16,7 +16,7 @@
 /* ------------------------------------------------------------------------- */
 
 void
-get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
+get_triangle(geom_t geometry, int angles[], arb_t nu_enclosure,
              particular_solution_opt_t options, int triangle, int prec)
 {
   /* Set default precision */
@@ -40,10 +40,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 0;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 3.056691018, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 3.056691018);
   }
   else if (triangle == 1)
   {
@@ -63,10 +60,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 0;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 3.240902298, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 3.240902298);
   }
   else if (triangle == 2)
   {
@@ -86,10 +80,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 0;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 4.063109028, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 4.063109028);
   }
   else if (triangle == 3)
   {
@@ -109,10 +100,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 1;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 4.143210850, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 4.143210850);
   }
   else if (triangle == 4)
   {
@@ -132,10 +120,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 0;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 4.470604591, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 4.470604591);
   }
   else if (triangle == 5)
   {
@@ -155,10 +140,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 1;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 6.525663100, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 6.525663100);
   }
   else if (triangle == 6)
   {
@@ -178,10 +160,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 1;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 1.624084509, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 1.624084509);
   }
   else if (triangle == 7)
   {
@@ -201,10 +180,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 1;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 1.825757081, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 1.825757081);
   }
   else if (triangle == 8)
   {
@@ -224,10 +200,7 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 0;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 2.047890892, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 2.047890892);
   }
   else if (triangle == 9)
   {
@@ -247,18 +220,14 @@ get_triangle(geom_t geometry, int angles[], mpfr_t nu_low, mpfr_t nu_upp,
     geometry->half_boundary = 1;
 
     /* Set midpoint for nu */
-    mpfr_set_prec(nu_low, prec);
-    mpfr_set_prec(nu_upp, prec);
-    mpfr_set_d(nu_low, 2.150869291, MPFR_RNDN);
-    mpfr_set(nu_upp, nu_low, MPFR_RNDN);
+    arb_set_d(nu_enclosure, 2.150869291);
   }
 
   /* Set up the geometry */
   geom_set(geometry, angles, prec);
 
   /* Set starting enclosure of nu */
-  mpfr_sub_d(nu_low, nu_low, 1e-2, MPFR_RNDN);
-  mpfr_add_d(nu_upp, nu_upp, 1e-2, MPFR_RNDN);
+  mag_set_d(arb_radref(nu_enclosure), 1e-2);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -284,7 +253,7 @@ const char * descr[NUM_TRIANGLES] =
 int
 main(int argc, char *argv[])
 {
-  mpfr_t nu_low, nu_upp;
+  arb_t nu_enclosure;
   int angles[6];
   geom_t geometry;
   particular_solution_opt_t options;
@@ -340,8 +309,7 @@ main(int argc, char *argv[])
 
   prec = 64;
 
-  mpfr_init(nu_low);
-  mpfr_init(nu_upp);
+  arb_init(nu_enclosure);
 
   geom_init(geometry);
 
@@ -374,14 +342,13 @@ main(int argc, char *argv[])
   for (int i = ifrom; i <= ito; i++)
   {
     particular_solution_opt_default(options);
-    get_triangle(geometry, angles, nu_low, nu_upp, options, i, prec);
+    get_triangle(geometry, angles, nu_enclosure, options, i, prec);
 
-    particular_solution_enclosure(geometry, angles, nu_low, nu_upp,
+    particular_solution_enclosure(geometry, angles, nu_enclosure,
                                   options);
   }
 
-  mpfr_clear(nu_low);
-  mpfr_clear(nu_upp);
+  arb_clear(nu_enclosure);
 
   geom_clear(geometry);
 

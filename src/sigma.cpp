@@ -24,8 +24,8 @@ void sigma(mpfr_t res, points_t points, int N, arb_t nu, arb_t mu0, int (*index)
   delete [] A_mpfr;
 }
 
-void minimize_sigma(arb_t nu, points_t points, int N, mpfr_t nu_low,
-                    mpfr_t nu_upp, arb_t mu0, arb_t tol, int (*index)(int)) {
+void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
+                    arb_t mu0, arb_t tol, int (*index)(int)) {
   mpfr_t yc, yd;
   arb_t a, b, c, d, h, invphi, invphi2, tmp, tmp2;;
   slong prec;
@@ -46,8 +46,8 @@ void minimize_sigma(arb_t nu, points_t points, int N, mpfr_t nu_low,
 
   prec = mpfr_get_default_prec();
 
-  arb_set_interval_mpfr(a, nu_low, nu_low, prec);
-  arb_set_interval_mpfr(b, nu_upp, nu_upp, prec);
+  arb_get_lbound_arf(arb_midref(a), nu_enclosure, prec);
+  arb_get_ubound_arf(arb_midref(b), nu_enclosure, prec);
 
   arb_sqrt_ui(invphi, 5, prec);
   arb_sub_si(invphi, invphi, 1, prec);

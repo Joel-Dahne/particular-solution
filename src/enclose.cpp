@@ -747,7 +747,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 }
 
 void
-enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], arb_ptr coefs,
+enclose(arb_t nu_enclosure, int angles_coefs[], arb_ptr coefs,
         int N, arb_t nu, int (*index)(int), int output) {
   arb_ptr v1, v2;
   arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
@@ -827,11 +827,9 @@ enclose(mpfr_t nu_low, mpfr_t nu_upp, int angles_coefs[], arb_ptr coefs,
     flint_printf(" %e", mag_get_d(arb_radref(nu)));
   }
 
-  arb_set_interval_mpfr(tmp, nu_low, nu_upp, prec);
-
-  if (arb_is_finite(nu) && arb_intersection(tmp, tmp, nu, prec))
+  if (arb_is_finite(nu) && arb_overlaps(nu_enclosure, nu))
   {
-    arb_get_interval_mpfr(nu_low, nu_upp, tmp);
+    arb_intersection(nu_enclosure, nu_enclosure, nu, prec);
   }
 
   _arb_vec_clear(v1, 3);
