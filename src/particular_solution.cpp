@@ -41,21 +41,18 @@ particular_solution_opt_clear(particular_solution_opt_t options)
 
 void
 particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
-                              particular_solution_opt_t options)
+                              particular_solution_opt_t options, slong prec)
 {
   arb_ptr coefs;
   arb_t nu, mu0, tol, tmp;
   points_t points;
-  int prec;
 
   arb_init(nu);
   arb_init(mu0);
   arb_init(tol);
   arb_init(tmp);
 
-  prec = mpfr_get_default_prec();
-
-  for (int N = options->N_beg; N <= options->N_end; N += options->N_step)
+  for (slong N = options->N_beg; N <= options->N_end; N += options->N_step)
   {
     /* Compute tolerance and precision to use */
     arb_get_rad_arb(tol, nu_enclosure);
@@ -90,19 +87,19 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
 
     /* Find the value of nu that minimizes sigma */
     minimize_sigma(nu, points, N, nu_enclosure, mu0, tol,
-                   options->index_function);
+                   options->index_function, prec);
 
     flint_printf("%i ", N);
     fflush(stdout);
 
     /* Find the coefficients of the expansion */
-    coefs_sigma(coefs, points, N, nu, mu0, options->index_function);
+    coefs_sigma(coefs, points, N, nu, mu0, options->index_function, prec);
 
     /* Compute an enclosure of the eigenvalue. To be sure to get correct
        output of the eigenvalue the output of it is handled inside the
        function enclose. */
     enclose(nu_enclosure, geometry, coefs, N, nu, options->index_function,
-            4);
+            4, prec);
     flint_printf("\n");
 
     _arb_vec_clear(coefs, N);

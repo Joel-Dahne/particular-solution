@@ -8,9 +8,9 @@ typedef struct
 {
     arb_t prec_factor;
     arb_t tol_relative;
-    int N_beg;
-    int N_end;
-    int N_step;
+    slong N_beg;
+    slong N_end;
+    slong N_step;
     int verbose;
     int (*index_function)(int);
 
@@ -30,6 +30,7 @@ void particular_solution_opt_default(particular_solution_opt_t options);
 void particular_solution_opt_clear(particular_solution_opt_t options);
 
 void particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
-                                   particular_solution_opt_t options);
+                                   particular_solution_opt_t options,
+                                   slong prec);
 
 #endif

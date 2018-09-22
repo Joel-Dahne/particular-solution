@@ -6,12 +6,9 @@
 /* ------------------------------------------------------------------------- */
 
 void
-get_triangle(geom_t geometry, int angles[], arb_t nu_enclosure,
-             particular_solution_opt_t options, int triangle, int prec)
+get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
+             particular_solution_opt_t options, int triangle)
 {
-  /* Set default precision */
-  mpfr_set_default_prec(prec);
-
   if (triangle == 0)
   {
     /* Set up the coefficients for the angles */
@@ -226,10 +223,10 @@ const char * ans_str[NUM_TRIANGLES] =
 int main()
 {
   arb_t nu_enclosure, ans, res;
-  int angles[6];
   geom_t geometry;
   particular_solution_opt_t options;
-  int prec;
+  slong angles[6];
+  slong prec;
 
   arb_init(nu_enclosure);
   arb_init(ans);
@@ -244,8 +241,9 @@ int main()
   for (int i = 0; i < NUM_TRIANGLES; i++)
   {
     particular_solution_opt_default(options);
-    get_triangle(geometry, angles, nu_enclosure, options, i, prec);
-    particular_solution_enclosure(nu_enclosure, geometry, options);
+    get_triangle(geometry, angles, nu_enclosure, options, i);
+    particular_solution_enclosure(nu_enclosure, geometry, options, prec);
+
     arb_set(res, nu_enclosure);
     arb_add_si(ans, res, 1, prec);
     arb_mul(res, res, ans, prec);

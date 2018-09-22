@@ -21,7 +21,7 @@ geom_clear(geom_t g)
 }
 
 void
-geom_set_angles(geom_t g, int angles[])
+geom_set_angles(geom_t g, slong angles[])
 {
   fmpq_set_si(g->angles + 0, angles[0], angles[1]);
   fmpq_set_si(g->angles + 1, angles[2], angles[3]);
@@ -125,7 +125,7 @@ geom_compute(geom_t g, slong prec)
 }
 
 void
-points_init(points_t p, int boundary, int interior)
+points_init(points_t p, slong boundary, slong interior)
 {
   p->boundary = boundary;
   p->interior = interior;

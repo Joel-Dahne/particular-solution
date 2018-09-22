@@ -1,35 +1,35 @@
 #include "generate-matrix.h"
 #include "sigma_eigen.h"
 
-void sigma(mpfr_t res, points_t points, int N, arb_t nu, arb_t mu0, int (*index)(int)) {
+void sigma(mpfr_t res, points_t points, slong N, arb_t nu, arb_t mu0,
+           int (*index)(int), slong prec) {
   mpfr_t *A_mpfr;
-  int rows;
+  slong rows;
 
   rows = points->boundary + points->interior;
 
   A_mpfr = new mpfr_t[rows*N];
-  for (int i = 0; i < rows*N; i++) {
+  for (slong i = 0; i < rows*N; i++) {
     mpfr_init(A_mpfr[i]);
   }
 
   // Fill A_mpfr with the coefficients for the matrix A
-  generate_matrix(A_mpfr, points, N, nu, mu0, index);
+  generate_matrix(A_mpfr, points, N, nu, mu0, index, prec);
 
   sigma_eigen(res, A_mpfr, points->interior, rows, N);
 
-  for (int i = 0; i < rows*N; i++) {
+  for (slong i = 0; i < rows*N; i++) {
     mpfr_clear(A_mpfr[i]);
   }
 
   delete [] A_mpfr;
 }
 
-void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
-                    arb_t mu0, arb_t tol, int (*index)(int)) {
+void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
+                    arb_t mu0, arb_t tol, int (*index)(int), slong prec) {
   mpfr_t yc, yd;
   arb_t a, b, c, d, h, invphi, invphi2, tmp, tmp2;;
-  slong prec;
-  int n;
+  slong n;
 
   mpfr_init(yc);
   mpfr_init(yd);
@@ -43,8 +43,6 @@ void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
   arb_init(h);
   arb_init(tmp);
   arb_init(tmp2);
-
-  prec = mpfr_get_default_prec();
 
   arb_get_lbound_arf(arb_midref(a), nu_enclosure, prec);
   arb_get_ubound_arf(arb_midref(b), nu_enclosure, prec);
@@ -72,10 +70,10 @@ void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
     arb_mul(tmp, invphi, h, prec);
     arb_add(d, a, tmp, prec);
 
-    sigma(yc, points, N, c, mu0, index);
-    sigma(yd, points, N, d, mu0, index);
+    sigma(yc, points, N, c, mu0, index, prec);
+    sigma(yd, points, N, d, mu0, index, prec);
 
-    for (int k = 0; k < n; k++) {
+    for (slong k = 0; k < n; k++) {
       if (mpfr_cmp(yc, yd) < 0) {
         arb_set(b, d);
         arb_set(d, c);
@@ -86,7 +84,7 @@ void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
         arb_mul(tmp, invphi2, h, prec);
         arb_add(c, a, tmp, prec);
 
-        sigma(yc, points, N, c, mu0, index);
+        sigma(yc, points, N, c, mu0, index, prec);
       } else {
         arb_set(a, c);
         arb_set(c, d);
@@ -97,7 +95,7 @@ void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
         arb_mul(tmp, invphi, h, prec);
         arb_add(d, a, tmp, prec);
 
-        sigma(yd, points, N, d, mu0, index);
+        sigma(yd, points, N, d, mu0, index, prec);
       }
     }
 
@@ -126,40 +124,40 @@ void minimize_sigma(arb_t nu, points_t points, int N, arb_t nu_enclosure,
   arb_clear(tmp2);
 }
 
-void coefs_sigma(arb_ptr coefs, points_t points, int N, arb_t nu,
-                 arb_t mu0, int (*index)(int)) {
+void coefs_sigma(arb_ptr coefs, points_t points, slong N, arb_t nu,
+                 arb_t mu0, int (*index)(int), slong prec) {
   mpfr_t *A_mpfr, *coefs_mpfr;
-  int rows;
+  slong rows;
 
   rows = points->boundary + points->interior;
 
   A_mpfr = new mpfr_t[rows*N];
   coefs_mpfr = new mpfr_t[N];
-  for (int i = 0; i < rows*N; i++)
+  for (slong i = 0; i < rows*N; i++)
   {
     mpfr_init(A_mpfr[i]);
   }
-  for (int i = 0; i < N; i++)
+  for (slong i = 0; i < N; i++)
   {
     mpfr_init(coefs_mpfr[i]);
   }
 
   // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_mpfr, points, N, nu, mu0, index);
+  generate_matrix(A_mpfr, points, N, nu, mu0, index, prec);
 
   coefs_sigma_eigen(coefs_mpfr, A_mpfr, points->interior, rows, N);
 
-  for (int i = 0; i < N; i++)
+  for (slong i = 0; i < N; i++)
   {
     arf_set_mpfr(arb_midref(coefs + i), coefs_mpfr[i]);
     mag_zero(arb_radref(coefs + i));
   }
 
-  for (int i = 0; i < rows*N; i++)
+  for (slong i = 0; i < rows*N; i++)
   {
     mpfr_clear(A_mpfr[i]);
   }
-  for (int i = 0; i < N; i++)
+  for (slong i = 0; i < N; i++)
   {
     mpfr_clear(coefs_mpfr[i]);
   }

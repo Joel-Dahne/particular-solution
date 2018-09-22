@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   mpfr_t angles[3];
   mpfr_t nu_guess, nu_width, tol_rel, tol, tmp;
   double prec_factor;
-  int angles_coefs[6];
+  slong angles_coefs[6];
   int c, prec, output, N_beg, N_end, N_step;
   string usage;
   char nu_guess_str_default[] = "4.0631";
@@ -170,7 +170,7 @@ Options are:\n\
     /* Recompute values with new precision */
     geom_set_angles(geometry, angles_coefs);
 
-    particular_solution_enclosure(nu_enclosure, geometry, options);
+    particular_solution_enclosure(nu_enclosure, geometry, options, prec);
   }
 
   geom_clear(geometry);

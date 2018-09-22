@@ -2,19 +2,17 @@
 
 #include "arb_hypgeom.h"
 
-void generate_matrix(mpfr_t *A, points_t points, int N, arb_t nu,
-                     arb_t mu0, int (*index)(int)) {
+void generate_matrix(mpfr_t *A, points_t points, slong N, arb_t nu,
+                     arb_t mu0, int (*index)(int), slong prec) {
   arb_t mu, tmp, res;
   fmpz_t mu_int;
-  slong prec, prec_local, n;
+  slong prec_local, n;
 
   arb_init(mu);
   arb_init(tmp);
   arb_init(res);
 
   fmpz_init(mu_int);
-
-  prec = mpfr_get_default_prec();
 
   n = points->boundary + points->interior;
 
@@ -47,11 +45,11 @@ void generate_matrix(mpfr_t *A, points_t points, int N, arb_t nu,
   fmpz_clear(mu_int);
 }
 
-void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, int N,
-                   arb_t nu, arb_t mu0, int (*index)(int)) {
+void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, slong N,
+                   arb_t nu, arb_t mu0, int (*index)(int), slong prec) {
   arb_t mu, tmp, term, sum;
   fmpz_t mu_int;
-  slong prec, prec_local;
+  slong prec_local;
 
   arb_init(mu);
   arb_init(tmp);
@@ -59,8 +57,6 @@ void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, int N,
   arb_init(sum);
 
   fmpz_init(mu_int);
-
-  prec = mpfr_get_default_prec();
 
   for (slong i = 0; i < points->boundary + points->interior; i++) {
     arb_zero(sum);

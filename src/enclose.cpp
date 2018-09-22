@@ -748,12 +748,11 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 
 void
 enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
-        int N, arb_t nu, int (*index)(int), int output) {
+        slong N, arb_t nu, int (*index)(int), int output, slong prec) {
   arb_ptr v1, v2;
   arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
   fmpq_t mu0;
-  slong prec;
 
   v1 = _arb_vec_init(3);
   v2 = _arb_vec_init(3);
@@ -768,8 +767,6 @@ enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
   arb_init(tmp);
 
   fmpq_init(mu0);
-
-  prec = mpfr_get_default_prec();
 
   /* Compute enclosures of the required parameters */
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,

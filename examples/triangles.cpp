@@ -16,12 +16,9 @@
 /* ------------------------------------------------------------------------- */
 
 void
-get_triangle(geom_t geometry, int angles[], arb_t nu_enclosure,
-             particular_solution_opt_t options, int triangle, int prec)
+get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
+             particular_solution_opt_t options, int triangle)
 {
-  /* Set default precision */
-  mpfr_set_default_prec(prec);
-
   if (triangle == 0)
   {
     /* Set up the coefficients for the angles */
@@ -254,14 +251,14 @@ int
 main(int argc, char *argv[])
 {
   arb_t nu_enclosure;
-  int angles[6];
   geom_t geometry;
   particular_solution_opt_t options;
-  int ifrom, ito, prec;
+  slong angles[6];
+  slong ifrom, ito, prec;
 
   ifrom = ito = -1;
 
-  for (int i = 1; i < argc; i++)
+  for (slong i = 1; i < argc; i++)
   {
     if (!strcmp(argv[i], "-i"))
     {
@@ -342,9 +339,9 @@ main(int argc, char *argv[])
 
   for (int i = ifrom; i <= ito; i++)
   {
-    get_triangle(geometry, angles, nu_enclosure, options, i, prec);
+    get_triangle(geometry, angles, nu_enclosure, options, i);
 
-    particular_solution_enclosure(nu_enclosure, geometry, options);
+    particular_solution_enclosure(nu_enclosure, geometry, options, prec);
   }
 
   arb_clear(nu_enclosure);

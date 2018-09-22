@@ -19,8 +19,8 @@ typedef struct
 {
   arb_ptr thetas;
   arb_ptr phis;
-  int boundary;
-  int interior;
+  slong boundary;
+  slong interior;
 } points_struct;
 
 typedef points_struct points_t[1];
@@ -29,11 +29,11 @@ void geom_init(geom_t g);
 
 void geom_clear(geom_t g);
 
-void geom_set_angles(geom_t g, int angles_coefs[]);
+void geom_set_angles(geom_t g, slong angles_coefs[]);
 
 void geom_compute(geom_t g, slong prec);
 
-void points_init(points_t p, int boundary, int interior);
+void points_init(points_t p, slong boundary, slong interior);
 
 void points_clear(points_t p);
 
