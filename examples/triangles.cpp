@@ -314,6 +314,7 @@ main(int argc, char *argv[])
   geom_init(geometry);
 
   particular_solution_opt_init(options);
+  particular_solution_opt_default(options);
 
   for (int i = 1; i < argc; i++)
   {
@@ -341,7 +342,6 @@ main(int argc, char *argv[])
 
   for (int i = ifrom; i <= ito; i++)
   {
-    particular_solution_opt_default(options);
     get_triangle(geometry, angles, nu_enclosure, options, i, prec);
 
     particular_solution_enclosure(nu_enclosure, geometry, options);
