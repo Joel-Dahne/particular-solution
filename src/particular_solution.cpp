@@ -40,7 +40,7 @@ particular_solution_opt_clear(particular_solution_opt_t options)
 }
 
 void
-particular_solution_enclosure(geom_t geometry, arb_t nu_enclosure,
+particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                               particular_solution_opt_t options)
 {
   arb_ptr coefs;

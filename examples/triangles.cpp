@@ -344,7 +344,7 @@ main(int argc, char *argv[])
     particular_solution_opt_default(options);
     get_triangle(geometry, angles, nu_enclosure, options, i, prec);
 
-    particular_solution_enclosure(geometry, nu_enclosure, options);
+    particular_solution_enclosure(nu_enclosure, geometry, options);
   }
 
   arb_clear(nu_enclosure);

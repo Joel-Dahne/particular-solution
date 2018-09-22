@@ -170,7 +170,7 @@ Options are:\n\
     /* Recompute values with new precision */
     geom_set_angles(geometry, angles_coefs);
 
-    particular_solution_enclosure(geometry, nu_enclosure, options);
+    particular_solution_enclosure(nu_enclosure, geometry, options);
   }
 
   geom_clear(geometry);

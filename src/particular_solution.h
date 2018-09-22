@@ -29,7 +29,7 @@ void particular_solution_opt_default(particular_solution_opt_t options);
 
 void particular_solution_opt_clear(particular_solution_opt_t options);
 
-void particular_solution_enclosure(geom_t geometry, arb_t nu_enclosure,
+void particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                                    particular_solution_opt_t options);
 
 #endif
