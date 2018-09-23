@@ -45,21 +45,20 @@ void generate_matrix(mpfr_t *A, points_t points, slong N, arb_t nu,
   fmpz_clear(mu_int);
 }
 
-void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, slong N,
+void eigenfunction(arb_ptr res, arb_ptr coefs, points_t points, slong N,
                    arb_t nu, arb_t mu0, int (*index)(int), slong prec) {
-  arb_t mu, tmp, term, sum;
+  arb_t mu, tmp, term;
   fmpz_t mu_int;
   slong prec_local;
 
   arb_init(mu);
   arb_init(tmp);
   arb_init(term);
-  arb_init(sum);
 
   fmpz_init(mu_int);
 
   for (slong i = 0; i < points->boundary + points->interior; i++) {
-    arb_zero(sum);
+    arb_zero(res + i);
     for (slong j = 0; j < N; j++) {
       arb_mul_si(mu, mu0, index(j), prec);
       if (arb_get_unique_fmpz(mu_int, mu)) {
@@ -78,16 +77,13 @@ void eigenfunction(mpfr_t *res, arb_ptr coefs, points_t points, slong N,
 
       arb_mul(term, term, tmp, prec);
 
-      arb_addmul(sum, term, coefs + j, prec);
+      arb_addmul(res + i, term, coefs + j, prec);
     }
-
-    arf_get_mpfr(res[i], arb_midref(sum), MPFR_RNDN);
   }
 
   arb_clear(mu);
   arb_clear(tmp);
   arb_clear(term);
-  arb_clear(sum);
 
   fmpz_clear(mu_int);
 }
