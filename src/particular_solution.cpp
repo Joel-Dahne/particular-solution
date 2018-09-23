@@ -99,8 +99,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
        output of the eigenvalue the output of it is handled inside the
        function enclose. */
     enclose(nu_enclosure, geometry, coefs, N, nu, options->index_function,
-            4, prec);
-    flint_printf("\n");
+            prec);
 
     _arb_vec_clear(coefs, N);
 

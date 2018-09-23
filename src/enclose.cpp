@@ -748,7 +748,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 
 void
 enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
-        slong N, arb_t nu, int (*index)(int), int output, slong prec) {
+        slong N, arb_t nu, int (*index)(int), slong prec) {
   arb_ptr v1, v2;
   arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
@@ -802,32 +802,16 @@ enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
   arb_add_error(tmp, eps);
   arb_div(eigenvalue, eigenvalue, tmp, prec);
 
-  /* Compute lower and upper bounds for the value of nu */
-  arb_set_si(nu, 1);
-  arb_div_si(nu, nu, 4, prec);
-  arb_add(nu, nu, eigenvalue, prec);
-  arb_sqrt(nu, nu, prec);
-  arb_set_si(tmp, 1);
-  arb_div_si(tmp, tmp, 2, prec);
-  arb_sub(nu, nu, tmp, prec);
+  /* Compute lower and upper bounds for the enclosure of nu */
+  arb_set_d(tmp, 0.25);
+  arb_add(tmp, tmp, eigenvalue, prec);
+  arb_sqrt(tmp, tmp, prec);
+  arb_set_d(eps, 0.5);
+  arb_sub(tmp, tmp, eps, prec);
 
-  if (output == 4)
+  if (arb_is_finite(tmp) && arb_overlaps(nu_enclosure, tmp))
   {
-    arb_printn(eigenvalue, (slong)ceil(prec*log10(2)), 0);
-  } else if (output == 5)
-  {
-    arb_printn(nu, (slong)ceil(prec*log10(2)), 0);
-  } else if (output == 6)
-  {
-    flint_printf(" %e", mag_get_d(arb_radref(eigenvalue)));
-  } else if (output == 7)
-  {
-    flint_printf(" %e", mag_get_d(arb_radref(nu)));
-  }
-
-  if (arb_is_finite(nu) && arb_overlaps(nu_enclosure, nu))
-  {
-    arb_intersection(nu_enclosure, nu_enclosure, nu, prec);
+    arb_intersection(nu_enclosure, nu_enclosure, tmp, prec);
   }
 
   _arb_vec_clear(v1, 3);
