@@ -113,6 +113,7 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
+    arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_odd;
 
     /* Set if only half of the boundary is to be used or not */
@@ -220,6 +221,20 @@ const char * ans_str[NUM_TRIANGLES] =
   "6.78 +/- 8.61e-3"
 };
 
+const double width[NUM_TRIANGLES] =
+{
+  1.850986e-05,
+  3.518423e-09,
+  4.830439e-04,
+  1.155117e-04,
+  1.529171e-07,
+  3.143821e-14,
+  4.258170e-02,
+  4.445406e-02,
+  5.105783e-02,
+  3.847281e-02
+};
+
 int main()
 {
   arb_t nu_enclosure, ans, res;
@@ -257,9 +272,19 @@ int main()
       flint_printf("res = "); arb_printn(res, 20,  0); flint_printf("\n");
       flint_abort();
     }
+    else if (width[i] < mag_get_d(arb_radref(res)))
+    {
+      flint_printf("LOW PRECISION (Triangle %i)\n", i);
+      flint_printf("ans = %e\n", width[i]);
+      flint_printf("res = %e\n", mag_get_d(arb_radref(res)));
+      flint_abort();
+    }
 
+    flint_printf("Triangle %i\n", i);
     flint_printf("ans = "); arb_printn(ans, 20,  0); flint_printf("\n");
     flint_printf("res = "); arb_printn(res, 20,  0); flint_printf("\n");
+    flint_printf("width goal = %e\n", width[i]);
+    flint_printf("width res  = %e\n", mag_get_d(arb_radref(res)));
   }
 
   arb_clear(nu_enclosure);
