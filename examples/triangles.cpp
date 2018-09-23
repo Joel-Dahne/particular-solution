@@ -292,6 +292,16 @@ main(int argc, char *argv[])
     mpfr_printf("Usage: triangles -i n [-prec p] [-N_beg b] [...]\n\n");
     mpfr_printf("-i n       - compute for triangle n (0 <= n <= %d), or \"-i all\",\n", NUM_TRIANGLES - 1);
     mpfr_printf("           - or \"-i regular\" or \"-i singular\"\n");
+    mpfr_printf("-output m    - output type\n");
+    mpfr_printf("             - 0: no output\n");
+    mpfr_printf("             - 1: enclosure for eigenvalue\n");
+    mpfr_printf("             - 2: enclosure for nu\n");
+    mpfr_printf("             - 3: midpoint of enclosure for eigenvalue\n");
+    mpfr_printf("             - 4: midpoint of enclosure fornu\n");
+    mpfr_printf("             - 5: width of enclosure for eigenvalue\n");
+    mpfr_printf("             - 6: width of enclosure for nu\n");
+    mpfr_printf("             - 7: coefficients for the approximate eigenfunction\n");
+    mpfr_printf("             - 8: plot of the approximate eigenfunction\n");
     mpfr_printf("-prec p    - precision in bits (default p = 64)\n");
     mpfr_printf("-N_beg b    - N value to start at (default 4)\n");
     mpfr_printf("-N_end e    - N value to stop at (default 16)\n");
@@ -313,11 +323,17 @@ main(int argc, char *argv[])
   particular_solution_opt_init(options);
   particular_solution_opt_default(options);
 
+  options->output = 1;
+
   for (int i = 1; i < argc; i++)
   {
     if (!strcmp(argv[i], "-prec"))
     {
       prec = atol(argv[i + 1]);
+    }
+    else if (!strcmp(argv[i], "-output"))
+    {
+      options->output = atol(argv[i + 1]);
     }
     else if (!strcmp(argv[i], "-N_beg"))
     {

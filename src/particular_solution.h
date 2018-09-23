@@ -11,7 +11,7 @@ typedef struct
     slong N_beg;
     slong N_end;
     slong N_step;
-    int verbose;
+    int output;
     int (*index_function)(int);
 
 }

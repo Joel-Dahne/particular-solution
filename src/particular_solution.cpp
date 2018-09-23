@@ -2,6 +2,7 @@
 
 #include "sigma.h"
 #include "enclose.h"
+#include "plot_eigen.h"
 
 int
 index_function_odd(int k) {
@@ -28,7 +29,7 @@ particular_solution_opt_default(particular_solution_opt_t options)
   options->N_beg = 4;
   options->N_end = 16;
   options->N_step = 2;
-  options->verbose = 0;
+  options->output = 0;
   options->index_function = index_function_all;
 }
 
@@ -89,9 +90,6 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     minimize_sigma(nu, points, N, nu_enclosure, mu0, tol,
                    options->index_function, prec);
 
-    flint_printf("%i ", N);
-    fflush(stdout);
-
     /* Find the coefficients of the expansion */
     coefs_sigma(coefs, points, N, nu, mu0, options->index_function, prec);
 
@@ -100,6 +98,63 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
        function enclose. */
     enclose(nu_enclosure, geometry, coefs, N, nu, options->index_function,
             prec);
+
+    /* Print information */
+    if (options->output != 0)
+    {
+      flint_printf("%i ", N);
+
+      /* Compute bounds for the eigenvalue */
+      arb_add_si(tmp, nu_enclosure, 1, prec);
+      arb_mul(tmp, tmp, nu_enclosure, prec);
+
+      if (options->output == 1)
+      {
+        arb_printn(tmp, (slong)ceil(prec*log10(2)), 0);
+        flint_printf("\n");
+      }
+      else if (options->output == 2)
+      {
+        arb_printn(nu_enclosure, (slong)ceil(prec*log10(2)), 0);
+        flint_printf("\n");
+      }
+      else if (options->output == 3)
+      {
+        arf_printd(arb_midref(tmp), (slong)ceil(prec*log10(2)));
+        flint_printf("\n");
+      }
+      else if (options->output == 4)
+      {
+        arf_printd(arb_midref(nu_enclosure), (slong)ceil(prec*log10(2)));
+        flint_printf("\n");
+      }
+      else if (options->output == 5)
+      {
+        flint_printf(" %e\n", mag_get_d(arb_radref(tmp)));
+      }
+      else if (options->output == 6)
+      {
+        flint_printf(" %e\n", mag_get_d(arb_radref(nu_enclosure)));
+      }
+      else if (options->output == 7)
+      {
+        flint_printf("\n");
+        for (slong i = 0; i < N; i++)
+        {
+          arf_printd(arb_midref(coefs + i), (slong)ceil(prec*log10(2)));
+          flint_printf("\n");
+        }
+      }
+      else if (options->output == 8)
+      {
+        arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
+        flint_printf(" %i\n", 500);
+        plot_eigen(geometry, coefs, N, nu, mu0, 500, options->index_function,
+                   prec);
+      }
+
+
+    }
 
     _arb_vec_clear(coefs, N);
 
