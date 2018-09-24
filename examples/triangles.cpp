@@ -1,13 +1,11 @@
 /*
-  Computation of eigenvalues for spherical triangles with at most one
-  singular corner.
+  Computation of eigenvalues for spherical triangles.
 
   Author: Joel Dahne
   This file is in the public domain.
 */
 
 #include "particular_solution.h"
-#include "arb.h"
 
 #include <string.h>
 
@@ -16,9 +14,11 @@
 /* ------------------------------------------------------------------------- */
 
 void
-get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
+get_triangle(geom_t geometry, arb_t nu_enclosure,
              particular_solution_opt_t options, int triangle)
 {
+  slong angles[6];
+
   if (triangle == 0)
   {
     /* Set up the coefficients for the angles */
@@ -227,10 +227,6 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
   mag_set_d(arb_radref(nu_enclosure), 1e-2);
 }
 
-/* ------------------------------------------------------------------------- */
-/*  Main test program                                                        */
-/* ------------------------------------------------------------------------- */
-
 #define NUM_TRIANGLES 10
 
 const char * descr[NUM_TRIANGLES] =
@@ -247,13 +243,16 @@ const char * descr[NUM_TRIANGLES] =
   "(pi/2, 2pi/3, 2pi/3)"
 };
 
+/* ------------------------------------------------------------------------- */
+/*  Main test program                                                        */
+/* ------------------------------------------------------------------------- */
+
 int
 main(int argc, char *argv[])
 {
   arb_t nu_enclosure;
   geom_t geometry;
   particular_solution_opt_t options;
-  slong angles[6];
   slong ifrom, ito, prec;
 
   ifrom = ito = -1;
@@ -297,7 +296,7 @@ main(int argc, char *argv[])
     mpfr_printf("             - 1: enclosure for eigenvalue\n");
     mpfr_printf("             - 2: enclosure for nu\n");
     mpfr_printf("             - 3: midpoint of enclosure for eigenvalue\n");
-    mpfr_printf("             - 4: midpoint of enclosure fornu\n");
+    mpfr_printf("             - 4: midpoint of enclosure for nu\n");
     mpfr_printf("             - 5: width of enclosure for eigenvalue\n");
     mpfr_printf("             - 6: width of enclosure for nu\n");
     mpfr_printf("             - 7: coefficients for the approximate eigenfunction\n");
@@ -355,7 +354,7 @@ main(int argc, char *argv[])
 
   for (int i = ifrom; i <= ito; i++)
   {
-    get_triangle(geometry, angles, nu_enclosure, options, i);
+    get_triangle(geometry, nu_enclosure, options, i);
 
     particular_solution_enclosure(nu_enclosure, geometry, options, prec);
   }
