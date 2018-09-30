@@ -1,0 +1,227 @@
+* Variables
+Relative path to the program
+#+NAME: triangles
+  - build/examples/triangles
+#+NAME: sigma
+  - build/examples/plot_sigma_main
+* Regular triangle example
+Consider the triangle having angles \((3\pi/4, \pi/4, \pi/3)\). We
+begin by plotting the value of sigma from 0 to 8 using \(N = 8\).
+#+BEGIN_SRC sh :var binary=sigma :results output silent
+  $binary -i 4 -inf 0 -sup 8 -N_beg 8 -N_end 8 > data/regular-example-sigma
+#+END_SRC
+The output is saved in [[file:data/regular-example-sigma]]. We plot it and
+in the plot we also create a red box around the area used in the next
+plot.
+#+BEGIN_SRC octave :results output silent
+  data = load ("data/regular-example-sigma");
+  nus = data(2:end, 1);
+  sigmas = data(2:end, 2);
+
+  plot (nus, sigmas, "linewidth", 3);
+  hold on;
+
+  nu = 4.470604591;
+  x = [nu - 0.1, nu + 0.1, nu + 0.1, nu - 0.1, nu - 0.1];
+  y = [0, 0, 0.1, 0.1, 0];
+  plot(x, y, "r", "linewidth", 5);
+
+  xlabel ("nu", "fontweight", "bold", "fontsize", 20);
+  ylabel ("sigma(nu)", "fontweight", "bold", "fontsize", 20);
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/regular-example-sigma.pdf;
+#+END_SRC
+We then zoom in on the first eigenvalue at \(\nu = 4.470604591\) and
+plot again using a width of 0.1
+#+BEGIN_SRC sh :var binary=sigma :results output silent
+  $binary -i 4 -inf 4.370604591 0 -sup 4.570604591 -N_beg 8 -N_end 8 > data/regular-example-sigma-zoomed
+#+END_SRC
+The output is saved in [[file:data/regular-example-sigma-zoomed]]. We plot
+it with
+#+BEGIN_SRC octave :results output silent
+  data = load ("data/regular-example-sigma-zoomed");
+  nus = data(2:end, 1);
+  sigmas = data(2:end, 2);
+
+  plot (nus, sigmas, "linewidth", 3);
+
+  nu = 4.470604591;
+  axis([nu - 0.1, nu + 0.1, 0, 0.1]);
+
+  xlabel ("nu", "fontweight", "bold", "fontsize", 20);
+  ylabel ("sigma(nu)", "fontweight", "bold", "fontsize", 20);
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/regular-example-sigma-zoomed.pdf;
+#+END_SRC
+We then do a plot similar to figure 5.3 in Trefethen where we find the
+\(\nu\) minimizing \(\simga\) for \(N = 1, \dots, 32\) and plot there
+error relative to the last one. We compute the \(\nu\)s with
+#+BEGIN_SRC sh :var binary=triangles :results output silent
+  $binary -i 4 -N_beg 1 -N_step 1 -N_end 32 -output 4 -prec 128 -tol 1e-10 > data/regular-example-nus
+#+END_SRC
+The output is saved in [[file:data/regular-example-nus]]. We cannot
+compute the differences directly in Octave since it does not support
+arbitrary precision arithmetic, instead we do it with a simple Python
+script.
+#+BEGIN_SRC python :results output silent
+  import csv
+  from mpmath import *
+
+  mp.prec = 128
+
+  Ns = []
+  nus = []
+
+  with open("data/regular-example-nus", "r") as data:
+      reader = csv.reader(data, delimiter=" ")
+      for row in reader:
+          Ns.append(row[0])
+          nus.append(mpf(row[1]))
+
+  with open("data/regular-example-nus-diff", "w") as output:
+      writer = csv.writer(output, lineterminator="\n", delimiter=" ")
+      for (N, nu) in zip(Ns, nus):
+          writer.writerow([N, abs(nu - nus[-1])])
+
+#+END_SRC
+Finally we plot the differences
+#+BEGIN_SRC octave :results output silent
+  data = load("data/regular-example-nus-diff");
+  Ns = data(:, 1);
+  nus_diff = data(:, 2);
+
+  semilogy(Ns(1:end-1), nus_diff(1:end-1), "x-", "linewidth", 3)
+
+  xlabel ("N", "fontweight", "bold", "fontsize", 20);
+  ylabel ("error", "fontweight", "bold", "fontsize", 20);
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/regular-example-nus.pdf;
+#+END_SRC
+Finally we want to compute the enclosure for the same problem. We
+compute the enclosures with
+#+BEGIN_SRC sh :var binary=triangles :results output silent
+  $binary -i 4 -N_beg 1 -N_step 1 -N_end 32 -output 1 > data/regular-example-enclosures
+#+END_SRC
+  and the width of the enclosures with
+#+BEGIN_SRC sh :var binary=triangles :results output silent
+  $binary -i 4 -N_beg 1 -N_step 1 -N_end 32 -output 5 > data/regular-example-enclosures-width
+#+END_SRC
+The output for the enclosures is saved in
+[[file:data/regular-example-enclosures]]and the widths in
+[[file:data/regular-example-enclosures-width]]. We plot the convergence of
+the width with
+#+BEGIN_SRC octave :results output silent
+  data = load("data/regular-example-enclosures-width");
+  Ns = data(:, 1);
+  widths = data(:, 2);
+
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  xlabel ("N", "fontweight", "bold", "fontsize", 20);
+  ylabel ("width", "fontweight", "bold", "fontsize", 20);
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/regular-example-enclosures-width.pdf;
+#+END_SRC
+* Regular triangles
+We give results for applying the method to all the regular triangles
+listed in 3DWalks. This time it does not make much sense to plot the
+\(\sigma\) values or the approximate eigenfunctions since that would
+be to much information to show. Instead we plot the convergence of the
+width of the enclosure. We compute the widths of the enclosure for all
+the triangles, for the two triangles with symmetries we make use of it
+to speed up the convergence.
+#+BEGIN_SRC sh :var binary=triangles :results output silent
+  #!/bin/bash
+
+  # Parameters
+  beg="1" # Starting value for N
+  step="1" # Steps in N
+  end="32" # End value for N
+  tol="1e-4" # Tolerance to use in the minimization
+  wid="1e-4" # Width of the interval around the initial guess
+  prec="53" # Precision to use
+  type="5" # Type of output
+
+  args="-N_beg $beg -N_step $step -N_end $end -tol $tol -prec $prec -o $type"
+  dir="data/regular-triangles/enclosures-width"
+  prog=$binary
+
+  mkdir -p $dir
+
+  nohup $prog $args -i 0 &> $dir/3_4_1_3_1_2 &
+  nohup $prog $args -i 1 &> $dir/2_3_1_3_1_2 &
+  nohup $prog $args -i 2 &> $dir/2_3_1_4_1_2 &
+  nohup $prog $args -i 3 &> $dir/2_3_1_3_1_3 &
+  nohup $prog $args -i 4 &> $dir/3_4_1_4_1_3 &
+  nohup $prog $args -i 5 &> $dir/2_3_1_4_1_4 &
+#+END_SRC
+The outputs are saved in
+[[file:data/regular-triangles/enclosures-width/]]. We plot the data with
+#+BEGIN_SRC octave :results output silent
+  figure;
+  hold on;
+
+  path = "data/regular-triangles/enclosures-width/";
+
+  ## Plot triangle (3/4, 1/3, 1/2)
+  data = load (strcat (path, "3_4_1_3_1_2"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  ## Plot triangle (2/3, 1/3, 1/2)
+  data = load (strcat (path, "2_3_1_3_1_2"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  ## Plot triangle (2/3, 1/4, 1/2)
+  data = load (strcat (path, "2_3_1_4_1_2"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  ## Plot triangle (2/3, 1/3, 1/3)
+  data = load (strcat (path, "2_3_1_3_1_3"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  ## Plot triangle (3/4, 1/4, 1/3)
+  data = load (strcat (path, "3_4_1_4_1_3"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  ## Plot triangle (2/3, 1/4, 1/4)
+  data = load (strcat (path, "2_3_1_4_1_4"));
+  Ns = data(:, 1);
+  widths = data(:, 2);
+  semilogy(Ns, widths, "x-", "linewidth", 3)
+
+  legend ("1", "2", "3", "4", "5", "6");
+  leg = legend ("boxoff");
+  set (leg, "fontsize", 20);
+
+  xlabel ("N", "fontweight", "bold", "fontsize", 20);
+  ylabel ("width", "fontweight", "bold", "fontsize", 20);
+
+  set(gca, "ytick", 10.^(0:-5:-100))
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/regular-enclosures-convergence.pdf;
+#+END_SRC
