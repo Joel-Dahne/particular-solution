@@ -150,8 +150,7 @@ to speed up the convergence.
   step="1" # Steps in N
   end="32" # End value for N
   tol="1e-4" # Tolerance to use in the minimization
-  wid="1e-4" # Width of the interval around the initial guess
-  prec="53" # Precision to use
+  prec="64" # Precision to use
   type="5" # Type of output
 
   args="-N_beg $beg -N_step $step -N_end $end -tol $tol -prec $prec -o $type"
