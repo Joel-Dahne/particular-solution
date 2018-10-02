@@ -224,7 +224,7 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
   geom_set_angles(geometry, angles);
 
   /* Set starting enclosure of nu */
-  mag_set_d(arb_radref(nu_enclosure), 1e-2);
+  mag_set_d(arb_radref(nu_enclosure), 0.5);
 }
 
 #define NUM_TRIANGLES 10
