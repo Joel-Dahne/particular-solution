@@ -31,7 +31,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -57,7 +56,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -83,7 +81,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -109,7 +106,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -135,7 +131,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -161,7 +156,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -187,7 +181,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -213,7 +206,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -239,7 +231,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_all;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -265,7 +256,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 1.2);
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */

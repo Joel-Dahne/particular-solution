@@ -62,6 +62,8 @@ void geom_set_angles(geom_t g, slong angles_coefs[]);
 
 void geom_compute(geom_t g, slong prec);
 
+void geom_get_mu(arb_t mu, geom_t g, slong vertex, slong i, slong prec);
+
 void points_init(points_t p, slong boundary, slong interior);
 
 void points_clear(points_t p);

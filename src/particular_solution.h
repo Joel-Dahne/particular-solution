@@ -12,8 +12,6 @@ typedef struct
     slong N_end;
     slong N_step;
     int output;
-    int (*index_function)(int);
-
 }
 particular_solution_opt_struct;
 

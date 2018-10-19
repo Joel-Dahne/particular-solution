@@ -146,7 +146,6 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
 
     /* Set custom options */
     arb_set_d(options->prec_factor, 2);
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -171,7 +170,6 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -196,7 +194,6 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -245,7 +242,6 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    options->index_function = index_function_odd;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */

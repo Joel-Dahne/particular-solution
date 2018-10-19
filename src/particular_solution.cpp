@@ -4,16 +4,6 @@
 #include "enclose.h"
 #include "plot_eigen.h"
 
-int
-index_function_odd(int k) {
-  return 2*k + 1;
-}
-
-int
-index_function_all(int k) {
-  return k + 1;
-}
-
 void
 particular_solution_opt_init(particular_solution_opt_t options)
 {
@@ -30,7 +20,6 @@ particular_solution_opt_default(particular_solution_opt_t options)
   options->N_end = 16;
   options->N_step = 2;
   options->output = 0;
-  options->index_function = index_function_all;
 }
 
 void
@@ -45,11 +34,10 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                               particular_solution_opt_t options, slong prec)
 {
   arb_ptr coefs;
-  arb_t nu, mu0, tol, tmp;
+  arb_t nu, tol, tmp;
   points_t points;
 
   arb_init(nu);
-  arb_init(mu0);
   arb_init(tol);
   arb_init(tmp);
 
@@ -74,10 +62,6 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     /* Recompute variables to new precision */
     geom_compute(geometry, prec);
 
-    arb_set_fmpq(mu0, geometry->angles, prec);
-    arb_inv(mu0, mu0, prec);
-    arb_neg(mu0, mu0);
-
     /* Initiate new variables */
     coefs = _arb_vec_init(N);
 
@@ -87,17 +71,15 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     interior(points, geometry, prec);
 
     /* Find the value of nu that minimizes sigma */
-    minimize_sigma(nu, points, N, nu_enclosure, mu0, tol,
-                   options->index_function, prec);
+    minimize_sigma(nu, geometry, points, N, nu_enclosure, tol, prec);
 
     /* Find the coefficients of the expansion */
-    coefs_sigma(coefs, points, N, nu, mu0, options->index_function, prec);
+    coefs_sigma(coefs, geometry, points, N, nu, prec);
 
     /* Compute an enclosure of the eigenvalue. To be sure to get correct
        output of the eigenvalue the output of it is handled inside the
        function enclose. */
-    enclose(nu_enclosure, geometry, coefs, N, nu, options->index_function,
-            prec);
+    enclose(nu_enclosure, geometry, coefs, N, nu, prec);
 
     /* Print information */
     if (options->output != 0)
@@ -149,8 +131,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
       {
         arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
         flint_printf(" %i\n", 500);
-        plot_eigen(geometry, coefs, N, nu, mu0, 500, options->index_function,
-                   prec);
+        plot_eigen(geometry, coefs, N, nu, 500, prec);
       }
 
 
@@ -162,7 +143,6 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
   }
 
   arb_clear(nu);
-  arb_clear(mu0);
   arb_clear(tol);
   arb_clear(tmp);
 }

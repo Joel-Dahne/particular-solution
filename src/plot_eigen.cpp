@@ -3,8 +3,8 @@
 #include "generate-matrix.h"
 
 void
-plot_eigen(geom_t geometry, arb_ptr coefs, slong N, arb_t nu, arb_t mu0,
-           slong num_points, int (*index)(int), slong prec) {
+plot_eigen(geom_t geometry, arb_ptr coefs, slong N, arb_t nu, slong num_points,
+           slong prec) {
   arb_ptr evals;
   points_t  points;
 
@@ -13,7 +13,7 @@ plot_eigen(geom_t geometry, arb_ptr coefs, slong N, arb_t nu, arb_t mu0,
   points_init(points, num_points, 0);
   boundary(points, geometry, prec);
 
-  eigenfunction(evals, coefs, points, N, nu, mu0, index, prec);
+  //eigenfunction(evals, geometry, coefs, points, N, nu, prec);
 
   for (slong i = 0; i < num_points; i++)
   {

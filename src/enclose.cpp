@@ -176,14 +176,13 @@ integrand(acb_ptr out, const acb_t inp, void *param_void, slong order,
 }
 
 static void
-integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
-                          arb_t nu, fmpq_t mu0, int (*index)(int), slong prec)
+integral_norm(arb_t norm, geom_t geom, arb_ptr coefs, int N, arb_t theta_bound,
+                          arb_t nu, slong prec)
 {
   acb_t zero, theta_bound_c, norm_part;
   acb_ptr params;
-  arb_t integral_phi, mu_arb;
+  arb_t integral_phi, mu;
   mag_t tol;
-  fmpq_t mu;
   slong prec_local, n;
 
   params = _acb_vec_init(3);
@@ -192,11 +191,9 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   acb_init(theta_bound_c);
   acb_init(norm_part);
   arb_init(integral_phi);
-  arb_init(mu_arb);
+  arb_init(mu);
 
   mag_init(tol);
-
-  fmpq_init(mu);
 
   arb_set(acb_realref(params + 0), nu); /* params[0] = nu */
 
@@ -206,8 +203,8 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   /* Compute the integral corresponding to phi */
   arb_const_pi(integral_phi, prec);
   arb_div_si(integral_phi, integral_phi, 2, prec);
-  arb_set_fmpq(mu_arb, mu0, prec);
-  arb_div(integral_phi, integral_phi, mu_arb, prec);
+  geom_get_mu(mu, geom, 0, 0, prec);
+  arb_div(integral_phi, integral_phi, mu, prec);
   arb_neg(integral_phi, integral_phi);
 
   /* The norms of the basis functions are rapidly decreasing so it is
@@ -221,10 +218,8 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
 
   for (slong i = 0; i < n; i++)
   {
-    /* params[1] = i*mu0 */
-    fmpq_set_si(mu, index(i), 1);
-    fmpq_mul(mu, mu, mu0);
-    arb_set_fmpq(acb_realref(params + 1), mu, prec);
+    /* params[1] = mu */
+    geom_get_mu(acb_realref(params + 1), geom, 0, i, prec);
     /* params[2] = sqr(coefs[i]) */
     arb_sqr(acb_realref(params + 2), coefs + i, prec);
 
@@ -251,11 +246,9 @@ integral_norm(arb_t norm, arb_ptr coefs, int N, arb_t theta_bound,
   acb_clear(theta_bound_c);
   acb_clear(norm_part);
   arb_clear(integral_phi);
-  arb_clear(mu_arb);
+  arb_clear(mu);
 
   mag_clear(tol);
-
-  fmpq_clear(mu);
 }
 
 static void
@@ -521,32 +514,26 @@ legendre_taylor(arb_ptr res, arb_ptr z, slong order, arb_t nu, arb_t mu,
 }
 
 static void
-eigenfunction_taylor(arb_ptr res, arb_ptr z, arb_ptr phi, arb_ptr coefs,
-                     slong order, slong N, arb_t nu, fmpq_t mu0, int (*index)(int),
-                     slong prec)
+eigenfunction_taylor(arb_ptr res, geom_t geom, arb_ptr z, arb_ptr phi,
+                     arb_ptr coefs, slong order, slong N, arb_t nu, slong prec)
 {
   arb_ptr term_sin, term_legendre, tmp;
-  arb_t mu_arb;
-  fmpq_t mu;
+  arb_t mu;
 
   term_sin = _arb_vec_init(order);
   term_legendre = _arb_vec_init(order);
   tmp = _arb_vec_init(order);
 
-  arb_init(mu_arb);
-
-  fmpq_init(mu);
+  arb_init(mu);
 
   _arb_vec_zero(res, order);
 
   for (slong i = 0; i < N; i++)
   {
-    fmpq_set_si(mu, index(i), 1);
-    fmpq_mul(mu, mu, mu0);
-    arb_set_fmpq(mu_arb, mu, prec);
-    _arb_vec_scalar_mul(tmp, phi, order, mu_arb, prec);
+    geom_get_mu(mu, geom, 0, i, prec);
+    _arb_vec_scalar_mul(tmp, phi, order, mu, prec);
     _arb_poly_sin_series(term_sin, tmp, order, order, prec);
-    legendre_taylor(term_legendre, z, order, nu, mu_arb, prec);
+    legendre_taylor(term_legendre, z, order, nu, mu, prec);
     _arb_poly_mullow(tmp, term_sin, order, term_legendre, order, order, prec);
     _arb_vec_scalar_addmul(res, tmp, order, coefs + i, prec);
   }
@@ -555,15 +542,12 @@ eigenfunction_taylor(arb_ptr res, arb_ptr z, arb_ptr phi, arb_ptr coefs,
   _arb_vec_clear(term_legendre, order);
   _arb_vec_clear(tmp, order);
 
-  arb_clear(mu_arb);
-
-  fmpq_clear(mu);
+  arb_clear(mu);
 }
 
 static void
-maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
-                arb_ptr v1, arb_ptr v2, arb_t nu, fmpq_t mu0, int (*index)(int),
-                slong prec) {
+maximize_taylor(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
+                slong order, arb_ptr v1, arb_ptr v2, arb_t nu, slong prec) {
   arb_ptr z, phi, poly;
   arb_t x, rest_term;
 
@@ -577,8 +561,7 @@ maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
   /* Compute the Taylor polynomial of the eigenfunction at the midpoint of t */
   arb_set_arf(x, arb_midref(t));
   parametrization(z, phi, x, v1, v2, order, prec);
-  eigenfunction_taylor(poly, z, phi, coefs, order, N, nu, mu0,
-                       index, prec);
+  eigenfunction_taylor(poly, geom, z, phi, coefs, order, N, nu, prec);
 
   /* Enclose the Taylor polynomial evaluated at t - mid(t) */
   arb_sub(x, t, x, prec);
@@ -587,8 +570,7 @@ maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
 
   /* Compute the rest term of the Taylor expansion */
   parametrization(z, phi, t, v1, v2, order + 1, prec);
-  eigenfunction_taylor(poly, z, phi, coefs, order + 1, N, nu, mu0,
-                       index, prec);
+  eigenfunction_taylor(poly, geom, z, phi, coefs, order + 1, N, nu, prec);
 
   arb_pow_ui(rest_term, x, order, prec);
   arb_mul(rest_term, rest_term, poly + order, prec);
@@ -605,8 +587,8 @@ maximize_taylor(arb_t max, arb_t t, arb_ptr coefs, slong N, slong order,
 }
 
 static void
-maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
-         arb_t nu, fmpq_t mu0, int (*index)(int), slong prec) {
+maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
+         arb_t nu, slong prec) {
   arb_ptr evals;
   arf_t *intervals_low, *next_intervals_low, *intervals_upp, *next_intervals_upp;
   arb_t t;
@@ -665,8 +647,7 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
     {
       arb_set_interval_arf(t, intervals_low[i], intervals_upp[i], prec);
 
-      maximize_taylor(evals + i, t, coefs, N, order, v1, v2, nu, mu0, index,
-                      prec);
+      maximize_taylor(evals + i, geom, t, coefs, N, order, v1, v2, nu, prec);
 
       arb_get_abs_ubound_arf(tmp, evals + i, prec);
       arf_max(max_upp, max_upp, tmp);
@@ -754,12 +735,11 @@ maximize(arb_t max, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 }
 
 void
-enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
-        slong N, arb_t nu, int (*index)(int), slong prec) {
+enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
+        slong N, arb_t nu, slong prec) {
   arb_ptr v1, v2;
   arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
     max, eigenvalue, tmp;
-  fmpq_t mu0;
 
   v1 = _arb_vec_init(3);
   v2 = _arb_vec_init(3);
@@ -773,24 +753,18 @@ enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
   arb_init(eigenvalue);
   arb_init(tmp);
 
-  fmpq_init(mu0);
-
   /* Compute enclosures of the required parameters */
   angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
-                        critical_point, geometry->angles, 2*prec);
-
-  fmpq_set(mu0, geometry->angles);
-  fmpq_inv(mu0, mu0);
-  fmpq_neg(mu0, mu0);
+                        critical_point, geom->angles, 2*prec);
 
   /* Compute an enclosure of a lower bound of the norm */
-  integral_norm(norm, coefs, N, theta_bound_low, nu, mu0, index, prec);
-  maximize(max, coefs, N, v1, v2, nu, mu0, index, prec);
+  integral_norm(norm, geom, coefs, N, theta_bound_low, nu, prec);
+  maximize(max, geom, coefs, N, v1, v2, nu, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++)
   {
-    arb_set_fmpq(tmp, geometry->angles + i, prec);
+    arb_set_fmpq(tmp, geom->angles + i, prec);
     arb_add(eps, eps, tmp, prec);
   }
   arb_const_pi(tmp, prec);
@@ -831,6 +805,4 @@ enclose(arb_t nu_enclosure, geom_t geometry, arb_ptr coefs,
   arb_clear(max);
   arb_clear(eigenvalue);
   arb_clear(tmp);
-
-  fmpq_clear(mu0);
 }

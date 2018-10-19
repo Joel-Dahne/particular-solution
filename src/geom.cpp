@@ -125,6 +125,20 @@ geom_compute(geom_t g, slong prec)
 }
 
 void
+geom_get_mu(arb_t mu, geom_t g, slong vertex, slong i, slong prec)
+{
+  fmpq_t tmp;
+
+  fmpq_init(tmp);
+
+  fmpq_set_si(tmp, -(g->half_edge[vertex] ? 2*i + 1 : i + 1), 1);
+  fmpq_div(tmp, tmp, g->angles + vertex);
+  arb_set_fmpq(mu, tmp, prec);
+
+  fmpq_clear(tmp);
+}
+
+void
 points_init(points_t p, slong boundary, slong interior)
 {
   p->boundary = boundary;

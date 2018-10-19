@@ -1,8 +1,8 @@
 #include "generate-matrix.h"
 #include "sigma_eigen.h"
 
-void sigma(mpfr_t res, points_t points, slong N, arb_t nu, arb_t mu0,
-           int (*index)(int), slong prec) {
+void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
+           slong prec) {
   mpfr_t *A_mpfr;
   slong rows;
 
@@ -14,7 +14,7 @@ void sigma(mpfr_t res, points_t points, slong N, arb_t nu, arb_t mu0,
   }
 
   // Fill A_mpfr with the coefficients for the matrix A
-  generate_matrix(A_mpfr, points, N, nu, mu0, index, prec);
+  generate_matrix(A_mpfr, geom, points, N, nu, prec);
 
   sigma_eigen(res, A_mpfr, points->interior, rows, N);
 
@@ -25,8 +25,8 @@ void sigma(mpfr_t res, points_t points, slong N, arb_t nu, arb_t mu0,
   delete [] A_mpfr;
 }
 
-void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
-                    arb_t mu0, arb_t tol, int (*index)(int), slong prec) {
+void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
+                    arb_t nu_enclosure, arb_t tol, slong prec) {
   mpfr_t yc, yd;
   arb_t a, b, c, d, h, invphi, invphi2, tmp, tmp2;;
   slong n;
@@ -70,8 +70,8 @@ void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
     arb_mul(tmp, invphi, h, prec);
     arb_add(d, a, tmp, prec);
 
-    sigma(yc, points, N, c, mu0, index, prec);
-    sigma(yd, points, N, d, mu0, index, prec);
+    sigma(yc, geom, points, N, c, prec);
+    sigma(yd, geom, points, N, d, prec);
 
     for (slong k = 0; k < n; k++) {
       if (mpfr_cmp(yc, yd) < 0) {
@@ -84,7 +84,7 @@ void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
         arb_mul(tmp, invphi2, h, prec);
         arb_add(c, a, tmp, prec);
 
-        sigma(yc, points, N, c, mu0, index, prec);
+        sigma(yc, geom, points, N, c, prec);
       } else {
         arb_set(a, c);
         arb_set(c, d);
@@ -95,7 +95,7 @@ void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
         arb_mul(tmp, invphi, h, prec);
         arb_add(d, a, tmp, prec);
 
-        sigma(yd, points, N, d, mu0, index, prec);
+        sigma(yd, geom, points, N, d, prec);
       }
     }
 
@@ -124,8 +124,8 @@ void minimize_sigma(arb_t nu, points_t points, slong N, arb_t nu_enclosure,
   arb_clear(tmp2);
 }
 
-void coefs_sigma(arb_ptr coefs, points_t points, slong N, arb_t nu,
-                 arb_t mu0, int (*index)(int), slong prec) {
+void coefs_sigma(arb_ptr coefs, geom_t geom, points_t points, slong N, arb_t nu,
+                 slong prec) {
   mpfr_t *A_mpfr, *coefs_mpfr;
   slong rows;
 
@@ -142,8 +142,8 @@ void coefs_sigma(arb_ptr coefs, points_t points, slong N, arb_t nu,
     mpfr_init(coefs_mpfr[i]);
   }
 
-  // Fill A_arr with the coefficients for the matrix A
-  generate_matrix(A_mpfr, points, N, nu, mu0, index, prec);
+  /* Fill A_mpfr with the coefficients for the matrix A */
+  generate_matrix(A_mpfr, geom, points, N, nu, prec);
 
   coefs_sigma_eigen(coefs_mpfr, A_mpfr, points->interior, rows, N);
 
