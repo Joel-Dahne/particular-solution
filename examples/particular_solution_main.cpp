@@ -62,7 +62,9 @@ Options are:\n\
   nu_guess_str = nu_guess_str_default;
   nu_width_str = nu_width_str_default;
   tol_rel_str = tol_rel_str_default;
-  geometry->half_boundary = 0;
+  geometry->half_edge[0] = 0;
+  geometry->half_edge[1] = 0;
+  geometry->half_edge[2] = 0;
   index_function = index_function_all;
 
   while ((c = getopt (argc, argv, "n:w:t:p:f:o:b:e:s:hi")) != -1)
@@ -95,7 +97,7 @@ Options are:\n\
       N_step = atoi(optarg);
       break;
     case 'h':
-      geometry->half_boundary = 1;
+      geometry->half_edge[0] = 1;
       break;
     case 'i':
       index_function = index_function_odd;

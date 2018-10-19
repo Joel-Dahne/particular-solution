@@ -3,21 +3,25 @@
 void
 geom_init(geom_t g)
 {
-  g->v1 = _arb_vec_init(3);
-  g->v2 = _arb_vec_init(3);
-  g->v3 = _arb_vec_init(3);
-  arb_init(g->theta_bound);
   g->angles = _fmpq_vec_init(3);
+  for (slong i = 0; i < 3; i++)
+  {
+    g->v1[i] = _arb_vec_init(3);
+    g->v2[i] = _arb_vec_init(3);
+    g->v3[i] = _arb_vec_init(3);
+  }
 }
 
 void
 geom_clear(geom_t g)
 {
-  _arb_vec_clear(g->v1, 3);
-  _arb_vec_clear(g->v2, 3);
-  _arb_vec_clear(g->v3, 3);
-  arb_clear(g->theta_bound);
   _fmpq_vec_clear(g->angles, 3);
+    for (slong i = 0; i < 3; i++)
+  {
+    _arb_vec_clear(g->v1[i], 3);
+    _arb_vec_clear(g->v2[i], 3);
+    _arb_vec_clear(g->v3[i], 3);
+  }
 }
 
 void
@@ -40,84 +44,80 @@ geom_compute(geom_t g, slong prec)
   arb_init(tmp1);
   arb_init(tmp2);
 
-  /* Compute the angles from the quotient */
-  arb_const_pi(angles_arb + 0, prec);
-  arb_const_pi(angles_arb + 1, prec);
-  arb_const_pi(angles_arb + 2, prec);
+  for (slong i = 0; i < 3; i++)
+  {
+    /* Compute the angles from the quotient */
+    arb_const_pi(angles_arb + 0, prec);
+    arb_const_pi(angles_arb + 1, prec);
+    arb_const_pi(angles_arb + 2, prec);
 
-  arb_mul_fmpz(angles_arb + 0, angles_arb + 0, fmpq_numref(g->angles + 0), prec);
-  arb_div_fmpz(angles_arb + 0, angles_arb + 0, fmpq_denref(g->angles + 0), prec);
-  arb_mul_fmpz(angles_arb + 1, angles_arb + 1, fmpq_numref(g->angles + 1), prec);
-  arb_div_fmpz(angles_arb + 1, angles_arb + 1, fmpq_denref(g->angles + 1), prec);
-  arb_mul_fmpz(angles_arb + 2, angles_arb + 2, fmpq_numref(g->angles + 2), prec);
-  arb_div_fmpz(angles_arb + 2, angles_arb + 2, fmpq_denref(g->angles + 2), prec);
+    arb_mul_fmpz(angles_arb + 0, angles_arb + 0, fmpq_numref(g->angles + (0 + i)%3), prec);
+    arb_div_fmpz(angles_arb + 0, angles_arb + 0, fmpq_denref(g->angles + (0 + i)%3), prec);
+    arb_mul_fmpz(angles_arb + 1, angles_arb + 1, fmpq_numref(g->angles + (1 + i)%3), prec);
+    arb_div_fmpz(angles_arb + 1, angles_arb + 1, fmpq_denref(g->angles + (1 + i)%3), prec);
+    arb_mul_fmpz(angles_arb + 2, angles_arb + 2, fmpq_numref(g->angles + (2 + i)%3), prec);
+    arb_div_fmpz(angles_arb + 2, angles_arb + 2, fmpq_denref(g->angles + (2 + i)%3), prec);
 
-  /* Compute the vectors for the spherical triangle */
-  /* S = (angles_arb[0] + angles_arb[1] + angles_arb[2])/2 */
-  arb_add(S, angles_arb + 0, angles_arb + 1, prec);
-  arb_add(S, S, angles_arb + 2, prec);
-  arb_div_si(S, S, 2, prec);
+    /* Compute the vectors for the spherical triangle */
+    /* S = (angles_arb[0] + angles_arb[1] + angles_arb[2])/2 */
+    arb_add(S, angles_arb + 0, angles_arb + 1, prec);
+    arb_add(S, S, angles_arb + 2, prec);
+    arb_div_si(S, S, 2, prec);
 
-  /* v1 = [0, 0, 1] */
-  arb_set_si(g->v1 + 0, 0);
-  arb_set_si(g->v1 + 1, 0);
-  arb_set_si(g->v1 + 2, 1);
+    /* v1 = [0, 0, 1] */
+    arb_set_si(g->v1[i] + 0, 0);
+    arb_set_si(g->v1[i] + 1, 0);
+    arb_set_si(g->v1[i] + 2, 1);
 
-  /* Compute theta for v2 */
-  arb_cos(tmp1, S, prec);
+    /* Compute theta for v2 */
+    arb_cos(tmp1, S, prec);
 
-  arb_sub(tmp2, S, angles_arb + 1, prec);
-  arb_cos(tmp2, tmp2, prec);
-  arb_mul(tmp1, tmp1, tmp2, prec);
+    arb_sub(tmp2, S, angles_arb + 1, prec);
+    arb_cos(tmp2, tmp2, prec);
+    arb_mul(tmp1, tmp1, tmp2, prec);
 
-  arb_sin(tmp2, angles_arb + 0, prec);
-  arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp2, angles_arb + 0, prec);
+    arb_div(tmp1, tmp1, tmp2, prec);
 
-  arb_sin(tmp2, angles_arb + 2, prec);
-  arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp2, angles_arb + 2, prec);
+    arb_div(tmp1, tmp1, tmp2, prec);
 
-  arb_neg(tmp1, tmp1);
-  arb_sqrt(tmp1, tmp1, prec);
-  arb_asin(tmp1, tmp1, prec);
-  arb_mul_si(tmp1, tmp1, 2, prec);
+    arb_neg(tmp1, tmp1);
+    arb_sqrt(tmp1, tmp1, prec);
+    arb_asin(tmp1, tmp1, prec);
+    arb_mul_si(tmp1, tmp1, 2, prec);
 
-  /* Add theta to theta_bound */
-  arb_set(g->theta_bound, tmp1);
+    /* Compute v2 from knowing theta */
+    arb_sin(g->v2[i] + 0, tmp1, prec);
+    arb_set_si(g->v2[i] + 1, 0);
+    arb_cos(g->v2[i] + 2, tmp1, prec);
 
-  /* Compute v2 from knowing theta */
-  arb_sin(g->v2 + 0, tmp1, prec);
-  arb_set_si(g->v2 + 1, 0);
-  arb_cos(g->v2 + 2, tmp1, prec);
+    /* Compute theta for v3 */
+    arb_cos(tmp1, S, prec);
 
-  /* Compute theta for v3 */
-  arb_cos(tmp1, S, prec);
+    arb_sub(tmp2, S, angles_arb + 2, prec);
+    arb_cos(tmp2, tmp2, prec);
+    arb_mul(tmp1, tmp1, tmp2, prec);
 
-  arb_sub(tmp2, S, angles_arb + 2, prec);
-  arb_cos(tmp2, tmp2, prec);
-  arb_mul(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp2, angles_arb + 0, prec);
+    arb_div(tmp1, tmp1, tmp2, prec);
 
-  arb_sin(tmp2, angles_arb + 0, prec);
-  arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp2, angles_arb + 1, prec);
+    arb_div(tmp1, tmp1, tmp2, prec);
 
-  arb_sin(tmp2, angles_arb + 1, prec);
-  arb_div(tmp1, tmp1, tmp2, prec);
+    arb_neg(tmp1, tmp1);
+    arb_sqrt(tmp1, tmp1, prec);
+    arb_asin(tmp1, tmp1, prec);
+    arb_mul_si(tmp1, tmp1, 2, prec);
 
-  arb_neg(tmp1, tmp1);
-  arb_sqrt(tmp1, tmp1, prec);
-  arb_asin(tmp1, tmp1, prec);
-  arb_mul_si(tmp1, tmp1, 2, prec);
-
-  /* Add theta to theta_bound and divide by 2 */
-  arb_add(g->theta_bound, g->theta_bound, tmp1, prec);
-  arb_div_si(g->theta_bound, g->theta_bound, 2, prec);
-
-  /* Compute v3 from knowing theta */
-  arb_sin(tmp2, tmp1, prec);
-  arb_cos(g->v3 + 0, angles_arb + 0, prec);
-  arb_mul(g->v3 + 0, g->v3 + 0, tmp2, prec);
-  arb_sin(g->v3 + 1, angles_arb + 0, prec);
-  arb_mul(g->v3 + 1, g->v3 + 1, tmp2, prec);
-  arb_cos(g->v3 + 2, tmp1, prec);
+    /* Compute v3 from knowing theta */
+    arb_sin(tmp2, tmp1, prec);
+    arb_cos(g->v3[i] + 0, angles_arb + 0, prec);
+    arb_mul(g->v3[i] + 0, g->v3[i] + 0, tmp2, prec);
+    arb_sin(g->v3[i] + 1, angles_arb + 0, prec);
+    arb_mul(g->v3[i] + 1, g->v3[i] + 1, tmp2, prec);
+    arb_cos(g->v3[i] + 2, tmp1, prec);
+  }
 
   arb_clear(S);
   arb_clear(tmp1);
@@ -157,14 +157,14 @@ boundary(points_t p, geom_t g, slong prec)
 
   for (int i = 0; i < n; i++) {
     arb_set_si(t, i + 1);
-    if (g->half_boundary)
+    if (g->half_edge[0])
       arb_div_si(t, t, 2*n, prec);
     else
       arb_div_si(t, t, n + 1, prec);
 
-    _arb_vec_sub(arc, g->v3, g->v2, 3, prec);
+    _arb_vec_sub(arc, g->v3[0], g->v2[0], 3, prec);
     _arb_vec_scalar_mul(arc, arc, 3, t, prec);
-    _arb_vec_add(arc, arc, g->v2, 3, prec);
+    _arb_vec_add(arc, arc, g->v2[0], 3, prec);
 
     _arb_vec_dot(norm, arc, arc, 3, prec);
     arb_sqrt(norm, norm, prec);
@@ -197,8 +197,8 @@ interior(points_t p, geom_t g, slong prec)
   arb_init(norm);
   arb_init(tmp);
 
-  _arb_vec_sub(v2mv1, g->v2, g->v1, 3, prec);
-  _arb_vec_sub(v3mv1, g->v3, g->v1, 3, prec);
+  _arb_vec_sub(v2mv1, g->v2[0], g->v1[0], 3, prec);
+  _arb_vec_sub(v3mv1, g->v3[0], g->v1[0], 3, prec);
 
   for (int i = p->boundary; i < p->boundary + p->interior; i++)
   {
@@ -221,7 +221,7 @@ interior(points_t p, geom_t g, slong prec)
       arb_set(s, tmp);
     }
 
-    _arb_vec_set(xyz, g->v1, 3);
+    _arb_vec_set(xyz, g->v1[0], 3);
     _arb_vec_scalar_addmul(xyz, v2mv1, 3, s, prec);
     _arb_vec_scalar_addmul(xyz, v3mv1, 3, t, prec);
 

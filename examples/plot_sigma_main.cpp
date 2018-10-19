@@ -34,8 +34,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 0;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 0;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 3.056691018);
@@ -54,8 +60,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 0;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 0;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 3.240902298);
@@ -74,8 +86,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 0;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 0;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 4.063109028);
@@ -94,8 +112,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 1;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 1;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 4.143210850);
@@ -114,8 +138,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 0;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 0;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 4.470604591);
@@ -134,8 +164,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 1;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 1;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 6.525663100);
@@ -154,8 +190,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 1;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 1;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 1.624084509);
@@ -174,8 +216,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 1;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 1;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 1.825757081);
@@ -194,8 +242,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_all;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 0;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 0;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 2.047890892);
@@ -214,8 +268,14 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     arb_set_d(options->prec_factor, 1.2);
     options->index_function = index_function_odd;
 
-    /* Set if only half of the boundary is to be used or not */
-    geometry->half_boundary = 1;
+    /* Set which edges are to be used and for which we only use half
+     * of the boundary */
+    geometry->vertices[0] = 1;
+    geometry->vertices[1] = 0;
+    geometry->vertices[2] = 0;
+    geometry->half_edge[0] = 1;
+    geometry->half_edge[1] = 0;
+    geometry->half_edge[2] = 0;
 
     /* Set midpoint for nu */
     arb_set_d(nu_enclosure, 2.150869291);
