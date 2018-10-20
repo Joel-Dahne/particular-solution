@@ -38,7 +38,7 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
   arb_clear(res);
 }
 
-void eigenfunction(arb_ptr res, arb_ptr coefs, geom_t geom, points_t points,
+void eigenfunction(arb_ptr res, geom_t geom, arb_ptr coefs, points_t points,
                    slong N, arb_t nu, slong prec) {
   arb_t mu, tmp, term;
   slong prec_local;
