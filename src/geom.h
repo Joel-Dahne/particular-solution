@@ -17,7 +17,7 @@
  * fmpq * angles: Contains the three angles for the three different
  * vertices.
  *
- * arb_ptr v1[3]: Coordinates for the vertex places on the north pole
+ * arb_ptr v1[3]: Coordinates for the vertex placed on the north pole
  * (this will always be [0, 0, 1]).
  *
  * arb_ptr v2[3]: Coordinates for the vertex having y equal to zero.

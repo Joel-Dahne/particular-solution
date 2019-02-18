@@ -35,10 +35,10 @@ geom_set_angles(geom_t g, slong angles[])
 void
 geom_compute(geom_t g, slong prec)
 {
-  arb_ptr angles_arb;
+  arb_ptr angles;
   arb_t S, tmp1, tmp2;
 
-  angles_arb = _arb_vec_init(3);
+  angles = _arb_vec_init(3);
 
   arb_init(S);
   arb_init(tmp1);
@@ -47,21 +47,26 @@ geom_compute(geom_t g, slong prec)
   for (slong i = 0; i < 3; i++)
   {
     /* Compute the angles from the quotient */
-    arb_const_pi(angles_arb + 0, prec);
-    arb_const_pi(angles_arb + 1, prec);
-    arb_const_pi(angles_arb + 2, prec);
+    arb_const_pi(angles + 0, prec);
+    arb_const_pi(angles + 1, prec);
+    arb_const_pi(angles + 2, prec);
 
-    arb_mul_fmpz(angles_arb + 0, angles_arb + 0, fmpq_numref(g->angles + (0 + i)%3), prec);
-    arb_div_fmpz(angles_arb + 0, angles_arb + 0, fmpq_denref(g->angles + (0 + i)%3), prec);
-    arb_mul_fmpz(angles_arb + 1, angles_arb + 1, fmpq_numref(g->angles + (1 + i)%3), prec);
-    arb_div_fmpz(angles_arb + 1, angles_arb + 1, fmpq_denref(g->angles + (1 + i)%3), prec);
-    arb_mul_fmpz(angles_arb + 2, angles_arb + 2, fmpq_numref(g->angles + (2 + i)%3), prec);
-    arb_div_fmpz(angles_arb + 2, angles_arb + 2, fmpq_denref(g->angles + (2 + i)%3), prec);
+    /* Angle for the vertex at the north pole in the current
+     * parameterization. */
+    arb_mul_fmpz(angles + 0, angles + 0, fmpq_numref(g->angles + (3 - i)%3), prec);
+    arb_div_fmpz(angles + 0, angles + 0, fmpq_denref(g->angles + (3 - i)%3), prec);
+    /* Angle for the vertex having y equal to zero in the current
+     * parameterization */
+    arb_mul_fmpz(angles + 1, angles + 1, fmpq_numref(g->angles + (4 - i)%3), prec);
+    arb_div_fmpz(angles + 1, angles + 1, fmpq_denref(g->angles + (4 - i)%3), prec);
+    /* Angle for the third vertex in the current parameterization */
+    arb_mul_fmpz(angles + 2, angles + 2, fmpq_numref(g->angles + (5 - i)%3), prec);
+    arb_div_fmpz(angles + 2, angles + 2, fmpq_denref(g->angles + (5 - i)%3), prec);
 
     /* Compute the vectors for the spherical triangle */
-    /* S = (angles_arb[0] + angles_arb[1] + angles_arb[2])/2 */
-    arb_add(S, angles_arb + 0, angles_arb + 1, prec);
-    arb_add(S, S, angles_arb + 2, prec);
+    /* S = (angles[0] + angles[1] + angles[2])/2 */
+    arb_add(S, angles + 0, angles + 1, prec);
+    arb_add(S, S, angles + 2, prec);
     arb_div_si(S, S, 2, prec);
 
     /* v1 = [0, 0, 1] */
@@ -72,14 +77,14 @@ geom_compute(geom_t g, slong prec)
     /* Compute theta for v2 */
     arb_cos(tmp1, S, prec);
 
-    arb_sub(tmp2, S, angles_arb + 1, prec);
+    arb_sub(tmp2, S, angles + 1, prec);
     arb_cos(tmp2, tmp2, prec);
     arb_mul(tmp1, tmp1, tmp2, prec);
 
-    arb_sin(tmp2, angles_arb + 0, prec);
+    arb_sin(tmp2, angles + 0, prec);
     arb_div(tmp1, tmp1, tmp2, prec);
 
-    arb_sin(tmp2, angles_arb + 2, prec);
+    arb_sin(tmp2, angles + 2, prec);
     arb_div(tmp1, tmp1, tmp2, prec);
 
     arb_neg(tmp1, tmp1);
@@ -95,14 +100,14 @@ geom_compute(geom_t g, slong prec)
     /* Compute theta for v3 */
     arb_cos(tmp1, S, prec);
 
-    arb_sub(tmp2, S, angles_arb + 2, prec);
+    arb_sub(tmp2, S, angles + 2, prec);
     arb_cos(tmp2, tmp2, prec);
     arb_mul(tmp1, tmp1, tmp2, prec);
 
-    arb_sin(tmp2, angles_arb + 0, prec);
+    arb_sin(tmp2, angles + 0, prec);
     arb_div(tmp1, tmp1, tmp2, prec);
 
-    arb_sin(tmp2, angles_arb + 1, prec);
+    arb_sin(tmp2, angles + 1, prec);
     arb_div(tmp1, tmp1, tmp2, prec);
 
     arb_neg(tmp1, tmp1);
@@ -112,9 +117,9 @@ geom_compute(geom_t g, slong prec)
 
     /* Compute v3 from knowing theta */
     arb_sin(tmp2, tmp1, prec);
-    arb_cos(g->v3[i] + 0, angles_arb + 0, prec);
+    arb_cos(g->v3[i] + 0, angles + 0, prec);
     arb_mul(g->v3[i] + 0, g->v3[i] + 0, tmp2, prec);
-    arb_sin(g->v3[i] + 1, angles_arb + 0, prec);
+    arb_sin(g->v3[i] + 1, angles + 0, prec);
     arb_mul(g->v3[i] + 1, g->v3[i] + 1, tmp2, prec);
     arb_cos(g->v3[i] + 2, tmp1, prec);
   }
@@ -122,6 +127,8 @@ geom_compute(geom_t g, slong prec)
   arb_clear(S);
   arb_clear(tmp1);
   arb_clear(tmp2);
+
+  _arb_vec_clear(angles, 3);
 }
 
 void
@@ -132,7 +139,7 @@ geom_get_mu(arb_t mu, geom_t g, slong vertex, slong i, slong prec)
   fmpq_init(tmp);
 
   fmpq_set_si(tmp, -(g->half_edge[vertex] ? 2*i + 1 : i + 1), 1);
-  fmpq_div(tmp, tmp, g->angles + vertex);
+  fmpq_div(tmp, tmp, g->angles + (3 - vertex)%3);
   arb_set_fmpq(mu, tmp, prec);
 
   fmpq_clear(tmp);
