@@ -26,24 +26,57 @@ eval_eigenfunction(arb_t res, arb_t theta, arb_t phi, arb_t nu, arb_t mu,
   arb_clear(tmp);
 }
 
+/* Generates a matrix for computations of the sigma values. The rows
+ * of the matrix corresponds to points in the points argument and the
+ * columns corresponds to different functions in the expansion. The
+ * value of an element is given by the corresponding function
+ * evaluated at the corresponding point.
+ *
+ * Expansions from up to all three vertices can be used. For each
+ * vertex N terms are used in the expansion. The first N columns
+ * correspond to the first used vertex, the second N columns to the
+ * second used vertex and similar for the third used vertex. The
+ * number of columns is therefore equal to N times the number of used
+ * vertices. */
 void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
-                     slong prec) {
+                     slong prec)
+{
   arb_t mu, res;
-  slong n;
+  slong n, column_start;
 
   arb_init(mu);
   arb_init(res);
 
-  n = points->boundary + points->interior;
+  n = points->total;
+  column_start = 0;
 
-  for (slong i = 0; i < n; i++) {
-    for (slong j = 0; j < N; j++) {
-      geom_get_mu(mu, geom, 0, j, prec);
+  for (slong vertex = 0; vertex < 3; vertex++)
+    {
+    /* Check if an expansion from the vertex is to be used */
+    if (geom->vertices[vertex]) {
 
-      eval_eigenfunction(res, points->thetas + i, points->phis + i, nu, mu,
-                         prec);
+      for (slong i = 0; i < n; i++) {
+        /* If the values for points->thetas + i and points->phis + i
+           are indeterminate set function value to zero. This is what
+           points_t expects. */
+        if (arb_is_finite(points->thetas[vertex] + i)
+            && arb_is_finite(points->phis[vertex] + i)) {
 
-      arf_get_mpfr(A[j*n + i], arb_midref(res), MPFR_RNDN);
+          for (slong j = column_start; j < column_start + N; j++) {
+            geom_get_mu(mu, geom, vertex, j - column_start, prec);
+            eval_eigenfunction(res, points->thetas[vertex] + i,
+                               points->phis[vertex] + i, nu, mu, prec);
+
+            arf_get_mpfr(A[j*n + i], arb_midref(res), MPFR_RNDN);
+          }
+        } else {
+          for (slong j = column_start; j < column_start + N; j++) {
+            mpfr_set_zero(A[j*n + i], 0);
+          }
+        }
+      }
+
+      column_start += N;
     }
   }
 
@@ -51,21 +84,37 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
   arb_clear(res);
 }
 
+/*   Evaluates the eigenfunction given by the sum of the basis
+ *   eigenfunctions with the supplied coefficients at the supplied
+ *   points. */
 void eigenfunction(arb_ptr res, geom_t geom, arb_ptr coefs, points_t points,
                    slong N, arb_t nu, slong prec) {
   arb_t mu, term;
+  slong n;
 
   arb_init(mu);
   arb_init(term);
 
-  for (slong i = 0; i < points->boundary + points->interior; i++) {
+  n = points->total;
+
+  for (slong i = 0; i < n; i++) {
     arb_zero(res + i);
-    for (slong j = 0; j < N; j++) {
-      geom_get_mu(mu, geom, 0, j, prec);
 
-      eval_eigenfunction(term, points->thetas + i, points->phis + i, nu, mu, prec);
-
-      arb_addmul(res + i, term, coefs + j, prec);
+    for (slong vertex = 0; vertex < 3; vertex++) {
+      if (geom->vertices[vertex]) {
+        for (slong j = 0; j < N; j++) {
+          /* If the values for points->thetas + i and points->phis + i
+             are indeterminate set function value to zero. This is what
+             points_t expects. */
+          if (arb_is_finite(points->thetas[vertex] + i)
+              && arb_is_finite(points->phis[vertex] + i)) {
+            geom_get_mu(mu, geom, vertex, j, prec);
+            eval_eigenfunction(term, points->thetas[vertex] + i,
+                               points->phis[vertex] + i, nu, mu, prec);
+            arb_addmul(res + i, term, coefs + j, prec);
+          }
+        }
+      }
     }
   }
 

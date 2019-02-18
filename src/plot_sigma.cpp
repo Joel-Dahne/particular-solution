@@ -24,7 +24,7 @@ plot_sigma(arf_t inf, arf_t sup, geom_t geometry, slong num_points,
 
   for (slong N = options->N_beg; N <= options->N_end; N += options->N_step)
   {
-    points_init(points, 2*N, 2*N);
+    points_init(points, geometry, 2*N, 2*N);
 
     boundary(points, geometry, prec);
     interior(points, geometry, prec);

@@ -63,9 +63,10 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     geom_compute(geometry, prec);
 
     /* Initiate new variables */
-    coefs = _arb_vec_init(N);
+    coefs = _arb_vec_init(N*(geometry->vertices[0] + geometry->vertices[1]
+                             + geometry->vertices[2]));
 
-    points_init(points, 2*N, 2*N);
+    points_init(points, geometry, 2*N, 2*N);
 
     boundary(points, geometry, prec);
     interior(points, geometry, prec);

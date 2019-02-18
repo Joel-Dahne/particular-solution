@@ -3,26 +3,27 @@
 
 void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
            slong prec) {
-  mpfr_t *A_mpfr;
-  slong rows;
+  mpfr_t *A;
+  slong rows, columns;
 
-  rows = points->boundary + points->interior;
+  rows = points->total;
+  columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
 
-  A_mpfr = new mpfr_t[rows*N];
-  for (slong i = 0; i < rows*N; i++) {
-    mpfr_init(A_mpfr[i]);
+  A = new mpfr_t[rows*columns];
+  for (slong i = 0; i < rows*columns; i++) {
+    mpfr_init(A[i]);
   }
 
-  // Fill A_mpfr with the coefficients for the matrix A
-  generate_matrix(A_mpfr, geom, points, N, nu, prec);
+  /* Fill A with the coefficients for the matrix A */
+  generate_matrix(A, geom, points, N, nu, prec);
 
-  sigma_eigen(res, A_mpfr, points->interior, rows, N);
+  sigma_eigen(res, A, points->boundary, rows, columns);
 
   for (slong i = 0; i < rows*N; i++) {
-    mpfr_clear(A_mpfr[i]);
+    mpfr_clear(A[i]);
   }
 
-  delete [] A_mpfr;
+  delete [] A;
 }
 
 void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
@@ -126,42 +127,43 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
 
 void coefs_sigma(arb_ptr coefs, geom_t geom, points_t points, slong N, arb_t nu,
                  slong prec) {
-  mpfr_t *A_mpfr, *coefs_mpfr;
-  slong rows;
+  mpfr_t *A, *coefs_mpfr;
+  slong rows, columns;
 
-  rows = points->boundary + points->interior;
+  rows = points->total;
+  columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
 
-  A_mpfr = new mpfr_t[rows*N];
-  coefs_mpfr = new mpfr_t[N];
-  for (slong i = 0; i < rows*N; i++)
+  A = new mpfr_t[rows*columns];
+  coefs_mpfr = new mpfr_t[columns];
+  for (slong i = 0; i < rows*columns; i++)
   {
-    mpfr_init(A_mpfr[i]);
+    mpfr_init(A[i]);
   }
-  for (slong i = 0; i < N; i++)
+  for (slong i = 0; i < columns; i++)
   {
     mpfr_init(coefs_mpfr[i]);
   }
 
-  /* Fill A_mpfr with the coefficients for the matrix A */
-  generate_matrix(A_mpfr, geom, points, N, nu, prec);
+  /* Fill A with the coefficients for the matrix A */
+  generate_matrix(A, geom, points, N, nu, prec);
 
-  coefs_sigma_eigen(coefs_mpfr, A_mpfr, points->interior, rows, N);
+  coefs_sigma_eigen(coefs_mpfr, A, points->boundary, rows, columns);
 
-  for (slong i = 0; i < N; i++)
+  for (slong i = 0; i < columns; i++)
   {
     arf_set_mpfr(arb_midref(coefs + i), coefs_mpfr[i]);
     mag_zero(arb_radref(coefs + i));
   }
 
-  for (slong i = 0; i < rows*N; i++)
+  for (slong i = 0; i < rows*columns; i++)
   {
-    mpfr_clear(A_mpfr[i]);
+    mpfr_clear(A[i]);
   }
-  for (slong i = 0; i < N; i++)
+  for (slong i = 0; i < columns; i++)
   {
     mpfr_clear(coefs_mpfr[i]);
   }
 
-  delete [] A_mpfr;
+  delete [] A;
   delete [] coefs_mpfr;
 }
