@@ -76,9 +76,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     /* Find the coefficients of the expansion */
     coefs_sigma(coefs, geometry, points, N, nu, prec);
 
-    /* Compute an enclosure of the eigenvalue. To be sure to get correct
-       output of the eigenvalue the output of it is handled inside the
-       function enclose. */
+    /* Compute an enclosure of the eigenvalue. */
     enclose(nu_enclosure, geometry, coefs, N, nu, prec);
 
     /* Print information */
@@ -132,6 +130,11 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
         arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
         flint_printf(" %i\n", 500);
         plot_eigen(geometry, coefs, N, nu, 500, prec);
+      }
+      else if (options->output == 9)
+      {
+        arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
+        flint_printf("\n");
       }
 
 

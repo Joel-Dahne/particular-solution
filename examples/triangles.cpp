@@ -351,6 +351,7 @@ main(int argc, char *argv[])
     mpfr_printf("             - 6: width of enclosure for nu\n");
     mpfr_printf("             - 7: coefficients for the approximate eigenfunction\n");
     mpfr_printf("             - 8: plot of the approximate eigenfunction\n");
+    mpfr_printf("             - 9: minimizing nu value\n");
     mpfr_printf("-prec p    - precision in bits (default p = 64)\n");
     mpfr_printf("-N_beg b    - N value to start at (default 4)\n");
     mpfr_printf("-N_end e    - N value to stop at (default 16)\n");
