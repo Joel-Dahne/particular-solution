@@ -305,7 +305,9 @@ main(int argc, char *argv[])
   arf_t inf, sup;
   geom_t geometry;
   particular_solution_opt_t options;
-  slong triangle, prec;
+  slong triangle, num_points, prec;
+
+  srand(1);
 
   triangle = -1;
 
@@ -330,6 +332,7 @@ main(int argc, char *argv[])
     mpfr_printf("-N_beg b    - N value to start at (default 4)\n");
     mpfr_printf("-N_end e    - N value to stop at (default 16)\n");
     mpfr_printf("-N_step s    - step to take with N each iteration (default 2)\n");
+    mpfr_printf("-points num  - number of points to use in the plot (default 500)\n");
     mpfr_printf("Implemented triangles:\n");
     for (int i = 0; i < NUM_TRIANGLES; i++)
       mpfr_printf("T%d = %s\n", i, descr[i]);
@@ -337,6 +340,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
+  num_points = 500;
   prec = 64;
 
   arb_init(tmp);
@@ -378,10 +382,14 @@ main(int argc, char *argv[])
     {
       options->N_step = atol(argv[i + 1]);
     }
+    else if (!strcmp(argv[i], "-points"))
+    {
+      num_points = atol(argv[i + 1]);
+    }
   }
 
   get_triangle(geometry, tmp, options, triangle);
-  plot_sigma(inf, sup, geometry, options, prec);
+  plot_sigma(inf, sup, geometry, num_points, options, prec);
 
   arb_clear(tmp);
 

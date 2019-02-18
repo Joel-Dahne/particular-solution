@@ -3,12 +3,11 @@
 #include "sigma.h"
 
 void
-plot_sigma(arf_t inf, arf_t sup, geom_t geometry,
+plot_sigma(arf_t inf, arf_t sup, geom_t geometry, slong num_points,
            particular_solution_opt_t options, slong prec) {
   arb_t nu, step;
   mpfr_t res;
   points_t points;
-  slong num_points;
 
   mpfr_set_default_prec(prec);
 
@@ -16,8 +15,6 @@ plot_sigma(arf_t inf, arf_t sup, geom_t geometry,
   arb_init(step);
 
   mpfr_init(res);
-
-  num_points = 500;
 
   geom_compute(geometry, prec);
 
