@@ -59,8 +59,14 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
 
     mpfr_set_default_prec(prec);
 
-    /* Recompute variables to new precision */
-    geom_compute(geometry, prec);
+    /* Recompute variables to take into account the new precision.
+     * Certain parts of the program works with higher intermediary
+     * precision, to not have these parts be limited by the precision
+     * of these pre computed variables we compute them to a higher
+     * precision than we are currently working with. Testing has
+     * showed that using double the current precision seems to work
+     * well. */
+    geom_compute(geometry, 2*prec);
 
     /* Initiate new variables */
     coefs = _arb_vec_init(N*(geometry->vertices[0] + geometry->vertices[1]

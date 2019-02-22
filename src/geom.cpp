@@ -10,6 +10,8 @@ geom_init(geom_t g)
     g->v1[i] = _arb_vec_init(3);
     g->v2[i] = _arb_vec_init(3);
     g->v3[i] = _arb_vec_init(3);
+    g->theta_lower[i] = _arb_vec_init(3);
+    g->theta_upper[i] = _arb_vec_init(3);
   }
 }
 
@@ -22,6 +24,8 @@ geom_clear(geom_t g)
     _arb_vec_clear(g->v1[i], 3);
     _arb_vec_clear(g->v2[i], 3);
     _arb_vec_clear(g->v3[i], 3);
+    _arb_vec_clear(g->theta_lower[i], 3);
+    _arb_vec_clear(g->theta_upper[i], 3);
   }
 }
 
@@ -36,14 +40,18 @@ geom_set_angles(geom_t g, slong angles[])
 void
 geom_compute(geom_t g, slong prec)
 {
-  arb_ptr angles;
-  arb_t S, tmp1, tmp2;
+  arb_ptr angles, w;
+  arb_t S, theta_v2, theta_v3, critical_point, tmp, tmp_dot;
 
   angles = _arb_vec_init(3);
+  w = _arb_vec_init(3);
 
   arb_init(S);
-  arb_init(tmp1);
-  arb_init(tmp2);
+  arb_init(theta_v2);
+  arb_init(theta_v3);
+  arb_init(critical_point);
+  arb_init(tmp);
+  arb_init(tmp_dot);
 
   for (slong i = 0; i < 3; i++)
   {
@@ -75,61 +83,130 @@ geom_compute(geom_t g, slong prec)
     arb_set_si(g->v1[i] + 1, 0);
     arb_set_si(g->v1[i] + 2, 1);
 
-    /* Compute theta for v2 */
-    arb_cos(tmp1, S, prec);
+    /* Compute the theta value for for v2 */
+    arb_cos(theta_v2, S, prec);
 
-    arb_sub(tmp2, S, angles + 1, prec);
-    arb_cos(tmp2, tmp2, prec);
-    arb_mul(tmp1, tmp1, tmp2, prec);
+    arb_sub(tmp, S, angles + 1, prec);
+    arb_cos(tmp, tmp, prec);
+    arb_mul(theta_v2, theta_v2, tmp, prec);
 
-    arb_sin(tmp2, angles + 0, prec);
-    arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp, angles + 0, prec);
+    arb_div(theta_v2, theta_v2, tmp, prec);
 
-    arb_sin(tmp2, angles + 2, prec);
-    arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp, angles + 2, prec);
+    arb_div(theta_v2, theta_v2, tmp, prec);
 
-    arb_neg(tmp1, tmp1);
-    arb_sqrt(tmp1, tmp1, prec);
-    arb_asin(tmp1, tmp1, prec);
-    arb_mul_si(tmp1, tmp1, 2, prec);
+    arb_neg(theta_v2, theta_v2);
+    arb_sqrt(theta_v2, theta_v2, prec);
+    arb_asin(theta_v2, theta_v2, prec);
+    arb_mul_si(theta_v2, theta_v2, 2, prec);
 
-    /* Compute v2 from knowing theta */
-    arb_sin(g->v2[i] + 0, tmp1, prec);
+    /* Compute v2 from knowing theta
+    * v2 = [sin(theta_v2), 0, cos(theta_v2)] */
+    arb_sin(g->v2[i] + 0, theta_v2, prec);
     arb_set_si(g->v2[i] + 1, 0);
-    arb_cos(g->v2[i] + 2, tmp1, prec);
+    arb_cos(g->v2[i] + 2, theta_v2, prec);
 
-    /* Compute theta for v3 */
-    arb_cos(tmp1, S, prec);
+    /* Compute the theta value for v3 */
+    arb_cos(theta_v3, S, prec);
 
-    arb_sub(tmp2, S, angles + 2, prec);
-    arb_cos(tmp2, tmp2, prec);
-    arb_mul(tmp1, tmp1, tmp2, prec);
+    arb_sub(tmp, S, angles + 2, prec);
+    arb_cos(tmp, tmp, prec);
+    arb_mul(theta_v3, theta_v3, tmp, prec);
 
-    arb_sin(tmp2, angles + 0, prec);
-    arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp, angles + 0, prec);
+    arb_div(theta_v3, theta_v3, tmp, prec);
 
-    arb_sin(tmp2, angles + 1, prec);
-    arb_div(tmp1, tmp1, tmp2, prec);
+    arb_sin(tmp, angles + 1, prec);
+    arb_div(theta_v3, theta_v3, tmp, prec);
 
-    arb_neg(tmp1, tmp1);
-    arb_sqrt(tmp1, tmp1, prec);
-    arb_asin(tmp1, tmp1, prec);
-    arb_mul_si(tmp1, tmp1, 2, prec);
+    arb_neg(theta_v3, theta_v3);
+    arb_sqrt(theta_v3, theta_v3, prec);
+    arb_asin(theta_v3, theta_v3, prec);
+    arb_mul_si(theta_v3, theta_v3, 2, prec);
 
-    /* Compute v3 from knowing theta */
-    arb_sin(tmp2, tmp1, prec);
+    /* Compute v3 from knowing theta
+    * v3 = [sin(theta_v3)*cos(angles[0]), sin(theta_v3)*sin(angles[0]),
+    *       cos(theta_v3)] */
+    arb_sin(tmp, theta_v3, prec);
     arb_cos(g->v3[i] + 0, angles + 0, prec);
-    arb_mul(g->v3[i] + 0, g->v3[i] + 0, tmp2, prec);
+    arb_mul(g->v3[i] + 0, g->v3[i] + 0, tmp, prec);
     arb_sin(g->v3[i] + 1, angles + 0, prec);
-    arb_mul(g->v3[i] + 1, g->v3[i] + 1, tmp2, prec);
-    arb_cos(g->v3[i] + 2, tmp1, prec);
+    arb_mul(g->v3[i] + 1, g->v3[i] + 1, tmp, prec);
+    arb_cos(g->v3[i] + 2, theta_v3, prec);
+
+    /* Compute the critical point, with respect to theta, on the
+     * boundary between v2 and v3. */
+    /* w = v3 - v2 */
+    _arb_vec_sub(w, g->v3[i], g->v2[i], 3, prec);
+    /* dot(v2, v2) */
+    _arb_vec_dot(tmp_dot, g->v2[i], g->v2[i], 3, prec);
+    /* critical_point = w_3*dot(v2, v2) */
+    arb_mul(critical_point, w + 2, tmp_dot, prec);
+    /* dot(v2, w) */
+    _arb_vec_dot(tmp_dot, g->v2[i], w, 3, prec);
+    /* v2_3*dot(v2, w) */
+    arb_mul(tmp, g->v2[i] + 2, tmp_dot, prec);
+    /* critical_point = v_3*dit(v2, w) - w_3*dot(v2, v2) */
+    arb_sub(critical_point, tmp, critical_point, prec);
+    /* w_3*dot(v2, w) */
+    arb_mul(tmp, w + 2, tmp_dot, prec);
+    /* dot(w, w) */
+    _arb_vec_dot(tmp_dot, w, w, 3, prec);
+    /* w_3*dot(v2, w) - v_3*dot(w, w) */
+    arb_submul(tmp, g->v2[i] + 2, tmp_dot, prec);
+
+    /* TODO: Handle the case when the enclosure of tmp contains 0. If
+     * tmp is exactly zero we can safetly discard the critical point.
+     * However since we only have an enclosure we can't be sure tmp is
+     * exactly zero. Most likely it will in theory be exactly zero and
+     * there are no solutions, but we need to prove this. */
+    /* The critical point */
+    arb_div(critical_point, critical_point, tmp, prec);
+
+    /* If the critical point is in the interval (0, 1) compute the angle
+     * corresponding to the critical point */
+    arb_sub_si(tmp, critical_point, 1, prec);
+    if (arb_contains_positive(critical_point) && arb_contains_negative(tmp))
+    {
+      /* Compute the vector v2 + w*critical_point = v2 + (v3 -
+       * v2)*critical point, i.e. the vector at the critical point. */
+      _arb_vec_scalar_mul(w, w, 3, critical_point, prec);
+      _arb_vec_add(w, g->v2[i], w, 3, prec);
+      /* Comute the norm of the above vector */
+      _arb_vec_dot(tmp_dot, w, w, 3, prec);
+      arb_sqrt(tmp_dot, tmp_dot, prec);
+      /* Compute z for this point */
+      arb_div(tmp, w + 2, tmp_dot, prec);
+
+      /* Compute the theta value for this point */
+      arb_acos(tmp, tmp, prec);
+    }
+    else
+    {
+      /* There is no critical point on the edge so put the theta value
+       * to that of theta_v2, that way it will not affect the minimum
+       * of maximum theta value. */
+      arb_set(tmp, theta_v2);
+    }
+
+    /* Compute the minimum theta value */
+    arb_min(g->theta_lower[i], theta_v2, theta_v3, prec);
+    arb_min(g->theta_lower[i], g->theta_lower[i], tmp, prec);
+    /* Compute the maximum theta value */
+    arb_max(g->theta_upper[i], theta_v2, theta_v3, prec);
+    arb_max(g->theta_upper[i], g->theta_upper[i], tmp, prec);
   }
 
   arb_clear(S);
-  arb_clear(tmp1);
-  arb_clear(tmp2);
+  arb_clear(theta_v2);
+  arb_clear(theta_v3);
+  arb_clear(critical_point);
+  arb_clear(tmp);
+  arb_clear(tmp_dot);
 
   _arb_vec_clear(angles, 3);
+  _arb_vec_clear(w, 3);
 }
 
 void

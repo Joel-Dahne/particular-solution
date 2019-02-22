@@ -4,132 +4,6 @@
 #include "acb_hypgeom.h"
 #include "acb_calc.h"
 
-static void
-angles_to_vectors_arb(arb_ptr v1, arb_ptr v2, arb_t theta_bound_low,
-                      arb_t theta_bound_upp, arb_t critical_point,
-                      fmpq * angles_fmpq, slong prec)
-{
-  arb_ptr angles, w;
-  arb_t S, theta1, theta2, tmp, tmp_dot;
-
-  angles = _arb_vec_init(3);
-  w = _arb_vec_init(3);
-  arb_init(S);
-  arb_init(theta1);
-  arb_init(theta2);
-  arb_init(tmp);
-  arb_init(tmp_dot);
-
-  arb_set_fmpq(angles + 0, angles_fmpq + 0, prec);
-  arb_set_fmpq(angles + 1, angles_fmpq + 1, prec);
-  arb_set_fmpq(angles + 2, angles_fmpq + 2, prec);
-
-  /* Compute the sum of the angles */
-  arb_add(S, angles, angles + 1, prec);
-  arb_add(S, S, angles + 2, prec);
-  arb_div_si(S, S, 2, prec);
-
-  /* Compute theta1 for v1*/
-  arb_cos_pi(theta1, S, prec);
-
-  arb_sub(tmp, S, angles + 1, prec);
-  arb_cos_pi(tmp, tmp, prec);
-  arb_mul(theta1, theta1, tmp, prec);
-
-  arb_sin_pi(tmp, angles + 0, prec);
-  arb_div(theta1, theta1, tmp, prec);
-
-  arb_sin_pi(tmp, angles + 2, prec);
-  arb_div(theta1, theta1, tmp, prec);
-
-  arb_neg(theta1, theta1);
-  arb_sqrt(theta1, theta1, prec);
-  arb_asin(theta1, theta1, prec);
-  arb_mul_si(theta1, theta1, 2, prec);
-
-  /* Compute v1 from knowing theta1 */
-  arb_sin(v1 + 0, theta1, prec);
-  arb_set_si(v1 + 1, 0);
-  arb_cos(v1 + 2, theta1, prec);
-
-  /* Compute theta2 for v2 */
-  arb_cos_pi(theta2, S, prec);
-
-  arb_sub(tmp, S, angles + 2, prec);
-  arb_cos_pi(tmp, tmp, prec);
-  arb_mul(theta2, theta2, tmp, prec);
-
-  arb_sin_pi(tmp, angles + 0, prec);
-  arb_div(theta2, theta2, tmp, prec);
-
-  arb_sin_pi(tmp, angles + 1, prec);
-  arb_div(theta2, theta2, tmp, prec);
-
-  arb_neg(theta2, theta2);
-  arb_sqrt(theta2, theta2, prec);
-  arb_asin(theta2, theta2, prec);
-  arb_mul_si(theta2, theta2, 2, prec);
-
-  /* Compute v2 from knowing theta2 */
-  arb_sin(tmp, theta2, prec);
-  arb_cos_pi(v2 + 0, angles + 0, prec);
-  arb_mul(v2 + 0, v2 + 0, tmp, prec);
-  arb_sin_pi(v2 + 1, angles + 0, prec);
-  arb_mul(v2 + 1, v2 + 1, tmp, prec);
-  arb_cos(v2 + 2, theta2, prec);
-
-  /* Compute the critical point */
-  _arb_vec_sub(w, v2, v1, 3, prec);
-  /* dot(v, v) */
-  _arb_vec_dot(tmp_dot, v1, v1, 3, prec);
-  /* w_3*dot(v, v) */
-  arb_mul(critical_point, w + 2, tmp_dot, prec);
-  /* dot(v, w) */
-  _arb_vec_dot(tmp_dot, v1, w, 3, prec);
-  /* v_3*dot(v, w) */
-  arb_mul(tmp, v1 + 2, tmp_dot, prec);
-  /* w_3*dot(v, v) - v_3*dot(v, w)*/
-  arb_sub(critical_point, tmp, critical_point, prec);
-  /* w_3*dot(v, w) */
-  arb_mul(tmp, w + 2, tmp_dot, prec);
-  /* dot(w, w) */
-  _arb_vec_dot(tmp_dot, w, w, 3, prec);
-  /* w_3*dot(v, w) - v_3*dot(w, w)*/
-  arb_submul(tmp, v1 + 2, tmp_dot, prec);
-  /* The critical point */
-  arb_div(critical_point, critical_point, tmp, prec);
-
-  /* If the critical point is in the interval [0, 1] compute the angle
-   * corresponding to the critical point */
-  arb_sub_si(tmp, critical_point, 1, prec);
-  if (!(arb_contains_positive(critical_point) && arb_contains_negative(tmp)))
-    arb_set_si(critical_point, 0);
-
-  _arb_vec_scalar_mul(w, w, 3, critical_point, prec);
-  _arb_vec_add(w, v1, w, 3, prec);
-  _arb_vec_dot(tmp_dot, w, w, 3, prec);
-  arb_sqrt(tmp_dot, tmp_dot, prec);
-  /* Compute z for this point */
-  arb_div(tmp, w + 2, tmp_dot, prec);
-  arb_acos(tmp, tmp, prec);
-
-
-  /* Compute the minimum theta value */
-  arb_min(theta_bound_low, theta1, theta2, prec);
-  arb_min(theta_bound_low, theta_bound_low, tmp, prec);
-  /* Compute the maximum theta value */
-  arb_max(theta_bound_upp, theta1, theta2, prec);
-  arb_max(theta_bound_upp, theta_bound_upp, tmp, prec);
-
-  _arb_vec_clear(angles, 3);
-  _arb_vec_clear(w, 3);
-  arb_clear(S);
-  arb_clear(theta1);
-  arb_clear(theta2);
-  arb_clear(tmp);
-  arb_clear(tmp_dot);
-}
-
 static int
 integrand(acb_ptr out, const acb_t inp, void *param_void, slong order,
                      slong prec)
@@ -737,29 +611,17 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
 void
 enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
         slong N, arb_t nu, slong prec) {
-  arb_ptr v1, v2;
-  arb_t eps, theta_bound_low, theta_bound_upp, critical_point, norm,
-    max, eigenvalue, tmp;
-
-  v1 = _arb_vec_init(3);
-  v2 = _arb_vec_init(3);
+  arb_t eps, norm, max, eigenvalue, tmp;
 
   arb_init(eps);
-  arb_init(theta_bound_low);
-  arb_init(theta_bound_upp);
-  arb_init(critical_point);
   arb_init(norm);
   arb_init(max);
   arb_init(eigenvalue);
   arb_init(tmp);
 
-  /* Compute enclosures of the required parameters */
-  angles_to_vectors_arb(v1, v2, theta_bound_low, theta_bound_upp,
-                        critical_point, geom->angles, 2*prec);
-
   /* Compute an enclosure of a lower bound of the norm */
-  integral_norm(norm, geom, coefs, N, theta_bound_low, nu, prec);
-  maximize(max, geom, coefs, N, v1, v2, nu, prec);
+  integral_norm(norm, geom, coefs, N, geom->theta_lower[0], nu, prec);
+  maximize(max, geom, coefs, N, geom->v2[0], geom->v3[0], nu, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++)
@@ -795,12 +657,7 @@ enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
     arb_intersection(nu_enclosure, nu_enclosure, tmp, prec);
   }
 
-  _arb_vec_clear(v1, 3);
-  _arb_vec_clear(v2, 3);
   arb_clear(eps);
-  arb_clear(theta_bound_low);
-  arb_clear(theta_bound_upp);
-  arb_clear(critical_point);
   arb_clear(norm);
   arb_clear(max);
   arb_clear(eigenvalue);

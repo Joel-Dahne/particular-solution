@@ -24,6 +24,12 @@
  *
  * arb_ptr v3[3]: Coordinates for the third vertex.
  *
+ * arb_ptr theta_lower[3]: Lower bound of theta for the boundary of
+ * the triangle between v2 and v3.
+ *
+ * arb_ptr theta_upper[3]: Upper bound of theta for the boundary of
+ * the triangle between v2 and v3.
+ *
  * int vertices[3]: Flags for which vertices to use expansions from (1
  * to use it, 0 to not use it).
  *
@@ -38,6 +44,8 @@ typedef struct
   arb_ptr v1[3];
   arb_ptr v2[3];
   arb_ptr v3[3];
+  arb_ptr theta_lower[3];
+  arb_ptr theta_upper[3];
   int vertices[3] = {0};
   int half_edge[3] = {0};
 } geom_struct;
