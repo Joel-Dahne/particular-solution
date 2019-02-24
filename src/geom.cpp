@@ -296,29 +296,32 @@ boundary(points_t p, geom_t g, slong prec)
     _arb_vec_indeterminate(p->thetas[vertex], p->boundary);
     _arb_vec_indeterminate(p->phis[vertex], p->boundary);
 
-    /* Compute starting index for the points which are not supposed to
-     * be zero. */
-    start = 0;
-    for (slong i = 0; i < vertex; i++)
+    if (g->vertices[vertex])
     {
-      start += g->vertices[i] ? n : 0;
-    }
+      /* Compute starting index for the points which are not supposed to
+       * be zero. */
+      start = 0;
+      for (slong i = 0; i < vertex; i++)
+      {
+        start += g->vertices[i] ? n : 0;
+      }
 
-    for (slong i = start; i < start + n; i++) {
-      /* Set value of t */
-      arb_set_si(t, i - start + 1);
-      if (g->half_edge[vertex])
-        arb_div_si(t, t, 2*n, prec);
-      else
-        arb_div_si(t, t, n + 1, prec);
+      for (slong i = start; i < start + n; i++) {
+        /* Set value of t */
+        arb_set_si(t, i - start + 1);
+        if (g->half_edge[vertex])
+          arb_div_si(t, t, 2*n, prec);
+        else
+          arb_div_si(t, t, n + 1, prec);
 
-      /* xyz = v2 - t*(v3 -v2) */
-      _arb_vec_sub(xyz, g->v3[vertex], g->v2[vertex], 3, prec);
-      _arb_vec_scalar_mul(xyz, xyz, 3, t, prec);
-      _arb_vec_add(xyz, xyz, g->v2[vertex], 3, prec);
+        /* xyz = v2 - t*(v3 -v2) */
+        _arb_vec_sub(xyz, g->v3[vertex], g->v2[vertex], 3, prec);
+        _arb_vec_scalar_mul(xyz, xyz, 3, t, prec);
+        _arb_vec_add(xyz, xyz, g->v2[vertex], 3, prec);
 
-      cartesian_to_spherical(p->thetas[vertex] + i, p->phis[vertex] + i, xyz,
-                             prec);
+        cartesian_to_spherical(p->thetas[vertex] + i, p->phis[vertex] + i, xyz,
+                               prec);
+      }
     }
   }
 
