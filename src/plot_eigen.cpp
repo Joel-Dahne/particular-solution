@@ -13,7 +13,7 @@ plot_eigen(geom_t geometry, arb_ptr coefs, slong N, arb_t nu, slong num_points,
   points_init(points, geometry, num_points, 0);
   boundary(points, geometry, prec);
 
-  eigenfunction(evals, geometry, coefs, points, N, nu, prec);
+  eigenfunction_vec(evals, geometry, coefs, points, N, nu, prec);
 
   for (slong i = 0; i < num_points; i++)
   {

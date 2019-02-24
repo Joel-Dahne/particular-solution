@@ -1,30 +1,7 @@
 #include "generate-matrix.h"
 
+#include "eigenfunction.h"
 #include "arb_hypgeom.h"
-
-static void
-eval_eigenfunction(arb_t res, arb_t theta, arb_t phi, arb_t nu, arb_t mu,
-                   slong prec)
-{
-  arb_t tmp;
-  slong prec_local;
-
-  arb_init(tmp);
-
-  arb_cos(tmp, theta, prec);
-  prec_local = prec;
-  do {
-    arb_hypgeom_legendre_p(res, nu, mu, tmp, 0, prec_local);
-    prec_local *=2;
-  } while (!arb_is_finite(res));
-
-  arb_mul(tmp, mu, phi, prec);
-  arb_sin(tmp, tmp, prec);
-
-  arb_mul(res, res, tmp, prec);
-
-  arb_clear(tmp);
-}
 
 /* Generates a matrix for computations of the sigma values. The rows
  * of the matrix corresponds to points in the points argument and the
@@ -64,8 +41,8 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
 
           for (slong j = column_start; j < column_start + N; j++) {
             geom_get_mu(mu, geom, vertex, j - column_start, prec);
-            eval_eigenfunction(res, points->thetas[vertex] + i,
-                               points->phis[vertex] + i, nu, mu, prec);
+            eigenfunction_basis(res, points->thetas[vertex] + i,
+                                points->phis[vertex] + i, nu, mu, prec);
 
             arf_get_mpfr(A[j*n + i], arb_midref(res), MPFR_RNDN);
           }
@@ -87,13 +64,13 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
 /*   Evaluates the eigenfunction given by the sum of the basis
  *   eigenfunctions with the supplied coefficients at the supplied
  *   points. */
-void eigenfunction(arb_ptr res, geom_t geom, arb_ptr coefs, points_t points,
-                   slong N, arb_t nu, slong prec) {
-  arb_t mu, term;
+void eigenfunction_vec(arb_ptr res, geom_t geom, arb_ptr coefs, points_t points,
+                       slong N, arb_t nu, slong prec) {
+  arb_t mu, res_term;
   slong n;
 
   arb_init(mu);
-  arb_init(term);
+  arb_init(res_term);
 
   n = points->total;
 
@@ -101,23 +78,16 @@ void eigenfunction(arb_ptr res, geom_t geom, arb_ptr coefs, points_t points,
     arb_zero(res + i);
 
     for (slong vertex = 0; vertex < 3; vertex++) {
-      if (geom->vertices[vertex]) {
-        for (slong j = 0; j < N; j++) {
-          /* If the values for points->thetas + i and points->phis + i
-             are indeterminate set function value to zero. This is what
-             points_t expects. */
-          if (arb_is_finite(points->thetas[vertex] + i)
-              && arb_is_finite(points->phis[vertex] + i)) {
-            geom_get_mu(mu, geom, vertex, j, prec);
-            eval_eigenfunction(term, points->thetas[vertex] + i,
-                               points->phis[vertex] + i, nu, mu, prec);
-            arb_addmul(res + i, term, coefs + j, prec);
-          }
-        }
+      if (geom->vertices[vertex]
+          && arb_is_finite(points->thetas[vertex] + i)
+          && arb_is_finite(points->phis[vertex] + i)) {
+        eigenfunction(res_term, geom, coefs, N, points->thetas[vertex] + i,
+                      points->phis[vertex] + i, nu, vertex, prec);
+        arb_add(res + i, res + i, res_term, prec);
       }
     }
   }
 
   arb_clear(mu);
-  arb_clear(term);
+  arb_clear(res_term);
 }
