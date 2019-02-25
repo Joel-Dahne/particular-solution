@@ -2,98 +2,11 @@
 
 #include "norm.h"
 #include "eigenfunction.h"
-#include "arb_hypgeom.h"
-
-static void
-parametrization(arb_ptr z, arb_ptr phi, arb_t t, arb_ptr v1, arb_ptr v2,
-                slong order, slong prec)
-{
-  arb_ptr w, x, y, dx, dy, tmp1, tmp2;
-
-  w = _arb_vec_init(3);
-  x = _arb_vec_init(order);
-  y = _arb_vec_init(order);
-  dx = _arb_vec_init(order - 1);
-  dy = _arb_vec_init(order - 1);
-  tmp1 = _arb_vec_init(order);
-  tmp2 = _arb_vec_init(order);
-
-  _arb_vec_zero(z, order);
-
-  /* w = v2 - v1 */
-  _arb_vec_sub(w, v2, v1, 3, prec);
-
-  /* x = v1_x + t*w_x */
-  /* x' = w_x */
-  arb_mul(x, t, w, prec);
-  arb_add(x, x, v1, prec);
-  if (order > 1)
-    arb_set(x + 1, w);
-
-  /* y = v1_y + t*w_y */
-  /* y' = w_y */
-  arb_mul(y, t, w + 1, prec);
-  arb_add(y, y, v1 + 1, prec);
-  if (order > 1)
-    arb_set(y + 1, w + 1);
-
-  /* z = v1_z + t*w_z */
-  /* z' = w_z */
-  arb_mul(z, t, w + 2, prec);
-  arb_add(z, z, v1 + 2, prec);
-  if (order > 1)
-    arb_set(z + 1, w + 2);
-
-  /* tmp1 = x^2 */
-  _arb_poly_mullow(tmp1, x, order, x, order, order, prec);
-  /* tmp2 = y^2 */
-  _arb_poly_mullow(tmp2, y, order, y, order, order, prec);
-  /* tmp1 = x^2 + y^2 */
-  _arb_vec_add(tmp1, tmp1, tmp2, order, prec);
-  /* tmp2 = z^2 */
-  _arb_poly_mullow(tmp2, z, order, z, order, order, prec);
-  /* tmp1 = x^2 + y^2 + z^2 */
-  _arb_vec_add(tmp1, tmp1, tmp2, order, prec);
-  /* tmp2 = sqrt(x^2 + y^2 + z^2) */
-  _arb_poly_sqrt_series(tmp2, tmp1, order, order, prec);
-
-  /* x, y, z = z, y, z / ||(x, y, z)|| */
-  _arb_poly_div_series(tmp1, x, order, tmp2, order, order, prec);
-  _arb_vec_swap(tmp1, x, order);
-  _arb_poly_div_series(tmp1, y, order, tmp2, order, order, prec);
-  _arb_vec_swap(tmp1, y, order);
-  _arb_poly_div_series(tmp1, z, order, tmp2, order, order, prec);
-  _arb_vec_swap(tmp1, z, order);
-
-  /* Compute the Taylor expansion of phi' */
-  _arb_poly_derivative(dx, x, order, prec);
-  _arb_poly_derivative(dy, y, order, prec);
-
-  _arb_poly_mullow(tmp1, x, order - 1, dy, order - 1, order - 1, prec);
-  _arb_poly_mullow(tmp2, y, order - 1, dx, order - 1, order - 1, prec);
-  _arb_vec_sub(phi, tmp1, tmp2, order - 1, prec);
-  _arb_poly_mullow(tmp1, x, order - 1, x, order - 1, order - 1, prec);
-  _arb_poly_mullow(tmp2, y, order - 1, y, order - 1, order - 1, prec);
-  _arb_vec_add(tmp1, tmp1, tmp2, order - 1, prec);
-  _arb_poly_div_series(tmp2, phi, order - 1, tmp1, order - 1, order - 1, prec);
-  _arb_vec_swap(phi, tmp2, order - 1);
-  _arb_poly_integral(phi, phi, order, prec);
-
-  /* phi = atan2(y, x) */
-  arb_atan2(phi, y, x, prec);
-
-  _arb_vec_clear(w, 3);
-  _arb_vec_clear(x, order);
-  _arb_vec_clear(y, order);
-  _arb_vec_clear(dx, order - 1);
-  _arb_vec_clear(dy, order - 1);
-  _arb_vec_clear(tmp1, order);
-  _arb_vec_clear(tmp2, order);
-}
+#include "arb_poly.h"
 
 static void
 maximize_taylor(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
-                slong order, arb_ptr v1, arb_ptr v2, arb_t nu, slong prec) {
+                slong order, arb_t nu, slong prec) {
   arb_ptr z, phi, poly;
   arb_t x, rest_term;
 
@@ -106,7 +19,7 @@ maximize_taylor(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
 
   /* Compute the Taylor polynomial of the eigenfunction at the midpoint of t */
   arb_set_arf(x, arb_midref(t));
-  parametrization(z, phi, x, v1, v2, order, prec);
+  parametrization(z, phi, geom, x, order, 0, prec);
   eigenfunction_series(poly, geom, coefs, N, z, phi, nu, 0, order, prec);
 
   /* Enclose the Taylor polynomial evaluated at t - mid(t) */
@@ -115,7 +28,7 @@ maximize_taylor(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
   arb_abs(max, max);
 
   /* Compute the rest term of the Taylor expansion */
-  parametrization(z, phi, t, v1, v2, order + 1, prec);
+  parametrization(z, phi, geom, t, order + 1, 0, prec);
   eigenfunction_series(poly, geom, coefs, N, z, phi, nu, 0, order + 1, prec);
 
   arb_pow_ui(rest_term, x, order, prec);
@@ -133,8 +46,7 @@ maximize_taylor(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
 }
 
 static void
-maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
-         arb_t nu, slong prec) {
+maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu, slong prec) {
   arb_ptr evals;
   arf_t *intervals_low, *next_intervals_low, *intervals_upp, *next_intervals_upp;
   arb_t t;
@@ -193,7 +105,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_ptr v1, arb_ptr v2,
     {
       arb_set_interval_arf(t, intervals_low[i], intervals_upp[i], prec);
 
-      maximize_taylor(evals + i, geom, t, coefs, N, order, v1, v2, nu, prec);
+      maximize_taylor(evals + i, geom, t, coefs, N, order, nu, prec);
 
       arb_get_abs_ubound_arf(tmp, evals + i, prec);
       arf_max(max_upp, max_upp, tmp);
@@ -295,7 +207,7 @@ enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
   integral_norm(norm, geom, coefs, N, nu, 0, prec);
 
   /* Compute an enclosure of the maximum on the boundary */
-  maximize(max, geom, coefs, N, geom->v2[0], geom->v3[0], nu, prec);
+  maximize(max, geom, coefs, N, nu, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++)

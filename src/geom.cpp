@@ -502,3 +502,100 @@ interior(points_t p, geom_t g, slong prec)
   arb_clear(t);
   arb_clear(tmp);
 }
+
+/* Compute the Taylor expansion of a parameterization of the boundary
+ * of the triangle opposite to the given vertex. The parameterization
+ * is given in t going from 0 to 1. The order of the computed
+ * expansion is n - 1, i.e. the number of terms is equal to n.*/
+void
+parametrization(arb_ptr z, arb_ptr phi, geom_t geom, arb_t t, slong n,
+                slong vertex, slong prec)
+{
+  arb_ptr w, x, y, dx, dy, tmp1, tmp2;
+
+  w = _arb_vec_init(3);
+  x = _arb_vec_init(n);
+  y = _arb_vec_init(n);
+  dx = _arb_vec_init(n - 1);
+  dy = _arb_vec_init(n - 1);
+  tmp1 = _arb_vec_init(n);
+  tmp2 = _arb_vec_init(n);
+
+  _arb_vec_zero(z, n);
+
+  /* w = v3 - v2 */
+  _arb_vec_sub(w, geom->v3[vertex], geom->v2[vertex], 3, prec);
+
+  /* x = v2_x + t*w_x */
+  /* x' = w_x */
+  arb_mul(x, t, w + 0, prec);
+  arb_add(x, x, geom->v2[vertex] + 0, prec);
+  if (n > 1)
+  {
+    arb_set(x + 1, w + 0);
+  }
+
+  /* y = v2_y + t*w_y */
+  /* y' = w_y */
+  arb_mul(y, t, w + 1, prec);
+  arb_add(y, y, geom->v2[vertex] + 1, prec);
+  if (n > 1)
+  {
+    arb_set(y + 1, w + 1);
+  }
+
+  /* z = v2_z + t*w_z */
+  /* z' = w_z */
+  arb_mul(z, t, w + 2, prec);
+  arb_add(z, z, geom->v2[vertex] + 2, prec);
+  if (n > 1)
+  {
+    arb_set(z + 1, w + 2);
+  }
+
+  /* tmp1 = x^2 */
+  _arb_poly_mullow(tmp1, x, n, x, n, n, prec);
+  /* tmp2 = y^2 */
+  _arb_poly_mullow(tmp2, y, n, y, n, n, prec);
+  /* tmp1 = x^2 + y^2 */
+  _arb_vec_add(tmp1, tmp1, tmp2, n, prec);
+  /* tmp2 = z^2 */
+  _arb_poly_mullow(tmp2, z, n, z, n, n, prec);
+  /* tmp1 = x^2 + y^2 + z^2 */
+  _arb_vec_add(tmp1, tmp1, tmp2, n, prec);
+  /* tmp2 = sqrt(x^2 + y^2 + z^2) */
+  _arb_poly_sqrt_series(tmp2, tmp1, n, n, prec);
+
+  /* x, y, z = x, y, z / ||(x, y, z)|| */
+  _arb_poly_div_series(tmp1, x, n, tmp2, n, n, prec);
+  _arb_vec_swap(tmp1, x, n);
+  _arb_poly_div_series(tmp1, y, n, tmp2, n, n, prec);
+  _arb_vec_swap(tmp1, y, n);
+  _arb_poly_div_series(tmp1, z, n, tmp2, n, n, prec);
+  _arb_vec_swap(tmp1, z, n);
+
+  /* Compute the Taylor expansion of phi' */
+  _arb_poly_derivative(dx, x, n, prec);
+  _arb_poly_derivative(dy, y, n, prec);
+
+  _arb_poly_mullow(tmp1, x, n - 1, dy, n - 1, n - 1, prec);
+  _arb_poly_mullow(tmp2, y, n - 1, dx, n - 1, n - 1, prec);
+  _arb_vec_sub(phi, tmp1, tmp2, n - 1, prec);
+  _arb_poly_mullow(tmp1, x, n - 1, x, n - 1, n - 1, prec);
+  _arb_poly_mullow(tmp2, y, n - 1, y, n - 1, n - 1, prec);
+  _arb_vec_add(tmp1, tmp1, tmp2, n - 1, prec);
+  _arb_poly_div_series(tmp2, phi, n - 1, tmp1, n - 1, n - 1, prec);
+  _arb_vec_swap(phi, tmp2, n - 1);
+  _arb_poly_integral(phi, phi, n, prec);
+
+  /* phi = atan2(y, x) */
+  arb_atan2(phi, y, x, prec);
+
+  _arb_vec_clear(w, 3);
+  _arb_vec_clear(x, n);
+  _arb_vec_clear(y, n);
+  _arb_vec_clear(dx, n - 1);
+  _arb_vec_clear(dy, n - 1);
+  _arb_vec_clear(tmp1, n);
+  _arb_vec_clear(tmp2, n);
+}

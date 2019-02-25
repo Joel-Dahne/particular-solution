@@ -121,4 +121,7 @@ void boundary(points_t p, geom_t g, slong prec);
 
 void interior(points_t p, geom_t g, slong prec);
 
+void parametrization(arb_ptr z, arb_ptr phi, geom_t geom, arb_t t, slong n,
+                     slong vertex, slong prec);
+
 #endif
