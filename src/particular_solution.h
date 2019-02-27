@@ -6,12 +6,14 @@
 
 typedef struct
 {
-    arb_t prec_factor;
-    arb_t tol_relative;
-    slong N_beg;
-    slong N_end;
-    slong N_step;
-    int output;
+  arb_t prec_factor;
+  arb_t tol_relative;
+  slong N_beg;
+  slong N_end;
+  slong N_step;
+  slong plot_n;
+  int output;
+  int output_final;
 }
 particular_solution_opt_struct;
 

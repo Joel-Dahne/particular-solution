@@ -352,11 +352,16 @@ main(int argc, char *argv[])
     mpfr_printf("             - 7: coefficients for the approximate eigenfunction\n");
     mpfr_printf("             - 8: plot of the approximate eigenfunction\n");
     mpfr_printf("             - 9: minimizing nu value\n");
-    mpfr_printf("-prec p    - precision in bits (default p = 64)\n");
-    mpfr_printf("-N_beg b    - N value to start at (default 4)\n");
-    mpfr_printf("-N_end e    - N value to stop at (default 16)\n");
+    mpfr_printf("-prec p      - precision in bits (default p = 64)\n");
+    mpfr_printf("-N_beg b     - N value to start at (default 4)\n");
+    mpfr_printf("-N_end e     - N value to stop at (default 16)\n");
     mpfr_printf("-N_step s    - step to take with N each iteration (default 2)\n");
-    mpfr_printf("-tol eps    - relative accuracy goal each iteration (default 1e-5)\n");
+    mpfr_printf("-tol eps     - relative accuracy goal each iteration (default 1e-5)\n");
+    mpfr_printf("-plot n      - determines how to enclose eigenfunction with output 8 (default 0)\n");
+    mpfr_printf("             -  -1: non-rigorous plot on points on the boundary\n");
+    mpfr_printf("             -   0: simple interval enclosure\n");
+    mpfr_printf("             - > 0: enclosure with Taylor expansion with n terms\n");
+    mpfr_printf("-final       - flag for plotting only for the last N value (default off)\n");
     mpfr_printf("Implemented triangles:\n");
     for (int i = 0; i < NUM_TRIANGLES; i++)
       mpfr_printf("T%d = %s\n", i, descr[i]);
@@ -400,6 +405,14 @@ main(int argc, char *argv[])
     else if (!strcmp(argv[i], "-tol"))
     {
       arb_set_d(options->tol_relative, atof(argv[i + 1]));
+    }
+    else if (!strcmp(argv[i], "-plot"))
+    {
+      options->plot_n = atol(argv[i + 1]);
+    }
+    else if (!strcmp(argv[i], "-final"))
+    {
+      options->output_final = 1;
     }
   }
 

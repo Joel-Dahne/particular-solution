@@ -19,7 +19,9 @@ particular_solution_opt_default(particular_solution_opt_t options)
   options->N_beg = 4;
   options->N_end = 16;
   options->N_step = 2;
+  options->plot_n = 0;
   options->output = 0;
+  options->output_final = 0;
 }
 
 void
@@ -87,7 +89,8 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     enclose(nu_enclosure, geometry, coefs, N, nu, prec);
 
     /* Print information */
-    if (options->output != 0)
+    if (options->output != 0
+        && (!options->output_final || (options->N_end == N)))
     {
       flint_printf("%i ", N);
 
@@ -136,7 +139,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
       {
         arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
         flint_printf(" %i\n", 500);
-        plot_eigen(geometry, coefs, N, nu, 500, prec);
+        plot_eigen(geometry, coefs, N, nu, options->plot_n, 250, 0, prec);
       }
       else if (options->output == 9)
       {
