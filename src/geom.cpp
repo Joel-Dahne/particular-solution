@@ -140,11 +140,11 @@ geom_compute(geom_t g, slong prec)
     /* w = v3 - v2 */
     _arb_vec_sub(w, g->v3[i], g->v2[i], 3, prec);
     /* dot(v2, v2) */
-    _arb_vec_dot(tmp_dot, g->v2[i], g->v2[i], 3, prec);
+    arb_dot(tmp_dot, NULL, 0, g->v2[i], 1, g->v2[i], 1, 3, prec);
     /* critical_point = w_3*dot(v2, v2) */
     arb_mul(critical_point, w + 2, tmp_dot, prec);
     /* dot(v2, w) */
-    _arb_vec_dot(tmp_dot, g->v2[i], w, 3, prec);
+    arb_dot(tmp_dot, NULL, 0, g->v2[i], 1, w, 1, 3, prec);
     /* v2_3*dot(v2, w) */
     arb_mul(tmp, g->v2[i] + 2, tmp_dot, prec);
     /* critical_point = v_3*dit(v2, w) - w_3*dot(v2, v2) */
@@ -152,7 +152,7 @@ geom_compute(geom_t g, slong prec)
     /* w_3*dot(v2, w) */
     arb_mul(tmp, w + 2, tmp_dot, prec);
     /* dot(w, w) */
-    _arb_vec_dot(tmp_dot, w, w, 3, prec);
+    arb_dot(tmp_dot, NULL, 0, w, 1, w, 1, 3, prec);
     /* w_3*dot(v2, w) - v_3*dot(w, w) */
     arb_submul(tmp, g->v2[i] + 2, tmp_dot, prec);
 
@@ -174,7 +174,7 @@ geom_compute(geom_t g, slong prec)
       _arb_vec_scalar_mul(w, w, 3, critical_point, prec);
       _arb_vec_add(w, g->v2[i], w, 3, prec);
       /* Comute the norm of the above vector */
-      _arb_vec_dot(tmp_dot, w, w, 3, prec);
+      arb_dot(tmp_dot, NULL, 0, w, 1, w, 1, 3, prec);
       arb_sqrt(tmp_dot, tmp_dot, prec);
       /* Compute z for this point */
       arb_div(tmp, w + 2, tmp_dot, prec);
@@ -261,7 +261,7 @@ cartesian_to_spherical(arb_t theta, arb_t phi, arb_ptr xyz, slong prec)
 
   arb_init(norm);
 
-  _arb_vec_dot(norm, xyz, xyz, 3, prec);
+  arb_dot(norm, NULL, 0, xyz, 1, xyz, 1, 3, prec);
   arb_sqrt(norm, norm, prec);
   _arb_vec_scalar_div(tmp, xyz, 3, norm, prec);
 
@@ -378,7 +378,7 @@ interior(points_t p, geom_t g, slong prec)
   /* Coordinates 1 to coordinates 2 */
   /* We rotate by alpha along the y-axis and then by beta along the z
    * axis */
-  _arb_vec_dot(alpha, g->v1[0], g->v2[0], 3, prec);
+  arb_dot(alpha, NULL, 0, g->v1[0], 1, g->v2[0], 1, 3, prec);
   arb_acos(alpha, alpha, prec);
   arb_neg(alpha, alpha);
 
@@ -410,7 +410,7 @@ interior(points_t p, geom_t g, slong prec)
   /* Coordinates 2 to coordinates 3 */
   /* We rotate by alpha along the y-axis and then by beta along the z
    * axis */
-  _arb_vec_dot(alpha, g->v1[1], g->v2[1], 3, prec);
+  arb_dot(alpha, NULL, 0, g->v1[1], 1, g->v2[1], 1, 3, prec);
   arb_acos(alpha, alpha, prec);
   arb_neg(alpha, alpha);
 
