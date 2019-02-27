@@ -224,3 +224,81 @@ The outputs are saved in
 
   print -dpdf -color "-S1000,600" figures/regular-enclosures-convergence.pdf;
 #+END_SRC
+* Plot of eigenfunction
+We plot the computed eigenfunctions values on the boundary of the
+spherical triangle. We choose the triangle with angles \((2\pi/3,
+\pi/3, \pi/3)\) for the example, the reason we choose this triangle is
+that it has the best convergence we therefore get the most extreme
+results.
+
+The boundary is parameterized on the interval \([0, 1]\) and we plot
+the values on this interval. The first plot is a non-rigorous plot
+where we choose a number of points on the interval and plot the values
+of these. The second plot is a rigorous plot where the interval is
+split into several smaller intervals and on each interval we enclose
+the functions value using normal interval arithmetic. Finally we have
+a number of plots where we enclose the value using Taylor expansions
+of different orders.
+#+BEGIN_SRC sh
+  # Generate data for the first, non-rigorous, plot
+  ./build/examples/triangles -i 3 -output 8 -final -plot -1 | tail -n +2 > data/plot_eigenfunction_-1
+
+  # Generate data for the second, simple enclosure, plot
+  ./build/examples/triangles -i 3 -output 8 -final -plot 0 | tail -n +2 > data/plot_eigenfunction_0
+
+  # Generate data for the remaining plots using 4, 8, 12 and 16 terms in the
+  # expansion
+  ./build/examples/triangles -i 3 -output 8 -final -plot 4 | tail -n +2 > data/plot_eigenfunction_4
+  ./build/examples/triangles -i 3 -output 8 -final -plot 8 | tail -n +2 > data/plot_eigenfunction_8
+  ./build/examples/triangles -i 3 -output 8 -final -plot 12 | tail -n +2 > data/plot_eigenfunction_12
+  ./build/examples/triangles -i 3 -output 8 -final -plot 16 | tail -n +2 > data/plot_eigenfunction_16
+#+END_SRC
+
+We plot the data with Octave.
+#+BEGIN_SRC octave
+  pkg load interval
+
+  data = load ("data/plot_eigenfunction_-1");
+  x_mid = data(:, 1);
+  y_mid = data(:, 3);
+
+  plot (x_mid, y_mid, "o-");
+  hold on;
+
+  axis ([0, 1]);
+
+  title("Non rigorous plot")
+  xlabel ("t", "fontweight", "bold", "fontsize", 20);
+  ylabel ("u", "fontweight", "bold", "fontsize", 20);
+
+  h=get (gcf, "currentaxes");
+  set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+  print -dpdf -color "-S1000,600" figures/plot_eigenfunction_-1;
+
+  close;
+
+  for n = [0, 4, 8, 12, 16]
+    filename = ["plot_eigenfunction_" num2str(n)]
+    data = load (["data/" filename]);
+    x = infsupdec(data(:, 1), data(:, 2));
+    y = infsupdec(data(:, 3), data(:, 4));
+
+    plot (x, y);
+    hold on;
+    scatter (x_mid, y_mid, "filled");
+
+    axis ([0, 1]);
+
+    title(["Plot with Taylor expansion with " num2str(n) " terms"])
+    xlabel ("t", "fontweight", "bold", "fontsize", 20);
+    ylabel ("u", "fontweight", "bold", "fontsize", 20);
+
+    h=get (gcf, "currentaxes");
+    set (h, "fontweight", "bold", "linewidth", 2, "fontsize", 20);
+
+    print (["figures/" filename], "-dpdf", "-S1000,600");
+
+    close
+  endfor
+#+END_SRC
