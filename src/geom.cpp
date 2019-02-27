@@ -578,15 +578,18 @@ parametrization(arb_ptr z, arb_ptr phi, geom_t geom, arb_t t, slong n,
   _arb_poly_derivative(dx, x, n, prec);
   _arb_poly_derivative(dy, y, n, prec);
 
-  _arb_poly_mullow(tmp1, x, n - 1, dy, n - 1, n - 1, prec);
-  _arb_poly_mullow(tmp2, y, n - 1, dx, n - 1, n - 1, prec);
-  _arb_vec_sub(phi, tmp1, tmp2, n - 1, prec);
-  _arb_poly_mullow(tmp1, x, n - 1, x, n - 1, n - 1, prec);
-  _arb_poly_mullow(tmp2, y, n - 1, y, n - 1, n - 1, prec);
-  _arb_vec_add(tmp1, tmp1, tmp2, n - 1, prec);
-  _arb_poly_div_series(tmp2, phi, n - 1, tmp1, n - 1, n - 1, prec);
-  _arb_vec_swap(phi, tmp2, n - 1);
-  _arb_poly_integral(phi, phi, n, prec);
+  if (n > 1)
+  {
+    _arb_poly_mullow(tmp1, x, n - 1, dy, n - 1, n - 1, prec);
+    _arb_poly_mullow(tmp2, y, n - 1, dx, n - 1, n - 1, prec);
+    _arb_vec_sub(phi, tmp1, tmp2, n - 1, prec);
+    _arb_poly_mullow(tmp1, x, n - 1, x, n - 1, n - 1, prec);
+    _arb_poly_mullow(tmp2, y, n - 1, y, n - 1, n - 1, prec);
+    _arb_vec_add(tmp1, tmp1, tmp2, n - 1, prec);
+    _arb_poly_div_series(tmp2, phi, n - 1, tmp1, n - 1, n - 1, prec);
+    _arb_vec_swap(phi, tmp2, n - 1);
+    _arb_poly_integral(phi, phi, n, prec);
+  }
 
   /* phi = atan2(y, x) */
   arb_atan2(phi, y, x, prec);
