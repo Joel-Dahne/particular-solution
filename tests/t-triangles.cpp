@@ -284,9 +284,9 @@ const double width[NUM_TRIANGLES] =
   1.850986e-05,
   3.518423e-09,
   4.830439e-04,
-  3.534395e-18,
+  2.838847e-21,
   1.529171e-07,
-  3.143821e-14,
+  3.143191e-14,
   4.258170e-02,
   4.445406e-02,
   5.105783e-02,
@@ -317,17 +317,18 @@ int main()
     get_triangle(geometry, angles, nu_enclosure, options, i);
     particular_solution_enclosure(nu_enclosure, geometry, options, prec);
 
+    /* lambda = nu*(nu + 1) */
     arb_set(res, nu_enclosure);
-    arb_add_si(ans, res, 1, prec);
-    arb_mul(res, res, ans, prec);
+    arb_add_si(ans, res, 1, 2*prec);
+    arb_mul(res, res, ans, 2*prec);
 
-    arb_set_str(ans, ans_str[i], prec);
+    arb_set_str(ans, ans_str[i], 2*prec);
 
     if (!arb_overlaps(ans, res))
     {
       flint_printf("FAIL (Triangle %i)\n", i);
-      flint_printf("ans = "); arb_printn(ans, 20,  0); flint_printf("\n");
-      flint_printf("res = "); arb_printn(res, 20,  0); flint_printf("\n");
+      flint_printf("ans = "); arb_printn(ans, 25,  0); flint_printf("\n");
+      flint_printf("res = "); arb_printn(res, 25,  0); flint_printf("\n");
       flint_abort();
     }
     else if (width[i] < mag_get_d(arb_radref(res)))
@@ -338,8 +339,8 @@ int main()
     }
 
     flint_printf("Triangle %i\n", i);
-    flint_printf("ans = "); arb_printn(ans, 20,  0); flint_printf("\n");
-    flint_printf("res = "); arb_printn(res, 20,  0); flint_printf("\n");
+    flint_printf("ans = "); arb_printn(ans, 25,  0); flint_printf("\n");
+    flint_printf("res = "); arb_printn(res, 25,  0); flint_printf("\n");
     flint_printf("width goal = %e\n", width[i]);
     flint_printf("width res  = %e\n", mag_get_d(arb_radref(res)));
   }
