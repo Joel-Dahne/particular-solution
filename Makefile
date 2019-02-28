@@ -1,16 +1,16 @@
 # Makefile for particular-solutions
 
-SHELL=/bin/sh
+SHELL = /bin/sh
 
-INCS=-I/usr/include/eigen3/ -I$(CURDIR)/src/
-LIBS=-L$(CURDIR) -larb -lflint -lmpfr -lgmp
+INCS = -I/usr/include/eigen3/ -I$(CURDIR)/src/
+LIBS = -L$(CURDIR) -larb -lflint -lmpfr -lgmp
 
-CC=gcc
-CXX=g++
+CC ?= gcc
+CXX ?= g++
 
-CFLAGS=-Wall -O3
+override CFLAGS := $(CFLAGS) -Wall -O3
 
-AT=@
+AT = @
 
 BUILD_DIRS = src
 
