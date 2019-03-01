@@ -241,6 +241,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
 
   _arb_vec_clear(intervals_lower, intervals_len);
   _arb_vec_clear(intervals_upper, intervals_len);
+  _arb_vec_clear(evals, intervals_len);
 
   arb_clear(t);
 

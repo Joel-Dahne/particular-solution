@@ -487,6 +487,7 @@ interior(points_t p, geom_t g, slong prec)
   arb_mat_clear(M[0]);
   arb_mat_clear(M[1]);
   arb_mat_clear(M[2]);
+  arb_mat_clear(xyz_matrix);
 
   _arb_vec_clear(xyz, 3);
   _arb_vec_clear(v2mv1, 3);
