@@ -14,6 +14,7 @@ typedef struct
   slong plot_n;
   int output;
   int output_final;
+  int output_time;
 }
 particular_solution_opt_struct;
 

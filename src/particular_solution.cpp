@@ -3,6 +3,7 @@
 #include "sigma.h"
 #include "enclose.h"
 #include "plot_eigen.h"
+#include "time.h"
 
 void
 particular_solution_opt_init(particular_solution_opt_t options)
@@ -22,6 +23,7 @@ particular_solution_opt_default(particular_solution_opt_t options)
   options->plot_n = 0;
   options->output = 0;
   options->output_final = 0;
+  options->output_time = 0;
 }
 
 void
@@ -38,6 +40,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
   arb_ptr* coefs;
   arb_t nu, tol, tmp;
   points_t points;
+  clock_t start_time, sigma_time, enclosure_time;
   slong vertex;
 
   arb_init(nu);
@@ -84,11 +87,14 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     boundary(points, geometry, prec);
     interior(points, geometry, prec);
 
+    start_time = clock();
+
     /* Find the value of nu that minimizes sigma */
     minimize_sigma(nu, geometry, points, N, nu_enclosure, tol, prec);
 
     /* Find the coefficients of the expansion */
     coefs_sigma(coefs, geometry, points, N, nu, prec);
+    sigma_time = clock();
 
     /* Compute an enclosure of the eigenvalue. */
     /* FIXME: At the moment enclose only supports using a single
@@ -110,6 +116,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     }
 
     enclose(nu_enclosure, geometry, coefs, N, nu, vertex, prec);
+    enclosure_time = clock();
 
     /* Print information */
     if (options->output != 0
@@ -170,7 +177,15 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
         flint_printf("\n");
       }
 
+    }
 
+    if (options->output_time
+         && (!options->output_final || (options->N_end == N)))
+    {
+      flint_printf("Time computing minimum: %f\n",
+                   ((double)(sigma_time - start_time))/CLOCKS_PER_SEC);
+      flint_printf("Time computing enclosure: %f\n",
+                   ((double)(enclosure_time - sigma_time))/CLOCKS_PER_SEC);
     }
 
     for (slong i = 0; i < 3; i++)

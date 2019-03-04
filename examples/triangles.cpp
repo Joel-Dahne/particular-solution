@@ -361,7 +361,8 @@ main(int argc, char *argv[])
     mpfr_printf("             -  -1: non-rigorous plot on points on the boundary\n");
     mpfr_printf("             -   0: simple interval enclosure\n");
     mpfr_printf("             - > 0: enclosure with Taylor expansion with n terms\n");
-    mpfr_printf("-final       - flag for plotting only for the last N value (default off)\n");
+    mpfr_printf("-final       - flag for outputting only for the last N value (default off)\n");
+    mpfr_printf("-time       - flag for outputting timing information (default off)\n");
     mpfr_printf("Implemented triangles:\n");
     for (int i = 0; i < NUM_TRIANGLES; i++)
       mpfr_printf("T%d = %s\n", i, descr[i]);
@@ -413,6 +414,10 @@ main(int argc, char *argv[])
     else if (!strcmp(argv[i], "-final"))
     {
       options->output_final = 1;
+    }
+    else if (!strcmp(argv[i], "-time"))
+    {
+      options->output_time = 1;
     }
   }
 
