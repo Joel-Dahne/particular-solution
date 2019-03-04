@@ -35,13 +35,16 @@ void
 particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                               particular_solution_opt_t options, slong prec)
 {
-  arb_ptr coefs;
+  arb_ptr* coefs;
   arb_t nu, tol, tmp;
   points_t points;
+  slong vertex;
 
   arb_init(nu);
   arb_init(tol);
   arb_init(tmp);
+
+  coefs = (arb_ptr*)calloc(3, sizeof(arb_ptr));
 
   for (slong N = options->N_beg; N <= options->N_end; N += options->N_step)
   {
@@ -71,8 +74,10 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     geom_compute(geometry, 2*prec);
 
     /* Initiate new variables */
-    coefs = _arb_vec_init(N*(geometry->vertices[0] + geometry->vertices[1]
-                             + geometry->vertices[2]));
+    for (slong i = 0; i < 3; i++)
+    {
+      coefs[i] = _arb_vec_init(N);
+    }
 
     points_init(points, geometry, 2*N, 2*N);
 
@@ -86,7 +91,25 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
     coefs_sigma(coefs, geometry, points, N, nu, prec);
 
     /* Compute an enclosure of the eigenvalue. */
-    enclose(nu_enclosure, geometry, coefs, N, nu, prec);
+    /* FIXME: At the moment enclose only supports using a single
+     * expansion from one vertex and doesn't handle expansions from
+     * several vertices. We choose which vertex to use by taking the
+     * first vertex we have an expansion from. This should be changed
+     * once enclose supports expansions from several vertices. */
+    if (geometry->vertices[0])
+    {
+      vertex = 0;
+    }
+    else if (geometry->vertices[1])
+    {
+      vertex = 1;
+    }
+    else
+    {
+      vertex = 2;
+    }
+
+    enclose(nu_enclosure, geometry, coefs, N, nu, vertex, prec);
 
     /* Print information */
     if (options->output != 0
@@ -131,7 +154,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
         flint_printf("\n");
         for (slong i = 0; i < N; i++)
         {
-          arf_printd(arb_midref(coefs + i), (slong)ceil(prec*log10(2)));
+          arf_printd(arb_midref(coefs[0] + i), (slong)ceil(prec*log10(2)));
           flint_printf("\n");
         }
       }
@@ -139,7 +162,7 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
       {
         arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
         flint_printf(" %i\n", 500);
-        plot_eigen(geometry, coefs, N, nu, options->plot_n, 250, 0, prec);
+        plot_eigen(geometry, coefs[0], N, nu, options->plot_n, 250, 0, prec);
       }
       else if (options->output == 9)
       {
@@ -150,10 +173,16 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
 
     }
 
-    _arb_vec_clear(coefs, N);
+    for (slong i = 0; i < 3; i++)
+    {
+      _arb_vec_clear(coefs[i], N);
+    }
 
     points_clear(points);
   }
+
+  free(coefs);
+  coefs = NULL;
 
   arb_clear(nu);
   arb_clear(tol);

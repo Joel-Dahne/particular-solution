@@ -125,10 +125,11 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
   arb_clear(tmp2);
 }
 
-void coefs_sigma(arb_ptr coefs, geom_t geom, points_t points, slong N, arb_t nu,
-                 slong prec) {
+void coefs_sigma(arb_ptr* coefs, geom_t geom, points_t points, slong N,
+                 arb_t nu, slong prec) {
   mpfr_t *A, *coefs_mpfr;
   slong rows, columns;
+  slong start;
 
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
@@ -149,10 +150,19 @@ void coefs_sigma(arb_ptr coefs, geom_t geom, points_t points, slong N, arb_t nu,
 
   coefs_sigma_eigen(coefs_mpfr, A, points->boundary, rows, columns);
 
-  for (slong i = 0; i < columns; i++)
+  start = 0;
+  for (slong vertex = 0; vertex < 3; vertex++)
   {
-    arf_set_mpfr(arb_midref(coefs + i), coefs_mpfr[i]);
-    mag_zero(arb_radref(coefs + i));
+    if (geom->vertices[vertex])
+    {
+      for (slong i = 0; i < N; i++)
+      {
+        arf_set_mpfr(arb_midref(coefs[vertex] + i), coefs_mpfr[start + i]);
+        mag_zero(arb_radref(coefs[vertex] + i));
+      }
+
+      start += N;
+    }
   }
 
   for (slong i = 0; i < rows*columns; i++)

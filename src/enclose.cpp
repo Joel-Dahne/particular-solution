@@ -5,8 +5,8 @@
 #include "maximum.h"
 
 void
-enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
-        slong N, arb_t nu, slong prec) {
+enclose(arb_t nu_enclosure, geom_t geom, arb_ptr* coefs,
+        slong N, arb_t nu, slong vertex, slong prec) {
   arb_t eps, norm, max, eigenvalue, tmp;
 
   arb_init(eps);
@@ -16,10 +16,10 @@ enclose(arb_t nu_enclosure, geom_t geom, arb_ptr coefs,
   arb_init(tmp);
 
   /* Compute an enclosure of a lower bound of the norm */
-  integral_norm(norm, geom, coefs, N, nu, 0, prec);
+  integral_norm(norm, geom, coefs[vertex], N, nu, vertex, prec);
 
   /* Compute an enclosure of the maximum on the boundary */
-  maximize(max, geom, coefs, N, nu, 0, prec);
+  maximize(max, geom, coefs[vertex], N, nu, vertex, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
   for (slong i = 0; i < 3; i++)
