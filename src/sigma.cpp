@@ -45,6 +45,8 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
   arb_init(tmp);
   arb_init(tmp2);
 
+  n = 0;
+
   arb_get_lbound_arf(arb_midref(a), nu_enclosure, prec);
   arb_get_ubound_arf(arb_midref(b), nu_enclosure, prec);
 
@@ -110,6 +112,12 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
 
   arb_add(nu, a, b, prec);
   arb_div_si(nu, nu, 2, prec);
+
+#ifdef DEBUG
+  flint_printf("DEBUG minimize_sigma: Iterations %d, minimum: ", n);
+  arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
+  flint_printf("\n");
+#endif
 
   mpfr_clear(yc);
   mpfr_clear(yd);

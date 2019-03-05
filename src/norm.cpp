@@ -123,6 +123,12 @@ integral_norm(arb_t norm, geom_t geom, arb_ptr coefs, int N, arb_t nu,
 
   arb_sqrt(norm, norm, prec);
 
+#ifdef DEBUG
+  flint_printf("DEBUG integral_norm: ");
+  arb_printn(norm, 10, 0);
+  flint_printf("\n");
+#endif
+
   _acb_vec_clear(params, 3);
 
   acb_clear(a);

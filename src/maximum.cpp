@@ -235,8 +235,10 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   /* Debug information showing the number of splits and iterations
    * when computing the maximum. */
 #ifdef DEBUG
-  flint_printf("DEBUG MAXIMIZE: Splits: %d, Iterations: %d\n",
+  flint_printf("DEBUG maximize: Splits: %d, Iterations: %d, Maximum: ",
                splits, iterations);
+  arb_printn(max, 10, 0);
+  flint_printf("\n");
 #endif
 
   _arb_vec_clear(intervals_lower, intervals_len);
