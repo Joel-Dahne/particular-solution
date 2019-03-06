@@ -302,3 +302,37 @@ We plot the data with Octave.
     close
   endfor
 #+END_SRC
+* High precision results
+We generate high precision results for both the regular and singular
+triangles. The total number of triangles is 10 (6 regular and 4
+singular) and the number of, logical, CPUs on our system is 12 so
+there should not be a big problem running all of them on the same
+system.
+#+BEGIN_SRC sh :var binary=triangles :results output silent
+  #!/bin/bash
+
+  # Parameters
+  beg="8" # Starting value for N
+  step="8" # Steps in N
+  end="512" # End value for N
+  tol="1e-20" # Tolerance to use in the minimization
+  prec="64" # Precision to start with
+  type="1" # Type of output
+
+  args="-N_beg $beg -N_end $end -N_step $step -tol $tol -prec $prec -o $type -time"
+  dir="data/high_precision/"
+  prog=$binary
+
+  mkdir -p $dir
+
+  stdbuf -oL nohup $prog $args -i 0 < /dev/null 2> $dir/triangle_0_error > $dir/triangle_0 &
+  stdbuf -oL nohup $prog $args -i 1 < /dev/null 2> $dir/triangle_1_error > $dir/triangle_1 &
+  stdbuf -oL nohup $prog $args -i 2 < /dev/null 2> $dir/triangle_2_error > $dir/triangle_2 &
+  stdbuf -oL nohup $prog $args -i 3 < /dev/null 2> $dir/triangle_3_error > $dir/triangle_3 &
+  stdbuf -oL nohup $prog $args -i 4 < /dev/null 2> $dir/triangle_4_error > $dir/triangle_4 &
+  stdbuf -oL nohup $prog $args -i 5 < /dev/null 2> $dir/triangle_5_error > $dir/triangle_5 &
+  stdbuf -oL nohup $prog $args -i 6 < /dev/null 2> $dir/triangle_6_error > $dir/triangle_6 &
+  stdbuf -oL nohup $prog $args -i 7 < /dev/null 2> $dir/triangle_7_error > $dir/triangle_7 &
+  stdbuf -oL nohup $prog $args -i 8 < /dev/null 2> $dir/triangle_8_error > $dir/triangle_8 &
+  stdbuf -oL nohup $prog $args -i 9 < /dev/null 2> $dir/triangle_9_error > $dir/triangle_9 &
+#+END_SRC
