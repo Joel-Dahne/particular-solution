@@ -9,7 +9,7 @@ void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
 
-  A = new mpfr_t[rows*columns];
+  A = (mpfr_t*) calloc(rows*columns, sizeof(mpfr_t));
   for (slong i = 0; i < rows*columns; i++) {
     mpfr_init(A[i]);
   }
@@ -23,7 +23,7 @@ void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
     mpfr_clear(A[i]);
   }
 
-  delete [] A;
+  free(A);
 }
 
 void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
@@ -142,8 +142,8 @@ void coefs_sigma(arb_ptr* coefs, geom_t geom, points_t points, slong N,
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
 
-  A = new mpfr_t[rows*columns];
-  coefs_mpfr = new mpfr_t[columns];
+  A = (mpfr_t*) calloc(rows*columns, sizeof(mpfr_t));
+  coefs_mpfr = (mpfr_t*) calloc(columns, sizeof(mpfr_t));
   for (slong i = 0; i < rows*columns; i++)
   {
     mpfr_init(A[i]);
@@ -182,6 +182,6 @@ void coefs_sigma(arb_ptr* coefs, geom_t geom, points_t points, slong N,
     mpfr_clear(coefs_mpfr[i]);
   }
 
-  delete [] A;
-  delete [] coefs_mpfr;
+  free(A);
+  free(coefs_mpfr);
 }
