@@ -2,8 +2,8 @@
 
 SHELL = /bin/sh
 
-INCS = -I/usr/include/eigen3/ -I$(CURDIR)/src/
-LIBS = -L$(CURDIR) -larb -lflint -lmpfr -lgmp
+INCS = -I$(HOME)/Sources/eigen/ -I$(CURDIR)/src/
+LIBS = -L$(CURDIR) -larb -lflint -lmpfr -lgmp -lm -lstdc++
 
 CC ?= gcc
 CXX ?= g++
@@ -16,17 +16,19 @@ BUILD_DIRS = src
 
 export
 
-SOURCES = $(wildcard $(patsubst %, %/*.cpp, $(BUILD_DIRS)))
+SOURCES = $(wildcard $(patsubst %, %/*.c, $(BUILD_DIRS)))
 
-HEADERS = $(patsubst %, %/*.h, $(BUILD_DIRS))
+SOURCESXX = $(wildcard $(patsubst %, %/*.cpp, $(BUILD_DIRS)))
 
-OBJS = $(patsubst src/%.cpp, build/%.o, $(SOURCES))
+HEADERS = $(patsubst %, %/*.h, $(BUILD_DIRS)) $(patsubst %, %/*.hpp, $(BUILD_DIRS))
 
-EXMP_SOURCES = $(wildcard examples/*.cpp)
-EXMPS = $(patsubst %.cpp, build/%, $(EXMP_SOURCES))
+OBJS = $(patsubst src/%.c, build/%.o, $(SOURCES)) $(patsubst src/%.cpp, build/%.o, $(SOURCESXX))
 
-TEST_SOURCES = $(wildcard tests/*.cpp)
-TESTS = $(patsubst %.cpp, build/%, $(TEST_SOURCES))
+EXMP_SOURCES = $(wildcard examples/*.c)
+EXMPS = $(patsubst %.c, build/%, $(EXMP_SOURCES))
+
+TEST_SOURCES = $(wildcard tests/*.c)
+TESTS = $(patsubst %.c, build/%, $(TEST_SOURCES))
 
 .SECONDARY: $(OBJS)
 
@@ -45,17 +47,20 @@ check: $(TESTS)
 build:
 	mkdir -p build
 
-build/%.o: src/%.cpp $(HEADERS) | build
+build/sigma_eigen.o: src/sigma_eigen.cpp $(HEADERS) | build
 	$(CXX) $(CFLAGS) $(INCS) -c $< -o $@
 
-build/tests/%: tests/%.cpp $(OBJS) | build/tests
-	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+build/%.o: src/%.c $(HEADERS) | build
+	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+
+build/tests/%: tests/%.c $(OBJS) | build/tests
+	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
 
 build/tests:
 	mkdir -p build/tests
 
-build/examples/%: examples/%.cpp $(OBJS) | build/examples
-	$(CXX) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+build/examples/%: examples/%.c $(OBJS) | build/examples
+	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
 
 build/examples:
 	mkdir -p build/examples

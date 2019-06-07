@@ -8,6 +8,7 @@ using namespace Eigen;
 
 typedef Matrix<mpreal,Dynamic,Dynamic>  MatrixXmp;
 
+extern "C"
 void sigma_eigen(mpfr_t res, mpfr_t *A_mpfr, int boundary, int rows, int columns)
 {
   mpreal *A_mpreal;
@@ -34,6 +35,7 @@ void sigma_eigen(mpfr_t res, mpfr_t *A_mpfr, int boundary, int rows, int columns
   delete [] A_mpreal;
 }
 
+extern "C"
 void coefs_sigma_eigen(mpfr_t *coefs_mpfr, mpfr_t *A_mpfr, int boundary,
                        int rows, int columns)
 {

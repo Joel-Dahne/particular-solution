@@ -1,5 +1,5 @@
 #include "generate-matrix.h"
-#include "sigma_eigen.h"
+#include "sigma_eigen.hpp"
 
 void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
            slong prec) {

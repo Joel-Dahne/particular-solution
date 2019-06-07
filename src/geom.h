@@ -46,8 +46,8 @@ typedef struct
   arb_ptr v3[3];
   arb_ptr theta_lower[3];
   arb_ptr theta_upper[3];
-  int vertices[3] = {0};
-  int half_edge[3] = {0};
+  int vertices[3];
+  int half_edge[3];
 } geom_struct;
 
 typedef geom_struct geom_t[1];

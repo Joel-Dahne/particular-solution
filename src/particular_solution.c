@@ -4,6 +4,7 @@
 #include "enclose.h"
 #include "plot_eigen.h"
 #include "time.h"
+#include <math.h>
 
 void
 particular_solution_opt_init(particular_solution_opt_t options)
