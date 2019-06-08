@@ -7,17 +7,10 @@
 #include <math.h>
 
 void
-particular_solution_opt_init(particular_solution_opt_t options)
-{
-  arb_init(options->prec_factor);
-  arb_init(options->tol_relative);
-}
-
-void
 particular_solution_opt_default(particular_solution_opt_t options)
 {
-  arb_set_d(options->prec_factor, 1.2);
-  arb_set_d(options->tol_relative, 1e-5);
+  options->tol_relative = 1e-5;
+  options->prec_factor = 1.2;
   options->N_beg = 4;
   options->N_end = 16;
   options->N_step = 2;
@@ -25,13 +18,6 @@ particular_solution_opt_default(particular_solution_opt_t options)
   options->output = 0;
   options->output_final = 0;
   options->output_time = 0;
-}
-
-void
-particular_solution_opt_clear(particular_solution_opt_t options)
-{
-  arb_clear(options->prec_factor);
-  arb_clear(options->tol_relative);
 }
 
 void
@@ -54,16 +40,16 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
   {
     /* Compute tolerance and precision to use */
     arb_get_rad_arb(tol, nu_enclosure);
-    arb_mul(tol, tol, options->tol_relative, prec);
+    arb_set_d(tmp, options->tol_relative);
+    arb_mul(tol, tol, tmp, prec);
 
     /* FIXME: Use the size of nu in the computations for the precision */
     arb_log_base_ui(tmp, tol, 2, prec);
-    arb_mul(tmp, tmp, options->prec_factor, prec);
     arb_neg(tmp, tmp);
 
-    if (arf_get_si(arb_midref(tmp), ARF_RND_CEIL) > prec)
+    if (arf_get_si(arb_midref(tmp), ARF_RND_CEIL)*options->prec_factor > prec)
     {
-      prec = arf_get_si(arb_midref(tmp), ARF_RND_CEIL);
+      prec = arf_get_si(arb_midref(tmp), ARF_RND_CEIL)*options->prec_factor;
     }
 
     mpfr_set_default_prec(prec);

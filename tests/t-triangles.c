@@ -20,7 +20,7 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -45,7 +45,7 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -71,7 +71,7 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -145,7 +145,7 @@ get_triangle(geom_t geometry, slong angles[], arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -309,8 +309,6 @@ int main()
 
   geom_init(geometry);
 
-  particular_solution_opt_init(options);
-
   for (int i = 0; i < NUM_TRIANGLES; i++)
   {
     particular_solution_opt_default(options);
@@ -345,8 +343,6 @@ int main()
   arb_clear(res);
 
   geom_clear(geometry);
-
-  particular_solution_opt_clear(options);
 
   flint_cleanup();
 

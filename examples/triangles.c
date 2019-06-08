@@ -30,7 +30,7 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -55,7 +55,7 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -80,7 +80,7 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 2;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 2);
+    options->prec_factor = 2.0;
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -105,7 +105,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -130,7 +129,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -155,7 +153,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -180,7 +177,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -205,7 +201,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -230,7 +225,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 4;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -255,7 +249,6 @@ get_triangle(geom_t geometry, arb_t nu_enclosure,
     angles[5] = 3;
 
     /* Set custom options */
-    arb_set_d(options->prec_factor, 1.2);
 
     /* Set which edges are to be used and for which we only use half
      * of the boundary */
@@ -376,7 +369,6 @@ main(int argc, char *argv[])
 
   geom_init(geometry);
 
-  particular_solution_opt_init(options);
   particular_solution_opt_default(options);
 
   options->output = 1;
@@ -405,7 +397,7 @@ main(int argc, char *argv[])
     }
     else if (!strcmp(argv[i], "-tol"))
     {
-      arb_set_d(options->tol_relative, atof(argv[i + 1]));
+      options->tol_relative = atof(argv[i + 1]);
     }
     else if (!strcmp(argv[i], "-plot"))
     {
@@ -431,8 +423,6 @@ main(int argc, char *argv[])
   arb_clear(nu_enclosure);
 
   geom_clear(geometry);
-
-  particular_solution_opt_clear(options);
 
   flint_cleanup();
 

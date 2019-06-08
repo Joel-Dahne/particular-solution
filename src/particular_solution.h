@@ -6,8 +6,8 @@
 
 typedef struct
 {
-  arb_t prec_factor;
-  arb_t tol_relative;
+  double tol_relative;
+  double prec_factor;
   slong N_beg;
   slong N_end;
   slong N_step;
@@ -20,11 +20,7 @@ particular_solution_opt_struct;
 
 typedef particular_solution_opt_struct particular_solution_opt_t[1];
 
-void particular_solution_opt_init(particular_solution_opt_t options);
-
 void particular_solution_opt_default(particular_solution_opt_t options);
-
-void particular_solution_opt_clear(particular_solution_opt_t options);
 
 void particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                                    particular_solution_opt_t options,
