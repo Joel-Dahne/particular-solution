@@ -7,20 +7,6 @@
 #include <math.h>
 
 void
-particular_solution_opt_default(particular_solution_opt_t options)
-{
-  options->tol_relative = 1e-5;
-  options->prec_factor = 1.2;
-  options->N_beg = 4;
-  options->N_end = 16;
-  options->N_step = 2;
-  options->plot_n = 0;
-  options->output = 0;
-  options->output_final = 0;
-  options->output_time = 0;
-}
-
-void
 particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
                               particular_solution_opt_t options, slong prec)
 {
