@@ -10,6 +10,8 @@ CXX ?= g++
 
 override CFLAGS := $(CFLAGS) -Wall -O3
 
+PIC_FLAG = -fPIC
+
 AT = @
 
 BUILD_DIRS = src
@@ -30,6 +32,8 @@ EXMPS = $(patsubst %.c, build/%, $(EXMP_SOURCES))
 TEST_SOURCES = $(wildcard tests/*.c)
 TESTS = $(patsubst %.c, build/%, $(TEST_SOURCES))
 
+PS_LIB = build/particular_solution.so
+
 .SECONDARY: $(OBJS)
 
 all: examples
@@ -41,6 +45,8 @@ examples: $(EXMPS)
 
 tests: $(TESTS)
 
+shared: $(PS_LIB)
+
 check: $(TESTS)
 	$(AT)$(foreach prog, $(TESTS), $(prog) || exit $$?;)
 
@@ -48,19 +54,22 @@ build:
 	mkdir -p build
 
 build/sigma_eigen.o: src/sigma_eigen.cpp $(HEADERS) | build
-	$(CXX) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CXX) $(PIC_FLAG) $(CFLAGS) $(INCS) -c $< -o $@
 
 build/%.o: src/%.c $(HEADERS) | build
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+	$(CC) $(PIC_FLAG) $(CFLAGS) $(INCS) -c $< -o $@
+
+build/examples/%: examples/%.c $(OBJS) | build/examples
+	$(CC) $(PIC_FLAG) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+
+build/examples:
+	mkdir -p build/examples
 
 build/tests/%: tests/%.c $(OBJS) | build/tests
-	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
+	$(CC) $(PIC_FLAG) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
 
 build/tests:
 	mkdir -p build/tests
 
-build/examples/%: examples/%.c $(OBJS) | build/examples
-	$(CC) $(CFLAGS) $(INCS) $^ -o $@ $(LIBS)
-
-build/examples:
-	mkdir -p build/examples
+$(PS_LIB): $(OBJS) | build
+	$(CC) -shared $(OBJS) $(INCS) -o $@ $(LIBS)
