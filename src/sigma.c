@@ -102,11 +102,10 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
       }
     }
 
-    if (yc < yd) {
+    if (mpfr_cmp(yc, yd) < 0) {
       arb_set(b, d);
     } else {
       arb_set(a, c);
-      arb_set(d, b);
     }
   }
 
