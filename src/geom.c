@@ -62,15 +62,15 @@ geom_compute(geom_t g, slong prec)
 
     /* Angle for the vertex at the north pole in the current
      * parameterization. */
-    arb_mul_fmpz(angles + 0, angles + 0, fmpq_numref(g->angles + (3 - i)%3), prec);
-    arb_div_fmpz(angles + 0, angles + 0, fmpq_denref(g->angles + (3 - i)%3), prec);
+    arb_mul_fmpz(angles + 0, angles + 0, fmpq_numref(g->angles + i), prec);
+    arb_div_fmpz(angles + 0, angles + 0, fmpq_denref(g->angles + i), prec);
     /* Angle for the vertex having y equal to zero in the current
      * parameterization */
-    arb_mul_fmpz(angles + 1, angles + 1, fmpq_numref(g->angles + (4 - i)%3), prec);
-    arb_div_fmpz(angles + 1, angles + 1, fmpq_denref(g->angles + (4 - i)%3), prec);
+    arb_mul_fmpz(angles + 1, angles + 1, fmpq_numref(g->angles + (i + 1)%3), prec);
+    arb_div_fmpz(angles + 1, angles + 1, fmpq_denref(g->angles + (i + 1)%3), prec);
     /* Angle for the third vertex in the current parameterization */
-    arb_mul_fmpz(angles + 2, angles + 2, fmpq_numref(g->angles + (5 - i)%3), prec);
-    arb_div_fmpz(angles + 2, angles + 2, fmpq_denref(g->angles + (5 - i)%3), prec);
+    arb_mul_fmpz(angles + 2, angles + 2, fmpq_numref(g->angles + (i + 2)%3), prec);
+    arb_div_fmpz(angles + 2, angles + 2, fmpq_denref(g->angles + (i + 2)%3), prec);
 
     /* Compute the vectors for the spherical triangle */
     /* S = (angles[0] + angles[1] + angles[2])/2 */
@@ -86,14 +86,14 @@ geom_compute(geom_t g, slong prec)
     /* Compute the theta value for for v2 */
     arb_cos(theta_v2, S, prec);
 
-    arb_sub(tmp, S, angles + 1, prec);
+    arb_sub(tmp, S, angles + 2, prec);
     arb_cos(tmp, tmp, prec);
     arb_mul(theta_v2, theta_v2, tmp, prec);
 
     arb_sin(tmp, angles + 0, prec);
     arb_div(theta_v2, theta_v2, tmp, prec);
 
-    arb_sin(tmp, angles + 2, prec);
+    arb_sin(tmp, angles + 1, prec);
     arb_div(theta_v2, theta_v2, tmp, prec);
 
     arb_neg(theta_v2, theta_v2);
@@ -110,14 +110,14 @@ geom_compute(geom_t g, slong prec)
     /* Compute the theta value for v3 */
     arb_cos(theta_v3, S, prec);
 
-    arb_sub(tmp, S, angles + 2, prec);
+    arb_sub(tmp, S, angles + 1, prec);
     arb_cos(tmp, tmp, prec);
     arb_mul(theta_v3, theta_v3, tmp, prec);
 
     arb_sin(tmp, angles + 0, prec);
     arb_div(theta_v3, theta_v3, tmp, prec);
 
-    arb_sin(tmp, angles + 1, prec);
+    arb_sin(tmp, angles + 2, prec);
     arb_div(theta_v3, theta_v3, tmp, prec);
 
     arb_neg(theta_v3, theta_v3);

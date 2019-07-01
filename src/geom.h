@@ -8,11 +8,16 @@
  *
  * In the computations, expansions from one, two or all three vertices
  * are used. Each expansion uses a different parameterization of the
- * sphere (the north pole of the sphere is placed at the vertex from
- * which the expansion originates and one of the other vertices is
- * taken to have phi equal to zero). Because of this all value which
- * depend on the parameterization has three instances, one for each
- * choice of vertex to place at the north pole.
+ * sphere and because of this all value which depend on the
+ * parameterization has three instances, one for each choice of vertex
+ * to place at the north pole. The north pole of the sphere is placed
+ * at the vertex from which the expansion originates and one of the
+ * other vertices is taken to have phi equal to zero. In the first
+ * parameterization the first angle is on the north pole and the
+ * second angle has y equal to zero, in the second parameterization
+ * the second angle is on the north pole and the third one has y equal
+ * to zero, in the third parameterization the third angles is on the
+ * north pole and the first one has y equal to zero.
  *
  * fmpq * angles: Contains the three angles for the three different
  * vertices.
@@ -72,7 +77,7 @@ typedef geom_struct geom_t[1];
  * indeterminate ball. We then expect the function that uses these
  * values to know that that means that they should evaluate to zero.
  *
- * slong boundary: The total number of points for each edge included
+ * slong boundary: The total number of points for the edges included
  * in the expansion, that is each edge for which an expansion from the
  * opposite vertex is used. The same number of points are used for
  * each edge and can thus be computed by dividing this number by the
@@ -84,12 +89,13 @@ typedef geom_struct geom_t[1];
  *
  * arb_ptr thetas, phi: Holds theta and phi values for all the stored
  * points in the three different parameterizations. Let b be the
- * number of boundary points and i the number of interior points. Then
- * the first b points are on the first edge (the one between the first
- * and second vertex), the b points after that are on the second edge
- * (the one between the second and third vertex) and the b points
- * after that on the third edge (the one between the third and first
- * vertex). After that comes i points from the interior.
+ * number of boundary points per edge and i the number of interior
+ * points. Then the first b points are on the first edge (the one
+ * between the first and second vertex), the b points after that are
+ * on the second edge (the one between the second and third vertex)
+ * and the b points after that on the third edge (the one between the
+ * third and first vertex). After that comes i points from the
+ * interior.
 */
 
 typedef struct
