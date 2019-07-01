@@ -5,16 +5,14 @@
 void
 plot_sigma(arf_t inf, arf_t sup, geom_t geometry, slong num_points,
            particular_solution_opt_t options, slong prec) {
-  arb_t nu, step;
-  mpfr_t res;
+  arb_t nu, res, step;
   points_t points;
 
   mpfr_set_default_prec(prec);
 
   arb_init(nu);
+  arb_init(res);
   arb_init(step);
-
-  mpfr_init(res);
 
   geom_compute(geometry, prec);
 
@@ -39,14 +37,14 @@ plot_sigma(arf_t inf, arf_t sup, geom_t geometry, slong num_points,
       sigma(res, geometry, points, N, nu, prec);
 
       arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
-      mpfr_printf(" %Re\n", res);
+      arf_printd(arb_midref(res), (slong)ceil(prec*log10(2)));
+      flint_printf("\n");
     }
 
     points_clear(points);
   }
 
   arb_clear(nu);
+  arb_clear(res);
   arb_clear(step);
-
-  mpfr_clear(res);
 }

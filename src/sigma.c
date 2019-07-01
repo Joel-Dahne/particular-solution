@@ -1,10 +1,13 @@
 #include "generate-matrix.h"
 #include "sigma_eigen.hpp"
 
-void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
+void sigma(arb_t res, geom_t geom, points_t points, slong N, arb_t nu,
            slong prec) {
+  mpfr_t res_mpfr;
   mpfr_t *A;
   slong rows, columns;
+
+  mpfr_init(res_mpfr);
 
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
@@ -17,28 +20,30 @@ void sigma(mpfr_t res, geom_t geom, points_t points, slong N, arb_t nu,
   /* Fill A with the coefficients for the matrix A */
   generate_matrix(A, geom, points, N, nu, prec);
 
-  sigma_eigen(res, A, points->boundary, rows, columns);
+  sigma_eigen(res_mpfr, A, points->boundary, rows, columns);
+
+  arf_set_mpfr(arb_midref(res), res_mpfr);
 
   for (slong i = 0; i < rows*N; i++) {
     mpfr_clear(A[i]);
   }
 
   free(A);
+
+  mpfr_clear(res_mpfr);
 }
 
 void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
                     arb_t nu_enclosure, arb_t tol, slong prec) {
-  mpfr_t yc, yd;
-  arb_t a, b, c, d, h, invphi, invphi2, tmp, tmp2;;
+  arb_t a, b, c, d, yc, yd, h, invphi, invphi2, tmp, tmp2;;
   slong n;
-
-  mpfr_init(yc);
-  mpfr_init(yd);
 
   arb_init(a);
   arb_init(b);
   arb_init(c);
   arb_init(d);
+  arb_init(yc);
+  arb_init(yd);
   arb_init(invphi);
   arb_init(invphi2);
   arb_init(h);
@@ -77,10 +82,10 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
     sigma(yd, geom, points, N, d, prec);
 
     for (slong k = 0; k < n; k++) {
-      if (mpfr_cmp(yc, yd) < 0) {
+      if (arf_cmp(arb_midref(yc), arb_midref(yd)) < 0) {
         arb_set(b, d);
         arb_set(d, c);
-        mpfr_set(yd, yc, MPFR_RNDN);
+        arb_set(yd, yc);
 
         arb_mul(h, h, invphi, prec);
 
@@ -91,7 +96,7 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
       } else {
         arb_set(a, c);
         arb_set(c, d);
-        mpfr_set(yc, yd, MPFR_RNDN);
+        arb_set(yc, yd);
 
         arb_mul(h, h, invphi, prec);
 
@@ -102,7 +107,7 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
       }
     }
 
-    if (mpfr_cmp(yc, yd) < 0) {
+    if (arf_cmp(arb_midref(yc), arb_midref(yd)) < 0) {
       arb_set(b, d);
     } else {
       arb_set(a, c);
@@ -118,13 +123,12 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
   flint_printf("\n");
 #endif
 
-  mpfr_clear(yc);
-  mpfr_clear(yd);
-
   arb_clear(a);
   arb_clear(b);
   arb_clear(c);
   arb_clear(d);
+  arb_clear(yc);
+  arb_clear(yd);
   arb_clear(invphi);
   arb_clear(invphi2);
   arb_clear(h);
