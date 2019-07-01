@@ -15,8 +15,8 @@
  * second used vertex and similar for the third used vertex. The
  * number of columns is therefore equal to N times the number of used
  * vertices. */
-void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
-                     slong prec)
+void generate_matrix(arb_mat_t A, geom_t geom, points_t points, slong N,
+                     arb_t nu, slong prec)
 {
   arb_t mu, res;
   slong n, column_start;
@@ -36,6 +36,7 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
         /* If the values for points->thetas + i and points->phis + i
            are indeterminate set function value to zero. This is what
            points_t expects. */
+
         if (arb_is_finite(points->thetas[vertex] + i)
             && arb_is_finite(points->phis[vertex] + i)) {
 
@@ -44,13 +45,15 @@ void generate_matrix(mpfr_t *A, geom_t geom, points_t points, slong N, arb_t nu,
             eigenfunction_basis(res, points->thetas[vertex] + i,
                                 points->phis[vertex] + i, nu, mu, prec);
 
-            arf_get_mpfr(A[j*n + i], arb_midref(res), MPFR_RNDN);
+            arb_set(arb_mat_entry(A, i, j), res);
           }
+
         } else {
           for (slong j = column_start; j < column_start + N; j++) {
-            mpfr_set_zero(A[j*n + i], 0);
+            arb_zero(arb_mat_entry(A, i, j));
           }
         }
+
       }
 
       column_start += N;
