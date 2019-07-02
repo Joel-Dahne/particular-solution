@@ -37,7 +37,7 @@ main(int argc, char *argv[])
   arb_t tmp;
   arf_t inf, sup;
   geom_t geometry;
-  particular_solution_opt_t options;
+  options_t options;
   slong triangle, num_points, prec;
 
   srand(1);
@@ -83,8 +83,8 @@ main(int argc, char *argv[])
 
   geom_init(geometry);
 
-  particular_solution_opt_init(options);
-  particular_solution_opt_default(options);
+  options_init(options);
+  options_default(options);
 
   arf_set_si(inf, 0);
   arf_set_si(sup, 10);
@@ -121,7 +121,7 @@ main(int argc, char *argv[])
     }
   }
 
-  get_triangle_defaults(geometry, tmp, options, triangle);
+  get_domain(geometry, tmp, options, triangle);
   plot_sigma(inf, sup, geometry, num_points, options, prec);
 
   arb_clear(tmp);
@@ -131,7 +131,7 @@ main(int argc, char *argv[])
 
   geom_clear(geometry);
 
-  particular_solution_opt_clear(options);
+  options_clear(options);
 
   flint_cleanup();
 

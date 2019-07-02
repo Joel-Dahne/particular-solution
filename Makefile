@@ -1,8 +1,11 @@
 # Makefile for particular-solutions
 
+# Which geometry to compile for, only spherical is supported currently
+GEOM = spherical
+
 SHELL = /bin/sh
 
-INCS = -I$(HOME)/Sources/eigen/ -I$(CURDIR)/src/
+INCS = -I$(HOME)/Sources/eigen/ -I$(CURDIR)/src/ -I$(CURDIR)/src/$(GEOM)
 LIBS = -L$(CURDIR) -larb -lflint -lmpfr -lgmp -lm -lstdc++
 
 CC ?= gcc
@@ -14,7 +17,7 @@ PIC_FLAG = -fPIC
 
 AT = @
 
-BUILD_DIRS = src
+BUILD_DIRS = src src/$(GEOM)
 
 export
 
@@ -22,7 +25,7 @@ SOURCES = $(wildcard $(patsubst %, %/*.c, $(BUILD_DIRS)))
 
 SOURCESXX = $(wildcard $(patsubst %, %/*.cpp, $(BUILD_DIRS)))
 
-HEADERS = $(patsubst %, %/*.h, $(BUILD_DIRS)) $(patsubst %, %/*.hpp, $(BUILD_DIRS))
+HEADERS = $(patsubst %, %/*.h, $(BUILD_DIRS)) $(patsubst %, %/*.hpp, src)
 
 OBJS = $(patsubst src/%.c, build/%.o, $(SOURCES)) $(patsubst src/%.cpp, build/%.o, $(SOURCESXX))
 
@@ -52,6 +55,7 @@ check: $(TESTS)
 
 build:
 	mkdir -p build
+	mkdir -p build/$(GEOM)
 
 build/sigma_eigen.o: src/sigma_eigen.cpp $(HEADERS) | build
 	$(CXX) $(PIC_FLAG) $(CFLAGS) $(INCS) -c $< -o $@
@@ -73,3 +77,9 @@ build/tests:
 
 $(PS_LIB): $(OBJS) | build
 	$(CC) -shared $(OBJS) $(INCS) -o $@ $(LIBS)
+
+output:
+	echo $(SOURCES)
+	echo $(SOURCESXX)
+	echo $(HEADERS)
+	echo $(OBJS)

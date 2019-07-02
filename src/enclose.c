@@ -22,14 +22,7 @@ enclose(arb_t nu_enclosure, geom_t geom, arb_ptr* coefs,
   maximize(max, geom, coefs[vertex], N, nu, vertex, prec);
 
   /* Set eps equal to the square root of the area of the triangle */
-  for (slong i = 0; i < 3; i++)
-  {
-    arb_set_fmpq(tmp, geom->angles + i, prec);
-    arb_add(eps, eps, tmp, prec);
-  }
-  arb_const_pi(tmp, prec);
-  arb_sub_si(eps, eps, 1, prec);
-  arb_mul(eps, eps, tmp, prec);
+  geom_area(eps, geom, prec);
   arb_sqrt(eps, eps, prec);
 
   /* Multiply with the maximum and divide with the norm */

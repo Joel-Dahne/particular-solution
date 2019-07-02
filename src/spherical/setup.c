@@ -1,23 +1,8 @@
 #include "setup.h"
 
-void
-particular_solution_opt_default(particular_solution_opt_t options)
-{
-  options->tol_relative = 1e-5;
-  options->prec_factor = 1.2;
-  options->N_beg = 4;
-  options->N_end = 16;
-  options->N_step = 2;
-  options->plot_n = 100;
-  options->output = 0;
-  options->output_final = 0;
-  options->output_time = 0;
-}
-
 /* Get geometry and options for a number of default triangles. */
 void
-get_triangle_defaults(geom_t geometry, arb_t nu_enclosure,
-                      particular_solution_opt_t options, int triangle)
+get_domain(geom_t geometry, arb_t nu_enclosure, options_t options, int triangle)
 {
   slong angles[6];
 

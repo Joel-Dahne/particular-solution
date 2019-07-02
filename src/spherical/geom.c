@@ -224,6 +224,25 @@ geom_get_mu(arb_t mu, geom_t g, slong vertex, slong i, slong prec)
 }
 
 void
+geom_area(arb_t area, geom_t g, slong prec)
+{
+  arb_t tmp;
+
+  arb_init(tmp);
+
+  for (slong i = 0; i < 3; i++)
+  {
+    arb_set_fmpq(tmp, g->angles + i, prec);
+    arb_add(area, area, tmp, prec);
+  }
+  arb_sub_si(area, area, 1, prec);
+  arb_const_pi(tmp, prec);
+  arb_mul(area, area, tmp, prec);
+
+  arb_clear(tmp);
+}
+
+void
 points_init(points_t p, geom_t g, slong per_boundary, slong interior)
 {
   slong boundaries;

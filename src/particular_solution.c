@@ -8,7 +8,7 @@
 
 void
 particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
-                              particular_solution_opt_t options, slong prec)
+                              options_t options, slong prec)
 {
   arb_ptr* coefs;
   arb_t nu, tol, tmp;

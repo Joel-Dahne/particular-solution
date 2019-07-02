@@ -119,6 +119,8 @@ void geom_compute(geom_t g, slong prec);
 
 void geom_get_mu(arb_t mu, geom_t g, slong vertex, slong i, slong prec);
 
+void geom_area(arb_t area, geom_t g, slong prec);
+
 void points_init(points_t p, geom_t g, slong boundary, slong interior);
 
 void points_clear(points_t p);

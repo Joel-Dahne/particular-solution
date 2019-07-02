@@ -35,7 +35,7 @@ main(int argc, char *argv[])
 {
   arb_t nu_enclosure;
   geom_t geometry;
-  particular_solution_opt_t options;
+  options_t options;
   slong ifrom, ito, prec;
 
   ifrom = ito = -1;
@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 
   geom_init(geometry);
 
-  particular_solution_opt_default(options);
+  options_default(options);
 
   options->output = 1;
 
@@ -155,7 +155,7 @@ main(int argc, char *argv[])
 
   for (int i = ifrom; i <= ito; i++)
   {
-    get_triangle_defaults(geometry, nu_enclosure, options, i);
+    get_domain(geometry, nu_enclosure, options, i);
 
     particular_solution_enclosure(nu_enclosure, geometry, options, prec);
   }

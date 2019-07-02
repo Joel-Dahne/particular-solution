@@ -57,7 +57,7 @@ maximize_series(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
   arb_pow_ui(rest_term, tmp, n, prec);
   arb_mul(rest_term, rest_term, series + n, prec);
 
-    /* Add the rest term to the maximum */
+  /* Add the rest term to the maximum */
   arb_add(enclosure, enclosure, rest_term, prec);
 
   /* Get the maximum of the midpoint and the enclosure. */

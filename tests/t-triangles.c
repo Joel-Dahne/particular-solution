@@ -35,7 +35,7 @@ int main()
 {
   arb_t nu_enclosure, ans, res;
   geom_t geometry;
-  particular_solution_opt_t options;
+  options_t options;
   slong prec;
 
   arb_init(nu_enclosure);
@@ -48,8 +48,8 @@ int main()
 
   for (int i = 0; i < NUM_TRIANGLES; i++)
   {
-    particular_solution_opt_default(options);
-    get_triangle_defaults(geometry, nu_enclosure, options, i);
+    options_default(options);
+    get_domain(geometry, nu_enclosure, options, i);
     particular_solution_enclosure(nu_enclosure, geometry, options, prec);
 
     /* lambda = nu*(nu + 1) */
