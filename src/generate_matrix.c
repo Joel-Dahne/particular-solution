@@ -1,4 +1,4 @@
-#include "generate-matrix.h"
+#include "generate_matrix.h"
 
 #include "eigenfunction.h"
 #include "arb_hypgeom.h"

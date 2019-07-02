@@ -1,4 +1,4 @@
-#include "generate-matrix.h"
+#include "generate_matrix.h"
 #include "sigma_eigen.hpp"
 
 void sigma(arb_t res, geom_t geom, points_t points, slong N, arb_t nu,
