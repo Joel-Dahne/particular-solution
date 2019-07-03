@@ -53,8 +53,10 @@ shared: $(PS_LIB)
 check: $(TESTS)
 	$(AT)$(foreach prog, $(TESTS), $(prog) || exit $$?;)
 
-build:
+build: 	build/$(GEOM)
 	mkdir -p build
+
+build/$(GEOM):
 	mkdir -p build/$(GEOM)
 
 build/sigma_eigen.o: src/sigma_eigen.cpp $(HEADERS) | build
