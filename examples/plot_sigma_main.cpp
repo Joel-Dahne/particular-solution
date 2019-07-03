@@ -6,6 +6,7 @@
   This file is in the public domain.
 */
 
+#include "options.h"
 #include "setup.h"
 #include "plot_sigma.h"
 

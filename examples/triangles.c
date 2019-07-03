@@ -5,6 +5,7 @@
   This file is in the public domain.
 */
 
+#include "options.h"
 #include "setup.h"
 #include "particular_solution.h"
 

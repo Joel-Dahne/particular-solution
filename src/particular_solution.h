@@ -2,6 +2,7 @@
 #define PARTICULAR_SOLUTIONS
 
 #include "geom.h"
+#include "options.h"
 #include "setup.h"
 #include "arb.h"
 
