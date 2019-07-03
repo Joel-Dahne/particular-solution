@@ -9,7 +9,7 @@ tol="1e-5" # Relative tolerance to use in the minimization
 prec="64" # Precision to use
 type="1" # Type of output
 
-args="-N_beg $beg -N_step $step -N_end $end -tol $tol -prec $prec -o $type"
+args="-N_beg $beg -N_step $step -N_end $end -tol $tol -prec $prec -o $type -time"
 dir="data/enclosures_"$beg"_"$step"_"$end"_"$tol"_"$prec
 prog="build/examples/triangles"
 
