@@ -8,6 +8,8 @@ void sigma(arb_t res, geom_t geom, points_t points, slong N, arb_t nu,
   mpfr_t res_mpfr;
   slong rows, columns;
 
+  mpfr_set_default_prec(prec);
+
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);
 
@@ -155,6 +157,8 @@ void coefs_sigma(arb_ptr* coefs, geom_t geom, points_t points, slong N,
   mpfr_t *A_mpfr, *coefs_mpfr;
   slong rows, columns;
   slong start;
+
+  mpfr_set_default_prec(prec);
 
   rows = points->total;
   columns = N*(geom->vertices[0] + geom->vertices[1] + geom->vertices[2]);

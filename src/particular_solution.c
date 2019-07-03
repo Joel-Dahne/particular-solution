@@ -38,8 +38,6 @@ particular_solution_enclosure(arb_t nu_enclosure, geom_t geometry,
       prec = arf_get_si(arb_midref(tmp), ARF_RND_CEIL)*options->prec_factor;
     }
 
-    mpfr_set_default_prec(prec);
-
     /* Recompute variables to take into account the new precision.
      * Certain parts of the program works with higher intermediary
      * precision, to not have these parts be limited by the precision
