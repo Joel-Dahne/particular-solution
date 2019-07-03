@@ -329,9 +329,13 @@ boundary(points_t p, geom_t g, slong prec)
         /* Set value of t */
         arb_set_si(t, i - start + 1);
         if (g->half_edge[vertex])
+        {
           arb_div_si(t, t, 2*n, prec);
+        }
         else
+        {
           arb_div_si(t, t, n + 1, prec);
+        }
 
         /* xyz = v2 - t*(v3 -v2) */
         _arb_vec_sub(xyz, g->v3[vertex], g->v2[vertex], 3, prec);
