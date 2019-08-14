@@ -56,6 +56,35 @@ function setboundary!(p::Points, values::Tuple{Array{ISOSpherical{ArbReal}, 1},
     end
 end
 
+"""
+Compute points on the boundary.
+"""
+function setboundary!(p::Points, g::GeometrySpherical)
+    n = p.boundary
+    values = (Array{ISOSpherical{ArbReal}}(undef, n),
+              Array{ISOSpherical{ArbReal}}(undef, n),
+              Array{ISOSpherical{ArbReal}}(undef, n))
+
+    for vertex in 1:3
+        v = v2(g, vertex)
+        w = v3(g, vertex)
+        for i in 1:n
+            # This points does represent one on the current
+            # boundary and should thus be computed.
+            if g.half_edge[vertex] != 0
+                t = ArbReal(i)/(2n)
+            else
+                t = ArbReal(i)/(n + 1)
+            end
+
+            xyz = SVector{3, ArbReal}(v + t.*(w - v))
+            values[vertex][i] = ISOSphericalFromCartesian()(xyz)
+        end
+    end
+
+    setboundary!(p, values)
+end
+
 function setinterior!(p::Points, values::Array{ISOSpherical{ArbReal}, 1},
                       vertex::Int = 1)
     @assert length(values) == p.interior

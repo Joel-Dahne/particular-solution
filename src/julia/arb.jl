@@ -28,6 +28,14 @@ function unsafe_store_ArbRealPtr!(ptr::Ptr{ArbReal}, values::Array{ArbReal, 1},
     end
 end
 
+function unsafe_store_ArbRealPtr!(ptr::Ptr{ArbReal}, values::Array{ArbReal{P}, 1},
+                                  start::Int = 1) where {P}
+    for i in 1:length(values)
+        ccall((:arb_set, :libarb), Cvoid, (Ref{ArbReal}, Ref{ArbReal{P}}),
+              ptr + ((start - 1) + (i - 1))*sizeof(ArbReal{P}), values[i])
+    end
+end
+
 function _arb_vec_init(n::Int)
     ccall((:_arb_vec_init, :libarb), Ptr{ArbReal}, (Int,), n)
 end
