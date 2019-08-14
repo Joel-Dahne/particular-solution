@@ -20,12 +20,12 @@ mutable struct Points
 end
 
 function Points(g::GeometrySpherical,
-                boundary::Tuple{Array{Spherical{ArbReal}, 1},
-                                Array{Spherical{ArbReal}, 1},
-                                Array{Spherical{ArbReal}, 1}},
-                interior::Tuple{Array{Spherical{ArbReal}, 1},
-                                Array{Spherical{ArbReal}, 1},
-                                Array{Spherical{ArbReal}, 1}})
+                boundary::Tuple{Array{ISOSpherical{ArbReal}, 1},
+                                Array{ISOSpherical{ArbReal}, 1},
+                                Array{ISOSpherical{ArbReal}, 1}},
+                interior::Tuple{Array{ISOSpherical{ArbReal}, 1},
+                                Array{ISOSpherical{ArbReal}, 1},
+                                Array{ISOSpherical{ArbReal}, 1}})
     p = Points(g, length(boundary[1])/sum(g.vertices), length(interior[1]))
 
     setboundary!(p, boundary)
@@ -38,7 +38,7 @@ function points_clear(p::Points)
     ccall((:points_clear, "build/particular_solution"), Cvoid, (Ref{Points},), p)
 end
 
-function setboundary!(p::Points, values::Array{Spherical{ArbReal}, 1},
+function setboundary!(p::Points, values::Array{ISOSpherical{ArbReal}, 1},
                       vertex::Int = 1)
     @assert length(values) == p.boundary
     θ = map(x -> x.θ, values)
@@ -48,15 +48,15 @@ function setboundary!(p::Points, values::Array{Spherical{ArbReal}, 1},
     unsafe_store_ArbRealPtr!(p.phis[vertex], ϕ)
 end
 
-function setboundary!(p::Points, values::Tuple{Array{Spherical{ArbReal}, 1},
-                                               Array{Spherical{ArbReal}, 1},
-                                               Array{Spherical{ArbReal}, 1}})
+function setboundary!(p::Points, values::Tuple{Array{ISOSpherical{ArbReal}, 1},
+                                               Array{ISOSpherical{ArbReal}, 1},
+                                               Array{ISOSpherical{ArbReal}, 1}})
     for vertex in 1:3
         setboundary!(p, values[vertex], vertex)
     end
 end
 
-function setinterior!(p::Points, values::Array{Spherical{ArbReal}, 1},
+function setinterior!(p::Points, values::Array{ISOSpherical{ArbReal}, 1},
                       vertex::Int = 1)
     @assert length(values) == p.interior
     θ = map(x -> x.θ, values)
@@ -66,9 +66,9 @@ function setinterior!(p::Points, values::Array{Spherical{ArbReal}, 1},
     unsafe_store_ArbRealPtr!(p.phis[vertex], ϕ, p.boundary + 1)
 end
 
-function setinterior!(p::Points, values::Tuple{Array{Spherical{ArbReal}, 1},
-                                               Array{Spherical{ArbReal}, 1},
-                                               Array{Spherical{ArbReal}, 1}})
+function setinterior!(p::Points, values::Tuple{Array{ISOSpherical{ArbReal}, 1},
+                                               Array{ISOSpherical{ArbReal}, 1},
+                                               Array{ISOSpherical{ArbReal}, 1}})
     for vertex in 1:3
         setinterior!(p, values[vertex], vertex)
     end
@@ -78,9 +78,9 @@ function boundary(p::Points, vertex::Int = 1)
     θ = unsafe_load_ArbRealPtr(p.thetas[vertex], p.boundary)
     ϕ = unsafe_load_ArbRealPtr(p.phis[vertex], p.boundary)
 
-    res = Array{Spherical{ArbReal{workingprecision(ArbReal)}}}(undef, p.boundary)
+    res = Array{ISOSpherical{ArbReal{workingprecision(ArbReal)}}}(undef, p.boundary)
     for i in 1:p.boundary
-        res[i] = Spherical(one(ArbReal), θ[i], ϕ[i])
+        res[i] = ISOSpherical(one(ArbReal), θ[i], ϕ[i])
     end
 
     return res
@@ -90,9 +90,9 @@ function interior(p::Points, vertex::Int = 1)
     θ = unsafe_load_ArbRealPtr(p.thetas[vertex], p.total)[p.boundary + 1:end]
     ϕ = unsafe_load_ArbRealPtr(p.phis[vertex], p.total)[p.boundary + 1:end]
 
-    res = Array{Spherical{ArbReal{workingprecision(ArbReal)}}}(undef, p.interior)
+    res = Array{ISOSpherical{ArbReal{workingprecision(ArbReal)}}}(undef, p.interior)
     for i in 1:p.interior
-        res[i] = Spherical(one(ArbReal), θ[i], ϕ[i])
+        res[i] = ISOSpherical(one(ArbReal), θ[i], ϕ[i])
     end
 
     return res
