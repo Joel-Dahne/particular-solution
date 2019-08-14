@@ -1,3 +1,13 @@
+function indeterminate!(x)
+    ccall((:arb_indeterminate, :libarb), Cvoid, (ArbReal,), x)
+end
+
+function indeterminate()
+    x = ArbReal(0)
+    indeterminate!(x)
+    return x
+end
+
 function unsafe_load_ArbRealPtr(ptr::Ptr{ArbReal}, size::Int)
     res = Array{ArbReal}(undef, size)
 
