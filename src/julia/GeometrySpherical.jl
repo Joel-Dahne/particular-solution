@@ -55,6 +55,6 @@ function vectors(g::GeometrySpherical, vertex::Int = 1)
 end
 
 function θ(g::GeometrySpherical, vertex::Int = 1)
-    (unsafe_load_ArbRealPtr(g.theta_lower[vertex], 1),
-     unsafe_load_ArbRealPtr(g.theta_upper[vertex], 1))
+    (unsafe_load_ArbRealPtr(g.theta_lower[vertex], 1)[1],
+     unsafe_load_ArbRealPtr(g.theta_upper[vertex], 1)[1])
 end
