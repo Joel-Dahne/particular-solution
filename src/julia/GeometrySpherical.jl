@@ -26,6 +26,18 @@ function recompute(g::GeometrySpherical, prec::Int = workingprecision(ArbReal))
           (Ref{GeometrySpherical}, Int), g, prec)
 end
 
+function activevertices(g::GeometrySpherical)
+    findall(x -> x == 1, g.vertices)
+end
+
+function numactivevertices(g::GeometrySpherical, before::Int = 4)
+    res = Int(0)
+    for i in 1:min(before-1, length(g.vertices))
+        res += g.vertices[i]
+    end
+    res
+end
+
 function angles(g::GeometrySpherical)
     (unsafe_load(g.angles, 1),
      unsafe_load(g.angles, 2),
