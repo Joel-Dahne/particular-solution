@@ -4,6 +4,7 @@ using Nemo
 using StaticArrays
 using CoordinateTransformations
 using ProgressMeter
+using LaTeXStrings
 using Random
 
 include("arb.jl")
@@ -15,6 +16,9 @@ include("Points.jl")
 include("sigma.jl")
 include("enclose.jl")
 include("particularsolution.jl")
+include("eigenfunction.jl")
+
+include("examples.jl")
 
 function getdomain(i::Int)
     g = Geometry()
