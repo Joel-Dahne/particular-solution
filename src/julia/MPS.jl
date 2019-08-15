@@ -4,6 +4,7 @@ using Nemo
 using StaticArrays
 using CoordinateTransformations
 using ProgressMeter
+using Random
 
 include("arb.jl")
 include("GeometrySpherical.jl")

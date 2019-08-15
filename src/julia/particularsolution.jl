@@ -29,6 +29,8 @@ function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
         #println("Precision: $prec")
 
         p = Points(g, 2N, 2N)
+        #setboundary!(p, g)
+        #setinterior!(p, g)
 
         ν = minimizesigma(enclosurelocal, g, p, N, tol)
 
