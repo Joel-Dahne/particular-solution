@@ -10,6 +10,7 @@ end
 
 function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
     enclosurelocal = copy(enclosure)
+    recompute(g, 2*workingprecision(ArbReal))
 
     Ns = opt.N_beg:opt.N_step:opt.N_end
     res = Array{Tuple{Array{ArbReal, 1}, ArbReal}}(undef, length(Ns))
@@ -21,12 +22,12 @@ function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
         prec = -Int(ceil(log(2, tol)*opt.prec_factor))
         if prec > workingprecision(enclosurelocal)
             setworkingprecision(ArbReal, prec)
-            enclosurelocal = ArbReal{workingprecision(ArbReal)}(enclosurelocal)
-            recompute(g, 2*workingprecision(ArbReal))
+            enclosurelocal = ArbReal{prec}(enclosurelocal)
+            recompute(g, 2*prec)
         end
 
-        #println("Tolerance: $tol")
-        #println("Precision: $prec")
+        #@show tol
+        #@show prec
 
         p = Points(g, 2N, 2N)
         #setboundary!(p, g)
@@ -38,11 +39,11 @@ function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
 
         coeffs = coefficientssigma(ν, g, p, N)[1]
 
-        #println("Coefficients: $coeffs")
+        @show coeffs
 
         enclosurelocal = enclose(enclosurelocal, ν, coeffs, g, 1)
 
-        #println("Enclosure: $enclosurelocal")
+        @show enclosurelocal
         res[i] = (coeffs, copy(enclosurelocal))
     end
 
