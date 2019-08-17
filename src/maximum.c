@@ -79,9 +79,7 @@ maximize_series(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
  *
  * The computations are done by adaptively splitting the interval into
  * smaller intervals and using maximize_series to enclose the maximum
- * on these smaller intervals.
- *
- * TODO: Handle increasing tolerance if required. */
+ * on these smaller intervals. */
 void
 maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
          slong vertex, slong prec)
@@ -98,7 +96,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   arb_t t;
   arf_t max_lower, max_upper, tmp;
   slong n, intervals_len, next_intervals_len;
-  slong iterations, max_iterations, splits;
+  slong iterations, max_iterations, splits, soft_limit_intervals_len;
 
   int done;
 
@@ -110,6 +108,13 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   /* We set the maximum number of iterations to avoid infinite
    * splitting. */
   max_iterations = 30;
+
+  /* We set a soft limit on the number of intervals in use. When this
+   * limit is reached it might indicate that there is some problem
+   * with the computations, in particular the working precision could
+   * be to low. Therefore we when this limit is reached we increase
+   * the precision and also the limit.*/
+  soft_limit_intervals_len = 100;
 
   /* The boundary is parameterized with t in the interval [0, 1] and
    * we start with using the whole interval. */
@@ -211,6 +216,15 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
           next_intervals_len += 2;
           splits += 1;
         }
+      }
+
+      /* Determine if the precision needs to be increased. */
+      if (next_intervals_len > soft_limit_intervals_len) {
+        prec *= 2;
+        soft_limit_intervals_len *= 4;
+        /* We also need to increase the precision of the computations
+         * used for the geometry. */
+        geom_compute(geom, 2*prec);
       }
 
       /* Clear variables for next iteration. */
