@@ -70,3 +70,27 @@ function θ(g::GeometrySpherical, vertex::Int = 1)
     (unsafe_load_ArbRealPtr(g.theta_lower[vertex], 1)[1],
      unsafe_load_ArbRealPtr(g.theta_upper[vertex], 1)[1])
 end
+
+"""
+Return coefficients a, b, c giving the plane ax + by + cz = 0 which is
+parallel to the great circle that defines the bottom boundary of the
+spherical triangle.
+"""
+function greatcircleplane(g::GeometrySpherical, vertex::Int = 1)
+    # Compute the normal vector of the plane
+    w = cross(v2(g, vertex), v3(g, vertex))
+    # w = [a, b, c]
+    return (w[1], w[2], w[3])
+end
+
+"""
+Compute the θ value corresponding to the give ϕ value on the great
+circle defined by the plane ax + by + cz = 0.
+"""
+function greatcircle(ϕ, a, b, c)
+    θ = atan(-c, a*cos(ϕ) + b*sin(ϕ))
+    if θ < 0
+        θ += ArbReal(π)
+    end
+    return θ
+end

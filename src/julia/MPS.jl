@@ -6,6 +6,7 @@ using CoordinateTransformations
 using ProgressMeter
 using LaTeXStrings
 using Random
+using LinearAlgebra
 
 include("arb.jl")
 include("GeometrySpherical.jl")
