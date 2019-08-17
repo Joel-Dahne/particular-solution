@@ -49,8 +49,10 @@ end
 setworkingprecision(ArbReal, 64)
 
 (g, enclosure, opt) = getdomain(0)
-N = 4
+
+#N = 8
 #p = Points(g, 2N, 2N)
+
 #coeffs = coefficientssigma(midpoint(enclosure), g, p, N)[1]
-#res = enclose(enclosure, midpoint(enclosure), coeffs, g, 1)
+#newenclosure = enclose(enclosure, midpoint(enclosure), coeffs, g, 1)
 #res = particularsolution(enclosure, g, opt)
