@@ -109,3 +109,35 @@ function ploteigenfunctionboundary(ν::ArbReal, coeffs::Array{ArbReal},
 
     return p1
 end
+
+"""
+Plot the eigenfunction in the interior of the spherical triangle. This
+plot is a bit hard to get good. We give two different versions, the
+first is 3d scatter plot in Cartesian coordinates whereas the second
+is a 2d scatter plot in spherical coordinates. The precise options
+depends a lot on which plotting backend is used, currently it's
+optimized for pyplot which seems to handle the 3d color plots the
+best.
+"""
+function ploteigenfunctioninterior(ν::ArbReal, coeffs::Array{ArbReal},
+                                   g::Geometry, numpoints::Int = 1000,
+                                   vertex::Int = 1)
+    p = Points(g, 0, numpoints)
+    setinterior2!(p, g)
+    ps = interior(p)
+    points = Array{SVector{3}{ArbReal}}(undef, numpoints)
+    values = zeros(ArbReal, numpoints)
+    @showprogress for i in 1:numpoints
+        points[i] = CartesianFromSpherical()(ps[i])
+        values[i] = eigenfunction(ps[i], ν, coeffs, g, vertex)
+    end
+
+    p1 = scatter3d(getindex.(points, 1), getindex.(points, 2),
+                   getindex.(points, 3), zcolor = Float64.(values),
+                   ms = 10)
+
+    p2 = scatter(map(x -> x.θ, ps), map(x -> x.ϕ, ps), zcolor = Float64.(values),
+                 ms = 10)
+
+    return (p1, p2)
+end
