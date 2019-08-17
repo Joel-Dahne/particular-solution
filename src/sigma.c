@@ -132,6 +132,10 @@ void minimize_sigma(arb_t nu, geom_t geom, points_t points, slong N,
   arb_add(nu, a, b, prec);
   arb_div_si(nu, nu, 2, prec);
 
+  /* This is not a validated enclosure of the minimum so we can just
+   * as well set the radius of nu to zero. */
+  mag_zero(arb_radref(nu));
+
 #ifdef DEBUG
   flint_printf("DEBUG minimize_sigma: Iterations %d, minimum: ", n);
   arf_printd(arb_midref(nu), (slong)ceil(prec*log10(2)));
