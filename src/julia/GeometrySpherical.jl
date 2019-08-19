@@ -1,4 +1,4 @@
-mutable struct GeometrySpherical
+mutable struct GeometrySpherical <: Geometry
     angles::Ptr{fmpq}
     v1::Tuple{Ptr{ArbReal}, Ptr{ArbReal}, Ptr{ArbReal}}
     v2::Tuple{Ptr{ArbReal}, Ptr{ArbReal}, Ptr{ArbReal}}
@@ -15,15 +15,6 @@ mutable struct GeometrySpherical
         finalizer(geometry_clear, g)
         return g
     end
-end
-
-function geometry_clear(g::GeometrySpherical)
-    ccall((:geom_clear, "build/particular_solution"), Nothing, (Ref{GeometrySpherical},), g)
-end
-
-function recompute(g::GeometrySpherical, prec::Int = workingprecision(ArbReal))
-    ccall((:geom_compute, "build/particular_solution"), Nothing,
-          (Ref{GeometrySpherical}, Int), g, prec)
 end
 
 function activevertices(g::GeometrySpherical)

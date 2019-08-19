@@ -1,3 +1,12 @@
+function generatematrix(ν::ArbReal, g::Geometry, p::Points, N::Int)
+    res = ArbNumerics.ArbRealMatrix(p.total, N)
+    ccall((:generate_matrix, "build/particular_solution"), Cvoid,
+          (Ref{ArbNumerics.ArbRealMatrix}, Ref{Geometry}, Ref{Points}, Int, Ref{ArbReal}, Int),
+          res, g, p, N, ν, workingprecision(ν))
+
+    return res
+end
+
 function sigma(ν::ArbReal, g::Geometry, p::Points, N::Int)
     res = typeof(ν)(0)
     ccall((:sigma, "build/particular_solution"), Cvoid,

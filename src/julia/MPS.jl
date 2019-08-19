@@ -1,4 +1,5 @@
 using ArbNumerics
+import ArbNumerics
 using ArbNumerics: radius, midpoint, ball
 using Nemo
 using StaticArrays
@@ -9,10 +10,13 @@ using Random
 using LinearAlgebra
 
 include("arb.jl")
+include("Geometry.jl")
 include("GeometrySpherical.jl")
-Geometry = GeometrySpherical
-include("Options.jl")
+include("GeometryCartesian.jl")
 include("Points.jl")
+include("PointsSpherical.jl")
+include("PointsCartesian.jl")
+include("Options.jl")
 
 include("sigma.jl")
 include("enclose.jl")
@@ -22,7 +26,7 @@ include("eigenfunction.jl")
 include("examples.jl")
 
 function getdomain(i::Int)
-    g = Geometry()
+    g = GeometrySpherical()
     enclosure = ArbReal(0)
     opt = Options()
 
@@ -48,7 +52,9 @@ end
 
 setworkingprecision(ArbReal, 64)
 
-(g, enclosure, opt) = getdomain(0)
+#(g, enclosure, opt) = getdomain(0)
+#g = GeometryCartesian(1//2, 1)
+#opt = Options()
 
 #N = 8
 #p = Points(g, 2N, 2N)
