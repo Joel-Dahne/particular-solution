@@ -20,8 +20,9 @@
  * interval, it is not optimal. It would be better if we were able to
  * enclose only the maximum and do so in an efficient way. */
 void
-maximize_series(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
-                arb_t nu, slong n, slong vertex, slong prec)
+maximize_series(arb_t max_lower, arb_t max_upper, geom_t geom, arb_t t,
+                arb_ptr coefs, slong N, arb_t nu, slong n, slong vertex,
+                slong prec)
 {
   arb_ptr z, phi, series;
   arb_t enclosure, rest_term, tmp;
@@ -40,8 +41,9 @@ maximize_series(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
   parametrization(z, phi, geom, tmp, n, vertex, prec);
   eigenfunction_series(series, geom, coefs, N, z, phi, nu, vertex, n, prec);
 
-  /* The max is lower bounded by the value at the midpoint. */
-  arb_abs(max, series + 0);
+  /* The max is lower bounded by the value at the midpoint */
+  arb_get_abs_lbound_arf(arb_midref(max_lower), series + 0, prec);
+  mag_zero(arb_radref(max_lower));
 
   /* Enclose the Taylor polynomial evaluated at t - mid(t) */
   /* tmp = t - mid(t) */
@@ -60,8 +62,9 @@ maximize_series(arb_t max, geom_t geom, arb_t t, arb_ptr coefs, slong N,
   /* Add the rest term to the maximum */
   arb_add(enclosure, enclosure, rest_term, prec);
 
-  /* Get the maximum of the midpoint and the enclosure. */
-  arb_max(max, max, enclosure, prec);
+  /* The max is upper bounded by the upper bound of the enclosure */
+  arb_get_abs_ubound_arf(arb_midref(max_upper), enclosure, prec);
+  mag_zero(arb_radref(max_upper));
 
   _arb_vec_clear(z, n + 1);
   _arb_vec_clear(phi, n + 1);
@@ -92,8 +95,8 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   arb_ptr intervals_lower, intervals_upper;
   arb_ptr next_intervals_lower, next_intervals_upper;
 
-  arb_ptr evals;
-  arb_t t;
+  arb_ptr evals_upper;
+  arb_t eval_lower, t;
   arf_t max_lower, max_upper, tmp;
   slong n, intervals_len, next_intervals_len;
   slong iterations, max_iterations, splits, soft_limit_intervals_len;
@@ -124,6 +127,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   arb_set_si(intervals_lower + 0, 0);
   arb_set_si(intervals_upper + 0, 1);
 
+  arb_init(eval_lower);
   arb_init(t);
 
   arf_init(max_lower);
@@ -138,7 +142,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
   {
     /* Create vector for storing maximum on all the remaining
      * intervals. */
-    evals = _arb_vec_init(intervals_len);
+    evals_upper = _arb_vec_init(intervals_len);
 
     /* Reset values from previous iteration. */
     arb_zero(max);
@@ -151,15 +155,21 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
     {
       arb_union(t, intervals_lower + i, intervals_upper + i, prec);
 
-      maximize_series(evals + i, geom, t, coefs, N, nu, n, vertex, prec);
+      maximize_series(eval_lower, evals_upper + i, geom, t, coefs, N, nu, n, vertex, prec);
 
-      /* Update lower and upper bounds for the maximum. */
-      if (arb_is_finite(evals + i))
+      /* Update the lower bound for the maximum*/
+      if (arb_is_finite(eval_lower))
       {
-        arb_get_abs_ubound_arf(tmp, evals + i, prec);
-        arf_max(max_upper, max_upper, tmp);
-        arb_get_abs_lbound_arf(tmp, evals + i, prec);
+        arb_get_abs_lbound_arf(tmp, eval_lower, prec);
         arf_max(max_lower, max_lower, tmp);
+      }
+
+      /* Update the upper bound for the maximum*/
+      if (arb_is_finite(evals_upper + i))
+      {
+        arb_get_abs_ubound_arf(tmp, evals_upper + i, prec);
+        arf_max(max_upper, max_upper, tmp);
+
       }
       else
       {
@@ -190,7 +200,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
       for (slong i = 0; i < intervals_len; i++)
       {
 
-        arb_get_abs_ubound_arf(tmp, evals + i, prec);
+        arb_get_abs_ubound_arf(tmp, evals_upper + i, prec);
         if (!(arf_cmp(tmp, max_lower) < 0))
         {
           /* Compute the midpoint of the current interval. */
@@ -230,7 +240,7 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
       /* Clear variables for next iteration. */
       _arb_vec_clear(intervals_lower, intervals_len);
       _arb_vec_clear(intervals_upper, intervals_len);
-      _arb_vec_clear(evals, intervals_len);
+      _arb_vec_clear(evals_upper, intervals_len);
 
       /* Set variables to use for next iteration. */
       intervals_lower = _arb_vec_init(next_intervals_len);
@@ -257,8 +267,9 @@ maximize(arb_t max, geom_t geom, arb_ptr coefs, slong N, arb_t nu,
 
   _arb_vec_clear(intervals_lower, intervals_len);
   _arb_vec_clear(intervals_upper, intervals_len);
-  _arb_vec_clear(evals, intervals_len);
+  _arb_vec_clear(evals_upper, intervals_len);
 
+  arb_clear(eval_lower);
   arb_clear(t);
 
   arf_clear(max_lower);
