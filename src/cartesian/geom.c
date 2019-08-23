@@ -1,4 +1,5 @@
 #include "geom.h"
+#include "arb_poly.h"
 
 void
 geom_init(geom_t g)
@@ -137,10 +138,55 @@ interior(points_t p, geom_t g, slong prec)
 
 }
 
-/* TODO: Implement this */
+/* Compute the Taylor expansion of a parameterization of the boundary
+ * of the triangle away from the origin. The parameterization is given
+ * in t going from 0 to 1. The order of the computed expansion is n -
+ * 1, i.e. the number of terms is equal to n.*/
 void
-parametrization(arb_ptr r, arb_ptr theta, geom_t geom, arb_t t, slong n,
+parametrization(arb_ptr r, arb_ptr theta, geom_t g, arb_t t, slong n,
                 slong vertex, slong prec)
 {
+  arb_ptr ux, uy, tmp1, tmp2;
 
+  ux = _arb_vec_init(n);
+  uy = _arb_vec_init(n);
+  tmp1 = _arb_vec_init(n);
+  tmp2 = _arb_vec_init(n);
+
+  /* ux  = t*x + 1 - t */
+  /* ux' = x - 1       */
+  arb_mul(ux + 0, t, g->x, prec);
+  arb_sub(ux + 0, ux + 0, t, prec);
+  arb_add_si(ux + 0, ux + 0, 1, prec);
+  if (n > 1)
+  {
+    arb_sub_si(ux + 1, g->x, 1, prec);
+  }
+
+  /* uy  = t*y */
+  /* uy' = y   */
+  arb_mul(uy + 0, t, g->y, prec);
+  if (n > 1)
+  {
+    arb_set(uy + 1, g->y);
+  }
+
+  /* tmp1 = sqr(ux) */
+  _arb_poly_mullow(tmp1, ux, n, ux, n, n, prec);
+  /* tmp2 = sqr(uy) */
+  _arb_poly_mullow(tmp2, uy, n, uy, n, n, prec);
+  /* tmp1 = sqr(ux) + sqr(uy) */
+  _arb_vec_add(tmp1, tmp1, tmp2, n, prec);
+  /* r = sqrt(sqr(ux) + sqr(uy)) */
+  _arb_poly_sqrt_series(r, tmp1, n, n, prec);
+
+  /* tmp1 = uy/ux */
+  _arb_poly_div_series(tmp1, uy, n, ux, n, n, prec);
+  /* theta = atan(uy/ux) */
+  _arb_poly_atan_series(theta, tmp1, n, n, prec);
+
+  _arb_vec_clear(ux, n);
+  _arb_vec_clear(uy, n);
+  _arb_vec_clear(tmp1, n);
+  _arb_vec_clear(tmp2, n);
 }
