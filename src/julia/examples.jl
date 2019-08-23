@@ -26,18 +26,18 @@ function plotconvergence(enclosure::ArbReal, g::Geometry, opt::Options)
     return (p1, p2)
 end
 
-function plotconvergence(triangle::Int)
-    (g, enclosure, opt) = getdomain(triangle)
+function plotconvergence(::Type{T}, triangle::Int) where T <: Geometry
+    (g, enclosure, opt) = getdomain(T, triangle)
 
     return plotconvergence(enclosure, g, opt)
 end
 
-function plotconvergence(triangles, Ns)
+function plotconvergence(::Type{T}, triangles, Ns) where T <: Geometry
     p1 = plot()
     p2 = plot()
 
     for triangle in triangles
-        (g, enclosure, opt) = getdomain(triangle)
+        (g, enclosure, opt) = getdomain(T, triangle)
         opt = Options(opt, Ns)
 
         enclosures = getindex.(particularsolution(enclosure, g, opt), 2)
@@ -82,8 +82,8 @@ function plotsigma(interval::Tuple{ArbReal, ArbReal}, g::Geometry, p::Points,
     return p1
 end
 
-function plotsigma(triangle::Int, N::Int, numpoints::Int = 0)
-    (g, enclosure, opt) = getdomain(triangle)
+function plotsigma(::Type{T}, triangle::Int, N::Int, numpoints::Int = 0) where T <: Geometry
+    (g, enclosure, opt) = getdomain(T, triangle)
     p = Points(g, 2N, 2N)
 
     if numpoints > 0

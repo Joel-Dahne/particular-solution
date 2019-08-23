@@ -26,40 +26,27 @@ include("norm.jl")
 
 include("examples.jl")
 
-function getdomain(i::Int)
-    g = GeometrySpherical()
+function getdomain(::Type{T}, i::Int) where T <: Geometry
+    g = T()
     enclosure = ArbReal(0)
     opt = Options()
 
     ccall((:get_domain, "build/particular_solution"), Cvoid,
-          (Ref{Geometry}, Ref{ArbReal}, Ref{Options}, Int32),
+          (Ref{T}, Ref{ArbReal}, Ref{Options}, Int32),
           g, enclosure, opt, i)
     ccall((:geom_compute, "build/particular_solution"), Cvoid,
-          (Ref{Geometry}, Int), g, workingprecision(ArbReal))
+          (Ref{T}, Int), g, workingprecision(ArbReal))
 
     return (g, enclosure, opt)
 end
 
-function runall()
-    numtriangles = 10
-    res = Array{ArbReal}(undef, numtriangles)
-    @showprogress for i in 1:numtriangles
-        (g, enclosure, opt) = getdomain(i - 1)
-        res[i] = particularsolution_c(enclosure, g, opt)
-    end
-
-    return res
-end
-
 setworkingprecision(ArbReal, 64)
 
-#(g, enclosure, opt) = getdomain(0)
-#g = GeometryCartesian(1//2, 1)
-#opt = Options()
+(g, enclosure, opt) = getdomain(GeometryCartesian, 0)
 
-#N = 8
-#p = Points(g, 2N, 2N)
+N = 8
+p = Points(g, 2N, 2N)
 
-#coeffs = coefficientssigma(midpoint(enclosure), g, p, N)[1]
-#newenclosure = enclose(enclosure, midpoint(enclosure), coeffs, g, 1)
+#coefs = coefficientssigma(midpoint(enclosure), g, p, N)[1]
+#newenclosure = enclose(enclosure, midpoint(enclosure), coefs, g, 1)
 #res = particularsolution(enclosure, g, opt)
