@@ -3,6 +3,7 @@ mutable struct GeometryCartesian <: Geometry
     side_length::Ptr{ArbReal}
     x::Ptr{ArbReal}
     y::Ptr{ArbReal}
+    r_lower::Ptr{ArbReal}
     vertices::Tuple{Int32, Int32, Int32}
     half_edge::Tuple{Int32, Int32, Int32}
 

@@ -22,6 +22,7 @@ include("sigma.jl")
 include("enclose.jl")
 include("particularsolution.jl")
 include("eigenfunction.jl")
+include("norm.jl")
 
 include("examples.jl")
 

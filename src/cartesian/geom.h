@@ -16,6 +16,7 @@ typedef struct
   arb_ptr side_length;
   arb_ptr x;
   arb_ptr y;
+  arb_ptr r_lower;
   int vertices[3];
   int half_edge[3];
 } geom_struct;
