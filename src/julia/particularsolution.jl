@@ -14,6 +14,9 @@ function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
 
     Ns = opt.N_beg:opt.N_step:opt.N_end
     res = Array{Tuple{Array{ArbReal, 1}, ArbReal}}(undef, length(Ns))
+
+    to = TimerOutput()
+
     @showprogress for i in 1:length(Ns)
         N = Ns[i]
         # Compute tolerance and precision to use
@@ -29,23 +32,23 @@ function particularsolution(enclosure::ArbReal, g::Geometry, opt::Options)
         #@show tol
         #@show prec
 
-        p = Points(g, 2N, 2N)
-        #setboundary!(p, g)
-        #setinterior!(p, g)
+        @timeit to "$N" begin
+            p = @timeit to "Points" Points(g, 2N, 2N)
 
-        ν = minimizesigma(enclosurelocal, g, p, N, tol)
+            ν = @timeit to "Minimum" minimizesigma(enclosurelocal, g, p, N, tol)
+            #@show ν
 
-        #println("Minimum: $ν")
+            coeffs = @timeit to "Coefficients" coefficientssigma(ν, g, p, N)[1]
+            #@show coeffs
 
-        coeffs = coefficientssigma(ν, g, p, N)[1]
+            enclosurelocal = @timeit to "Enclosure" enclose(enclosurelocal, ν, coeffs, g, 1)
+            #@show enclosurelocal
+        end
 
-        @show coeffs
-
-        enclosurelocal = enclose(enclosurelocal, ν, coeffs, g, 1)
-
-        @show enclosurelocal
         res[i] = (coeffs, copy(enclosurelocal))
     end
 
     return res
+    # To also return timing information
+    #return (res, to)
 end

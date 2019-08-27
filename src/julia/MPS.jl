@@ -8,6 +8,7 @@ using ProgressMeter
 using LaTeXStrings
 using Random
 using LinearAlgebra
+using TimerOutputs
 
 include("arb.jl")
 include("Geometry.jl")
@@ -25,6 +26,7 @@ include("eigenfunction.jl")
 include("norm.jl")
 
 include("examples.jl")
+include("timings.jl")
 
 function getdomain(::Type{T}, i::Int) where T <: Geometry
     g = T()
