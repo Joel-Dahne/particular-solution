@@ -100,9 +100,14 @@ function ploteigenfunctionboundary(ν::ArbReal, coeffs::Array{ArbReal},
                                    g::Geometry, numpoints::Int, vertex::Int = 1)
     points = boundary(Points(g, numpoints, 0))
     values = map(p -> eigenfunction(p, ν, coeffs, g, vertex), points)
-    ϕs = map(p -> p.ϕ, points)
+    xs = zeros(ArbReal, numpoints)
+    if typeof(g) == GeometrySpherical
+        xs = map(p -> p.ϕ, points)
+    elseif typeof(g) == GeometryCartesian
+        xs = map(p -> p.θ, points)
+    end
 
-    p1 = plot(ϕs, values,
+    p1 = plot(xs, values,
               xaxis = (L"\phi"),
               yaxis = ("Eigenfunction"),
               legend = :none)
