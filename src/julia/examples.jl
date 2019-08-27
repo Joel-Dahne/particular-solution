@@ -115,6 +115,60 @@ function ploteigenfunctionboundary(ν::ArbReal, coeffs::Array{ArbReal},
     return p1
 end
 
+function ploteigenfunctionboundaryseries(ν::ArbReal, coeffs::Vector{T},
+                                         g::Geometry, order::Int, numpoints::Int,
+                                         vertex::Int = 1) where T <: ArbReal
+    ts = range(0, stop = 1, length = numpoints + 1)
+    intervals = map(i -> setinterval(ArbReal(ts[i]), ArbReal(ts[i + 1])), 1:numpoints)
+    values = map(i -> eigenfunction_series_enclosure(i, ν, coeffs,
+                                                     g, order, vertex),
+                 intervals)
+
+
+    p = plot(collect(Iterators.flatten(map(i -> [lowerbound(i), upperbound(i)], intervals))),
+             collect(Iterators.flatten(map(v -> [upperbound(v), upperbound(v)], values))),
+             xaxis = "t",
+             yaxis = "Eigenfunction",
+             label = "Upper bound")
+
+    p = plot!(p, collect(Iterators.flatten(map(i -> [lowerbound(i), upperbound(i)], intervals))),
+              collect(Iterators.flatten(map(v -> [lowerbound(v), lowerbound(v)], values))),
+              xaxis = "t",
+              yaxis = "Eigenfunction",
+              label = "Lower bound")
+
+    return p
+end
+
+function ploteigenfunctionboundaryseries(ν::ArbReal, coeffs::Vector{T},
+                                         g::Geometry, orders::Vector{Int}, numpoints::Int,
+                                         vertex::Int = 1) where T <: ArbReal
+    ts = range(0, stop = 1, length = numpoints + 1)
+    intervals = map(i -> setinterval(ArbReal(ts[i]), ArbReal(ts[i + 1])), 1:numpoints)
+
+    p = plot()
+    for order in orders
+        values = map(i -> eigenfunction_series_enclosure(i, ν, coeffs,
+                                                         g, order, vertex),
+                     intervals)
+
+        plot!(p, collect(Iterators.flatten(map(i -> [lowerbound(i), upperbound(i)], intervals))),
+              collect(Iterators.flatten(map(v -> [upperbound(v), upperbound(v)], values))),
+              xaxis = "t",
+              yaxis = "Eigenfunction",
+              label = "Upper bound")
+
+        plot!(p, collect(Iterators.flatten(map(i -> [lowerbound(i), upperbound(i)], intervals))),
+              collect(Iterators.flatten(map(v -> [lowerbound(v), lowerbound(v)], values))),
+              xaxis = "t",
+              yaxis = "Eigenfunction",
+              label = "Lower bound")
+    end
+
+    return p
+end
+
+
 """
 Plot the eigenfunction in the interior of the spherical triangle. This
 plot is a bit hard to get good. We give two different versions, the
