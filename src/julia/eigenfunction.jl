@@ -110,7 +110,7 @@ function eigenfunction(point::ISOSpherical, ν, coeffs, g::GeometrySpherical,
     eigenfunction(point.θ, point.ϕ, ν, coeffs, g, vertex)
 end
 
-function eigenfunction(point::Polar, λ, coeffs, g::GeometryCartesian)
+function eigenfunction(point::Polar, λ, coeffs, g::GeometryCartesian, vertex = 1)
     eigenfunction(point.r, point.θ, λ, coeffs, g, 1)
 end
 
@@ -166,4 +166,44 @@ end
 function eigenfunction_series(point::Vector{T}, λ, coeffs,
                               g::GeometryCartesian) where T <: Polar
     eigenfunction_series(map(p -> p.r, point), map(p -> p.θ, point), λ, coeffs, g, 1)
+end
+
+"""
+Enclose the eigenfunction using Taylor expansions.
+"""
+function eigenfunction_series_enclosure(t::ArbReal, ν::ArbReal,
+                                        coeffs::Vector{T}, g::Geometry,
+                                        order::Int, vertex::Int = 1) where T <: ArbReal
+    # Compute the Taylor polynomial of the eigenfunction at the
+    # midpoint of t to the given order
+    (θ, ϕ) = parameterization(midpoint(t), g, order, vertex)
+    midpointseries = eigenfunction_series(θ, ϕ, ν, coeffs, g, vertex)
+
+    # Enclose the Taylor polynomial evaluated at t - midpoint(t)
+    enclosure = ArbReal(0)
+    midpointseriesPtr = _arb_vec_init(order + 1)
+    unsafe_store_ArbRealPtr!(midpointseriesPtr, midpointseries)
+
+    ccall((:_arb_poly_evaluate, :libarb), Cvoid,
+          (Ref{ArbReal}, Ptr{ArbReal}, Int, Ref{ArbReal}, Int),
+          enclosure, midpointseriesPtr, order + 1, t - midpoint(t), workingprecision(ν))
+
+    _arb_vec_clear(midpointseriesPtr, order + 1)
+    #@show enclosure
+    #@show radius(enclosure)
+
+    # Compute the Taylor polynomial of the eigenfunction on the
+    # interval t of order one higher than the given one
+    (θ, ϕ) = parameterization(t, g, order + 1, vertex)
+    series = eigenfunction_series(θ, ϕ, ν, coeffs, g, vertex)
+    #@show series[end]
+    #@show radius(series[end])
+
+
+    # Compute the rest term
+    restterm = series[end]*pow(t - midpoint(t), order)
+    #@show restterm
+    #@show radius(restterm)
+
+    return enclosure + restterm
 end
